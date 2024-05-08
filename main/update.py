@@ -11,53 +11,53 @@ class TicketManagement(QMainWindow):
     def initUI(self):
         self.setWindowTitle("Ticket Management")
         self.setGeometry(100, 100, 1200, 800)  # Posición y tamaño de la ventana
-
+        self.setWindowIconText("main\icon.ico")
         # Establecer estilo general del programa
         self.setStyleSheet("""
             QMainWindow {
-                background-color: #BDD4E7;
+                background-color: #D1D3C4;
             }
             QTabWidget::pane {
-                border-top: 2px solid #BDD4E7;
+                border-top: 1px solid #D1D3C4;
             }
             QTabWidget::tab-bar {
                 alignment: center;
             }
             QTabBar::tab {
-                background: #BDD4E7;
+                background: #FBFBFF;
                 font: bold 20px;
-                border: 2px solid #1e1e1e;
-                border-bottom-color: #34495E; /* same as pane color */
+                border: 1.5px solid #1e1e1e;
+                border-bottom-color: #D1D3C4; /* same as pane color */
                 min-width: 40ex;
-                padding: 15px;
+                padding: 10px;
             }
             QTabBar::tab:selected {
-                background: #D3D0CB;
+                background: #E2C044;
                 margin-bottom: -5px;
             }
             QComboBox {
-                border: 2px solid #555;
+                border: 0px solid #555;
                 border-radius: 5px;
                 padding: 1em;
                 min-width: 6em;
-                font-size: 16px;
-                color: #DEF2F1;
+                font-size: 20px;
+                color: #1E2019;
             }
             QPushButton {
-                background-color: #4CAF50;
+                background-color: #E2C044;
                 border: none;
-                color: white;
+                color: black;
                 padding: 15px 32px;
                 text-align: center;
                 text-decoration: none;
                 display: inline-block;
-                font-size: 16px;
+                font-size: 25px;
                 margin: 4px 2px;
                 cursor: pointer;
                 border-radius: 5px;
             }
             QPushButton:hover {
-                background-color: #45a049;
+                background-color: #393E41;
             }
         """)
 
