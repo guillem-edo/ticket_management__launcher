@@ -1,42 +1,37 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-# Función para enviar datos según la pestaña activa
-def enviar_datos(tipo):
-    data = entradas[tipo].get().strip()
+# Función para confirmar la incidencia seleccionada según el bloque activo
+def confirmar_datos(tipo):
     incidencia_seleccionada = incidencias_seleccionadas[tipo].get()
-    if not data:
-        messagebox.showwarning("Advertencia", f"Por favor, introduce datos para {tipo}.")
-        return
-
     if not incidencia_seleccionada:
         messagebox.showwarning("Advertencia", f"Por favor, selecciona una incidencia para {tipo}.")
         return
 
-    messagebox.showinfo("Información", f"{tipo} - {incidencia_seleccionada}: {data}")
+    messagebox.showinfo("Validación de la incidencia", f"{tipo} \nIncidencia confirmada:\n\n{incidencia_seleccionada}")
 
 # Configuración de la ventana principal
 app = tk.Tk()
-app.title("Gestión de Incidencias")
-app.geometry("600x500")
+app.title("Gestor de Incidencias")
+app.geometry("650x550")
 
 # Estilo personalizado
 style = ttk.Style()
 style.theme_use("clam")
-style.configure("TFrame", background="#f5f5f5")
-style.configure("TLabel", font=("Helvetica", 14), background="#f5f5f5")
-style.configure("TEntry", font=("Helvetica", 12), padding=5)
-style.configure("TButton", font=("Helvetica", 12), padding=8)
-style.configure("TRadiobutton", font=("Helvetica", 12), background="#f5f5f5")
-style.configure("TNotebook", background="#f5f5f5")
-style.configure("TNotebook.Tab", font=("Helvetica", 12), padding=[10, 5])
+style.configure("TFrame", background="#e0f7fa")
+style.configure("TLabel", font=("Arial", 14, "bold"), background="#e0f7fa", foreground="#006064")
+style.configure("TRadiobutton", font=("Arial", 12), background="#e0f7fa", foreground="#004d40")
+style.configure("TButton", font=("Arial", 12, "bold"), padding=10, background="#004d40", foreground="#ffffff")
+style.map("TButton", foreground=[("active", "#ffffff"), ("!disabled", "#ffffff")], background=[("active", "#004d40"), ("!disabled", "#00796b")])
+style.configure("TNotebook", background="#004d40", borderwidth=1)
+style.configure("TNotebook.Tab", font=("Arial", 12, "bold"), padding=[10, 5], background="#b2ebf2", foreground="#006064")
+style.map("TNotebook.Tab", background=[("selected", "#80deea")], foreground=[("selected", "#006064")])
 
 # Crear pestañas para categorías de incidencias
 notebook = ttk.Notebook(app)
 notebook.pack(pady=20, expand=True)
 
-# Diccionarios para almacenar las entradas y las incidencias seleccionadas
-entradas = {}
+# Diccionario para almacenar las incidencias seleccionadas
 incidencias_seleccionadas = {}
 
 # Lista de incidencias común para todas las categorías
@@ -59,12 +54,12 @@ incidencias_comunes = [
     "Fallo cámara visión"
 ]
 
-# Función para crear cada pestaña con entrada, opciones y botón de envío
+# Función para crear cada pestaña con opciones y botón de confirmación
 def crear_pestana(nombre):
-    frame = ttk.Frame(notebook, padding=20)
+    frame = ttk.Frame(notebook, padding=20, style="TFrame")
     notebook.add(frame, text=nombre)
 
-    label = ttk.Label(frame, text=f"Describe la incidencia para {nombre}:", style="TLabel")
+    label = ttk.Label(frame, text=f"Selecciona una incidencia para {nombre}:", style="TLabel")
     label.pack(pady=(0, 10))
 
     # Variable para almacenar la incidencia seleccionada
@@ -76,11 +71,7 @@ def crear_pestana(nombre):
         radio = ttk.Radiobutton(frame, text=incidencia, value=incidencia, variable=selected, style="TRadiobutton")
         radio.pack(anchor='w', pady=(2, 2))
 
-    entry = ttk.Entry(frame, width=40, style="TEntry")
-    entry.pack(pady=10)
-    entradas[nombre] = entry
-
-    button = ttk.Button(frame, text="Enviar", command=lambda: enviar_datos(nombre), style="TButton")
+    button = ttk.Button(frame, text="Confirmar", command=lambda: confirmar_datos(nombre), style="TButton")
     button.pack(pady=20)
 
 # Crear pestañas para cada bloque con las mismas incidencias
