@@ -3,11 +3,11 @@ import json
 import csv
 from datetime import datetime
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox, QTabWidget, QLabel, QListWidget, QListWidgetItem, QStatusBar
+    QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox, QTabWidget, QLabel, QListWidget, QListWidgetItem, QStatusBar, QHBoxLayout
 )
-from PyQt5.QtGui import QFont, QIcon, QColor
-from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
+from PyQt5.QtGui import QFont, QIcon, QPixmap
 from PyQt5.QtCore import QUrl, QByteArray, QTimer, Qt
+from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
 
 class TicketManagement(QMainWindow):
     def __init__(self):
@@ -21,29 +21,21 @@ class TicketManagement(QMainWindow):
     def initUI(self):
         self.setWindowTitle("Ticket Management")
         self.setGeometry(100, 100, 1200, 800)
-        self.setStyleSheet("""
-            QMainWindow {
-                background-color: #f4f6f7;
-            }
-            QPushButton {
-                background-color: #3498db;
-                color: white;
-                border-radius: 5px;
-                padding: 10px 15px;
-                font-size: 14px;
-            }
-            QTabWidget {
-                font-size: 14px;
-            }
-            QLabel {
-                font-size: 14px;
-            }
-        """)
-        self.tabWidget = QTabWidget(self)
-        self.tabWidget.setFont(QFont('Arial', 12))
-        self.setCentralWidget(self.tabWidget)
+        # Añadir una etiqueta global para la última incidencia en la barra de estado
+        self.global_last_incidence_label = QLabel("Última incidencia confirmada: N/A")
+        self.global_last_incidence_label.setFont(QFont('Arial', 12))
 
-        # Barra de estado (status bar)
+        self.status_bar = QStatusBar(self)
+        self.status_bar.addWidget(self.global_last_incidence_label)  # Incluir la etiqueta en la barra de estado
+        self.setStatusBar(self.status_bar)
+        self.update_status_bar()
+
+        timer = QTimer(self)
+        timer.timeout.connect(self.update_status_bar)
+        timer.start(1000)
+
+        self.tabWidget = QTabWidget(self)
+        self.setCentralWidget(self.tabWidget)
         self.status_bar = QStatusBar(self)
         self.setStatusBar(self.status_bar)
         self.update_status_bar()
@@ -73,42 +65,43 @@ class TicketManagement(QMainWindow):
             "SPL": ["Sensor de PCB detecta que hay placa cuando no la hay","No detecta marcas Power","Colisión placas","Fallo dispensación glue","Marco atascado en parte inferior",
                     "Soldadura defectuosa","Error en sensor de salida"] 
         }
+
         for name, incidences in self.incidencias.items():
             self.create_tab(name, incidences)
 
     def create_tab(self, name, incidences):
         tab = QWidget()
-        self.tabWidget.addTab(tab, QIcon("path/to/icon.png"), name)
+        self.tabWidget.addTab(tab, name)
         layout = QVBoxLayout(tab)
 
         title = QLabel(f"Incidencias - {name}")
         title.setFont(QFont('Arial', 16))
         layout.addWidget(title)
 
-        # Uso de QListWidget para un desplegable más sofisticado
         listWidget = QListWidget()
-        listWidget.setSelectionMode(QListWidget.SingleSelection)
-        listWidget.setStyleSheet("""
-            QListWidget::item:selected {
-                background-color: #3498db;
-                color: white;
-            }
-            QListWidget::item {
-                padding: 5px;
-                border: 1px solid #dcdcdc;
-                border-radius: 3px;
-            }
-        """)
         for incidence in incidences:
-            item = QListWidgetItem(QIcon("path/to/incidence_icon.png"), incidence)
+            item = QListWidgetItem(QIcon("app\logo.png"), incidence)
             item.setFont(QFont('Arial', 12))
             listWidget.addItem(item)
         layout.addWidget(listWidget)
 
+        buttonLayout = QHBoxLayout()
+
+        # Botón confirmar
         confirmButton = QPushButton("Confirmar")
-        confirmButton.setIcon(QIcon("path/to/check_icon.png"))
+        confirmButton.setIcon(QIcon("app\logo.png"))
         confirmButton.clicked.connect(lambda: self.on_confirm(name, listWidget.currentItem().text() if listWidget.currentItem() else ""))
-        layout.addWidget(confirmButton)
+        buttonLayout.addWidget(confirmButton)
+
+        # Logo FICOSA más grande y alineado
+        logoLabel = QLabel()
+        pixmap = QPixmap("app\logo.png")  # Ruta del logo
+        logoLabel.setPixmap(pixmap)
+        logoLabel.setScaledContents(True)
+        logoLabel.setMaximumSize(600, 60)  # Tamaño ajustado más grande
+        buttonLayout.addWidget(logoLabel, 0, Qt.AlignRight | Qt.AlignBottom)
+
+        layout.addLayout(buttonLayout)
 
         self.last_incidence_label = QLabel("Última incidencia confirmada: N/A")
         layout.addWidget(self.last_incidence_label)
@@ -123,10 +116,11 @@ class TicketManagement(QMainWindow):
                 self.write_to_csv(name, incidence)
         else:
             QMessageBox.warning(self, "Selección Vacía", "Por favor, selecciona una incidencia.")
+        self.update_last_incidence()
 
     def send_data_to_api(self, block, incidence):
         data = {"bloque": block, "incidencia": incidence}
-        url = QUrl("http://1000:5000/report_incidence")
+        url = QUrl("http://fe80::a038:8aec:6233:c933%10:5000/report_incidence")
         req = QNetworkRequest(url)
         req.setHeader(QNetworkRequest.ContentTypeHeader, "application/json")
         self.network_manager.post(req, QByteArray(json.dumps(data).encode('utf-8')))
@@ -152,8 +146,8 @@ class TicketManagement(QMainWindow):
 
     def update_last_incidence(self):
         if self.last_incidence:
-            self.last_incidence_label.setText(f"Última incidencia confirmada: {self.last_incidence['bloque']} - {self.last_incidence['incidencia']} ({self.last_incidence['timestamp']})")
-
+            last_incidence_info = f"Última incidencia confirmada: {self.last_incidence['bloque']} - {self.last_incidence['incidencia']} ({self.last_incidence['timestamp']})"
+            self.global_last_incidence_label.setText(last_incidence_info)  # Actualizar la etiqueta global
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
