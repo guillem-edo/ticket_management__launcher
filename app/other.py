@@ -1,5 +1,5 @@
-import json
 import sys
+import json
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QComboBox, QPushButton, QMessageBox, QTabWidget
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
@@ -9,12 +9,13 @@ from PyQt5.QtCore import QUrl, QByteArray
 class TicketManagement(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.network_manager = QNetworkAccessManager(self)
+        self.network_manager.finished.connect(self.on_network_reply)  # Manejar la respuesta de la red
         self.initUI()
-        self.network_manager = QNetworkAccessManager(self)  # Crea el administrador de red
 
     def initUI(self):
         self.setWindowTitle("Ticket Management")
-        self.setGeometry(100, 100, 1200, 800)  # Posición y tamaño de la ventana
+        self.setGeometry(100, 100, 1200, 800)
         self.setStyleSheet("""
             QMainWindow {
                 background-color: #D1D3C4;
@@ -64,6 +65,7 @@ class TicketManagement(QMainWindow):
         self.tabWidget.setFont(QFont('Arial', 12))
         self.setCentralWidget(self.tabWidget)
 
+        # Incidencias
         self.incidencias = {
             "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva",
                         "Fallo en paletizador", "No coge placa", "Palet atascado en la curva",
@@ -89,8 +91,6 @@ class TicketManagement(QMainWindow):
         for name, incidences in self.incidencias.items():
             self.create_tab(name, incidences)
 
-        self.show()
-
     def create_tab(self, name, incidences):
         tab = QWidget()
         self.tabWidget.addTab(tab, name)
@@ -111,11 +111,17 @@ class TicketManagement(QMainWindow):
             "bloque": block,
             "incidencia": incidence
         }
-        url = QUrl("http://localhost:5000/report_incidence")
+        url = QUrl("http://fe80::a038:8aec:6233:c933%10:5000/report_incidence")
         req = QNetworkRequest(url)
         req.setHeader(QNetworkRequest.ContentTypeHeader, "application/json")
         self.network_manager.post(req, QByteArray(json.dumps(data).encode('utf-8')))
-        QMessageBox.information(self, "Confirmación", f"Incidencia confirmada: \n\n{incidence}")
+
+    def on_network_reply(self, reply):
+        if reply.error():
+            QMessageBox.warning(self, "Network Error", "Failed to communicate with the API: " + reply.errorString())
+        else:
+            response = json.loads(reply.readAll().data().decode())
+            QMessageBox.information(self, "API Response", response.get("message", "No message received"))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
