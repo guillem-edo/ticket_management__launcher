@@ -1,71 +1,27 @@
 import sys
 import json
+import csv
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QComboBox, QPushButton, QMessageBox, QTabWidget
 from PyQt5.QtGui import QFont
-from PyQt5.QtCore import Qt
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
 from PyQt5.QtCore import QUrl, QByteArray
 
 class TicketManagement(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.network_manager = QNetworkAccessManager(self)
-        self.network_manager.finished.connect(self.on_network_reply)  # Manejar la respuesta de la red
         self.initUI()
+        self.network_manager = QNetworkAccessManager(self)
+        self.network_manager.finished.connect(self.on_network_reply)  # Conectar la respuesta de red
 
     def initUI(self):
         self.setWindowTitle("Ticket Management")
         self.setGeometry(100, 100, 1200, 800)
-        self.setStyleSheet("""
-            QMainWindow {
-                background-color: #D1D3C4;
-            }
-            QTabWidget::pane {
-                border-top: 1px solid #D1D3C4;
-            }
-            QTabWidget::tab-bar {
-                alignment: center;
-            }
-            QTabBar::tab {
-                background: #FBFBFF;
-                font: bold 20px;
-                border: 1.5px solid #1e1e1e;
-                min-width: 40ex;
-                padding: 10px;
-            }
-            QTabBar::tab:selected {
-                background: #E2C044;
-                margin-bottom: -5px;
-            }
-            QComboBox {
-                border: 0px solid #555;
-                border-radius: 5px;
-                padding: 1em;
-                min-width: 6em;
-                font-size: 20px;
-                color: #1E2019;
-            }
-            QPushButton {
-                background-color: #E2C044;
-                border: none;
-                color: black;
-                padding: 15px 32px;
-                text-align: center;
-                display: inline-block;
-                font-size: 25px;
-                margin: 4px 2px;
-                cursor: pointer;
-                border-radius: 5px;
-            }
-            QPushButton:hover {
-                background-color: #393E41;
-            }
-        """)
+        self.setStyleSheet("""<Estilos CSS Aquí>""")
         self.tabWidget = QTabWidget(self)
         self.tabWidget.setFont(QFont('Arial', 12))
         self.setCentralWidget(self.tabWidget)
 
-        # Incidencias
+        # Definición de incidencias
         self.incidencias = {
             "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva",
                         "Fallo en paletizador", "No coge placa", "Palet atascado en la curva",
@@ -87,7 +43,7 @@ class TicketManagement(QMainWindow):
                     "Soldadura defectuosa","Error en sensor de salida"] 
         }
 
-
+        # Creación de pestañas para cada bloque de incidencias
         for name, incidences in self.incidencias.items():
             self.create_tab(name, incidences)
 
@@ -99,29 +55,36 @@ class TicketManagement(QMainWindow):
         comboBox.addItems(incidences)
         layout.addWidget(comboBox)
         confirmButton = QPushButton("Confirmar")
-        confirmButton.clicked.connect(lambda: self.on_confirm(name, comboBox))
+        confirmButton.clicked.connect(lambda: self.on_confirm(name, comboBox.currentText()))
         layout.addWidget(confirmButton)
 
-    def on_confirm(self, name, comboBox):
-        selected_incidence = comboBox.currentText()
-        self.send_data(name, selected_incidence)
+    def on_confirm(self, name, incidence):
+        self.send_data_to_api(name, incidence)
+        self.write_to_csv(name, incidence)
 
-    def send_data(self, block, incidence):
-        data = {
-            "bloque": block,
-            "incidencia": incidence
-        }
-        url = QUrl("http://fe80::a038:8aec:6233:c933%10:5000/report_incidence")
+    def send_data_to_api(self, block, incidence):
+        data = {"bloque": block, "incidencia": incidence}
+        url = QUrl("http://1000:5000/report_incidence")
         req = QNetworkRequest(url)
         req.setHeader(QNetworkRequest.ContentTypeHeader, "application/json")
         self.network_manager.post(req, QByteArray(json.dumps(data).encode('utf-8')))
 
+    def write_to_csv(self, block, incidence):
+        with open(self.csv_file, 'a', newline='') as file:
+            writer = csv.writer(file)
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            writer.writerow([block, incidence, timestamp])
+        pass
+
     def on_network_reply(self, reply):
-        if reply.error():
-            QMessageBox.warning(self, "Network Error", "Failed to communicate with the API: " + reply.errorString())
+        err = reply.error()
+        if err != QNetworkReply.NoError:
+            error_message = reply.errorString()
+            QMessageBox.warning(self, "Error de Red", f"Error al comunicar con la API: {error_message}")
         else:
-            response = json.loads(reply.readAll().data().decode())
-            QMessageBox.information(self, "API Response", response.get("message", "No message received"))
+            response = json.loads(reply.readAll().decode())
+            QMessageBox.information(self, "Respuesta de la API", response.get("message", "No se recibió mensaje"))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
