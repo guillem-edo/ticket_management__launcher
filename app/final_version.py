@@ -116,7 +116,7 @@ class TicketManagement(QMainWindow):
         pixmap = QPixmap("app\logo.png")  # Ruta del logo
         logoLabel.setPixmap(pixmap)
         logoLabel.setScaledContents(True)
-        logoLabel.setMaximumSize(600, 60)  # Tamaño ajustado más grande
+        logoLabel.setMaximumSize(500, 60)  # Tamaño ajustado más grande
         buttonLayout.addWidget(logoLabel, 0, Qt.AlignRight | Qt.AlignBottom)
 
         layout.addLayout(buttonLayout)
