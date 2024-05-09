@@ -1,4 +1,5 @@
 import sys
+import csv
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QComboBox, QPushButton, QMessageBox, QTabWidget
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
@@ -110,6 +111,13 @@ class TicketManagement(QMainWindow):
     def on_confirm(self, comboBox):
         selected_incidence = comboBox.currentText()
         QMessageBox.information(self, "Confirmación", f"Incidencia confirmada: \n\n{selected_incidence}")
+
+    def write_to_csv(self, block, incidence):
+        with open(self.csv_file, 'a', newline='') as file:
+            writer = csv.writer(file)
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            writer.writerow([block, incidence, timestamp])
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
