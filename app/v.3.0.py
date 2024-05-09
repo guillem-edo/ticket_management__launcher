@@ -3,9 +3,9 @@ import json
 import csv
 from datetime import datetime
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox, QTabWidget, QLabel, QListWidget, QListWidgetItem, QStatusBar, QHBoxLayout
+    QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox, QTabWidget, QLabel, QListWidget, QListWidgetItem, QStatusBar
 )
-from PyQt5.QtGui import QFont, QIcon, QPixmap
+from PyQt5.QtGui import QFont, QIcon, QColor
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
 from PyQt5.QtCore import QUrl, QByteArray, QTimer, Qt
 
@@ -16,7 +16,7 @@ class TicketManagement(QMainWindow):
         self.network_manager = QNetworkAccessManager(self)
         self.network_manager.finished.connect(self.on_network_reply)
         self.last_incidence = None
-        self.csv_file = 'incidencias.csv'
+        self.csv_file = 'Incidencias_Pideu.csv'
 
     def initUI(self):
         self.setWindowTitle("Ticket Management")
@@ -29,17 +29,8 @@ class TicketManagement(QMainWindow):
                 background-color: #3498db;
                 color: white;
                 border-radius: 5px;
-                padding: 5px 10px;
-                font-size: 12px;
-            }
-            QListWidget::item:selected {
-                background-color: #3498db;
-                color: white;
-            }
-            QListWidget::item {
-                padding: 5px;
-                border: 1px solid #dcdcdc;
-                border-radius: 3px;
+                padding: 10px 15px;
+                font-size: 14px;
             }
             QTabWidget {
                 font-size: 14px;
@@ -48,11 +39,11 @@ class TicketManagement(QMainWindow):
                 font-size: 14px;
             }
         """)
-
         self.tabWidget = QTabWidget(self)
         self.tabWidget.setFont(QFont('Arial', 12))
         self.setCentralWidget(self.tabWidget)
 
+        # Barra de estado (status bar)
         self.status_bar = QStatusBar(self)
         self.setStatusBar(self.status_bar)
         self.update_status_bar()
@@ -82,43 +73,42 @@ class TicketManagement(QMainWindow):
             "SPL": ["Sensor de PCB detecta que hay placa cuando no la hay","No detecta marcas Power","Colisión placas","Fallo dispensación glue","Marco atascado en parte inferior",
                     "Soldadura defectuosa","Error en sensor de salida"] 
         }
-
         for name, incidences in self.incidencias.items():
             self.create_tab(name, incidences)
 
     def create_tab(self, name, incidences):
         tab = QWidget()
-        self.tabWidget.addTab(tab, name)
+        self.tabWidget.addTab(tab, QIcon("path/to/icon.png"), name)
         layout = QVBoxLayout(tab)
 
         title = QLabel(f"Incidencias - {name}")
         title.setFont(QFont('Arial', 16))
         layout.addWidget(title)
 
+        # Uso de QListWidget para un desplegable más sofisticado
         listWidget = QListWidget()
+        listWidget.setSelectionMode(QListWidget.SingleSelection)
+        listWidget.setStyleSheet("""
+            QListWidget::item:selected {
+                background-color: #3498db;
+                color: white;
+            }
+            QListWidget::item {
+                padding: 5px;
+                border: 1px solid #dcdcdc;
+                border-radius: 3px;
+            }
+        """)
         for incidence in incidences:
-            item = QListWidgetItem(QIcon("app\logo.png"), incidence)
+            item = QListWidgetItem(QIcon("path/to/incidence_icon.png"), incidence)
             item.setFont(QFont('Arial', 12))
             listWidget.addItem(item)
         layout.addWidget(listWidget)
 
-        buttonLayout = QHBoxLayout()
-
-        # Botón confirmar
         confirmButton = QPushButton("Confirmar")
         confirmButton.setIcon(QIcon("path/to/check_icon.png"))
         confirmButton.clicked.connect(lambda: self.on_confirm(name, listWidget.currentItem().text() if listWidget.currentItem() else ""))
-        buttonLayout.addWidget(confirmButton)
-
-        # Logo FICOSA más grande y alineado
-        logoLabel = QLabel()
-        pixmap = QPixmap("/path/to/Ficosa1.png")  # Ruta del logo
-        logoLabel.setPixmap(pixmap)
-        logoLabel.setScaledContents(True)
-        logoLabel.setMaximumSize(120, 60)  # Tamaño ajustado más grande
-        buttonLayout.addWidget(logoLabel, 0, Qt.AlignRight | Qt.AlignBottom)
-
-        layout.addLayout(buttonLayout)
+        layout.addWidget(confirmButton)
 
         self.last_incidence_label = QLabel("Última incidencia confirmada: N/A")
         layout.addWidget(self.last_incidence_label)
