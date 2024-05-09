@@ -3,3 +3,50 @@ WC49 POWER 5H,Atasco tuerca,2024-05-09 12:40:04
 WC49 POWER 5H,La cámara no detecta Top Cover,2024-05-09 12:40:35
 WC47 NACP,Palet atascado en la curva,2024-05-09 12:53:41
 WC48 POWER 5F,No detecta presencia power CP,2024-05-09 12:59:59
+WC48 POWER 5F,"Power atascado en prensa, cuesta sacar",2024-05-09 15:53:49
+WC49 POWER 5H,Screw K30 no lo detecta puesto,2024-05-09 15:54:40
+WC47 NACP,Fallo tolva,2024-05-09 16:06:47
+WC49 POWER 5H,Tornillo atascado,2024-05-09 16:07:21
+WV50 FILTER,Pieza enganchada en HV Test,2024-05-09 16:07:46
+WV50 FILTER,No coloca bien la pcb,2024-05-09 16:07:50
+WC48 POWER 5F,Tornillo atascado en tolva,2024-05-09 16:10:21
+WC47 NACP,Fallo en paletizador,2024-05-09 16:14:36
+WC49 POWER 5H,No lee QR,2024-05-09 16:14:49
+WC47 NACP,Ascensor no sube,2024-05-09 16:14:56
+WC47 NACP,No atornilla clips,2024-05-09 16:15:00
+WC47 NACP,Palet atascado en la curva,2024-05-09 16:33:26
+WC49 POWER 5H,No lee QR,2024-05-09 16:33:42
+WC47 NACP,Fallo en paletizador,2024-05-09 16:35:43
+WC47 NACP,AOI no detecta pieza,2024-05-09 16:35:47
+WV50 FILTER,NOK Soldad. Plástico+Metal,2024-05-09 16:35:51
+WC47 NACP,Ascensor no sube,2024-05-09 16:37:18
+WC47 NACP,Fallo fijador tapa,2024-05-09 16:37:21
+WC47 NACP,Ascensor no sube,2024-05-09 16:37:33
+WC49 POWER 5H,Etiquetadora,2024-05-09 16:37:57
+WV50 FILTER,QR desplazado,2024-05-09 16:38:21
+WC47 NACP,Ascensor no sube,2024-05-09 16:42:27
+WC47 NACP,No pone tornillo,2024-05-09 16:46:15
+WC47 NACP,Fallo en paletizador,2024-05-09 16:46:19
+WC48 POWER 5F,Cámara no detecta Power CP,2024-05-09 16:46:25
+WC47 NACP,No pone tornillo,2024-05-09 16:46:33
+WC47 NACP,Palet atascado en la curva,2024-05-09 16:58:35
+WC48 POWER 5F,Cámara no detecta busbar,2024-05-09 16:58:48
+WV50 FILTER,NOK Soldad. Plástico+Metal,2024-05-09 16:58:53
+WC47 NACP,Ascensor no sube,2024-05-09 17:08:41
+WV50 FILTER,NOK Soldadura metal,2024-05-09 17:08:44
+WV50 FILTER,Fallo atornillador,2024-05-09 17:08:54
+WV50 FILTER,NOK Soldad. Plástico+Metal,2024-05-09 17:08:59
+WC47 NACP,No coge placa,2024-05-09 17:10:59
+WC48 POWER 5F,Etiquetadora,2024-05-09 17:11:03
+WC47 NACP,AOI no detecta pieza,2024-05-09 17:13:33
+WC49 POWER 5H,No coloca bien el sealling,2024-05-09 17:13:40
+WC47 NACP,Fallo en paletizador,2024-05-09 17:15:45
+WC47 NACP,No atornilla clips,2024-05-09 17:15:49
+WC47 NACP,No coge placa,2024-05-09 17:15:53
+WC47 NACP,Ascensor no sube,2024-05-09 17:17:37
+WC47 NACP,No coge placa,2024-05-09 17:21:51
+WC48 POWER 5F,Fallo etiqueta,2024-05-09 17:22:03
+WC49 POWER 5H,Detección de sealling mal puesto,2024-05-09 17:25:13
+WC48 POWER 5F,Cámara no detecta skeleton,2024-05-09 17:25:19
+WC47 NACP,Fallo tornillo,2024-05-09 17:26:35
+WC47 NACP,No pone tornillo,2024-05-09 17:38:26

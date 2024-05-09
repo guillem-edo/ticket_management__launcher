@@ -3,17 +3,89 @@ import json
 import csv
 from datetime import datetime
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox, QTabWidget, QLabel, QListWidget, QListWidgetItem, QStatusBar, QHBoxLayout
+    QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox, QTabWidget, QLabel, QListWidget, QListWidgetItem, QStatusBar, QHBoxLayout, QLineEdit
 )
 from PyQt5.QtGui import QFont, QIcon, QPixmap
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
 from PyQt5.QtCore import QUrl, QByteArray, QTimer, Qt, pyqtSignal
+
+class LoginWindow(QWidget):
+    login_successful = pyqtSignal()
+
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Inicio de Sesión")
+        self.setGeometry(550, 300, 280, 360)  # Ventana más estrecha y pequeña
+
+        layout = QVBoxLayout()
+
+        # Logo aún más grande y centrado
+        logo_label = QLabel()
+        pixmap = QPixmap("app/logo.png").scaled(180, 180, Qt.KeepAspectRatio)
+        logo_label.setPixmap(pixmap)
+        logo_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(logo_label)
+
+        # Estilo moderno con fuente aún más grande para usuario y contraseña
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #ffffff;
+            }
+            QLineEdit {
+                font-size: 26px;  # Fuente más grande
+                padding: 12px;
+                margin: 10px 0;
+                border: 2px solid #2980b9;
+                border-radius: 8px;
+                background-color: #f0f4f8;
+            }
+            QPushButton {
+                background-color: #2980b9;
+                color: #ffffff;
+                border-radius: 8px;
+                font-size: 20px;
+                height: 45px;
+                margin-top: 15px;
+            }
+            QLabel {
+                font-size: 24px;  # Fuente más grande para el logo
+                color: #34495e;
+                margin: 15px 0;
+            }
+        """)
+
+        # Campos de entrada con tamaño de letra más grande
+        self.username_input = QLineEdit()
+        self.username_input.setPlaceholderText("Usuario")
+        layout.addWidget(self.username_input)
+
+        self.password_input = QLineEdit()
+        self.password_input.setPlaceholderText("Contraseña")
+        self.password_input.setEchoMode(QLineEdit.Password)
+        layout.addWidget(self.password_input)
+
+        # Botón de inicio de sesión
+        login_button = QPushButton("Iniciar Sesión")
+        login_button.clicked.connect(self.login)
+        layout.addWidget(login_button)
+
+        self.setLayout(layout)
+
+    def login(self):
+        username = self.username_input.text()
+        password = self.password_input.text()
+        if username == "ficosa_pideu" and password == "1111":
+            self.login_successful.emit()
+            self.close()
+        else:
+            QMessageBox.warning(self, "Error de Inicio de Sesión", "Usuario o contraseña incorrectos")
 
 class TicketManagement(QMainWindow):
     last_incidence_changed = pyqtSignal()
 
     def __init__(self):
         super().__init__()
+        self.last_incidence_labels = {}  # Aseguramos que este diccionario esté inicializado aquí
         self.initUI()
         self.network_manager = QNetworkAccessManager(self)
         self.network_manager.finished.connect(self.on_network_reply)
@@ -98,9 +170,17 @@ class TicketManagement(QMainWindow):
         title.setFont(QFont('Arial', 16))
         layout.addWidget(title)
 
+        # Label para la última incidencia confirmada
+        last_incidence_label = QLabel("Última incidencia: Ninguna")
+        last_incidence_label.setFont(QFont('Arial', 12))
+        layout.addWidget(last_incidence_label)
+
+        # Guardamos el label en el diccionario para actualizarlo más tarde
+        self.last_incidence_labels[name] = last_incidence_label
+
         listWidget = QListWidget()
         for incidence in incidences:
-            item = QListWidgetItem(QIcon("app\logo.png"), incidence)
+            item = QListWidgetItem(QIcon("app/logo.png"), incidence)
             item.setFont(QFont('Arial', 12))
             listWidget.addItem(item)
         layout.addWidget(listWidget)
@@ -109,17 +189,9 @@ class TicketManagement(QMainWindow):
 
         # Botón confirmar
         confirmButton = QPushButton("Confirmar")
-        confirmButton.setIcon(QIcon("app\logo.png"))
+        confirmButton.setIcon(QIcon("app/logo.png"))
         confirmButton.clicked.connect(lambda: self.on_confirm(name, listWidget.currentItem().text() if listWidget.currentItem() else ""))
         buttonLayout.addWidget(confirmButton)
-
-        # Logo FICOSA más grande y alineado
-        logoLabel = QLabel()
-        pixmap = QPixmap("app\logo.png")  # Ruta del logo
-        logoLabel.setPixmap(pixmap)
-        logoLabel.setScaledContents(True)
-        logoLabel.setMaximumSize(500, 60)  # Tamaño ajustado más grande
-        buttonLayout.addWidget(logoLabel, 0, Qt.AlignRight | Qt.AlignBottom)
 
         layout.addLayout(buttonLayout)
 
@@ -142,35 +214,39 @@ class TicketManagement(QMainWindow):
         self.network_manager.post(req, QByteArray(json.dumps(data).encode('utf-8')))
 
     def write_to_csv(self, block, incidence):
-        with open(self.csv_file, 'a', newline='') as file:
-            writer = csv.writer(file)
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            writer.writerow([block, incidence, timestamp])
+        with open(self.csv_file, 'a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow([block, incidence, datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
 
     def on_network_reply(self, reply):
-        err = reply.error()
-        if err != QNetworkReply.NoError:
-            error_message = reply.errorString()
-            QMessageBox.warning(self, "Error de Red", f"Error al comunicar con la API: {error_message}")
+        if reply.error() == QNetworkReply.NoError:
+            QMessageBox.information(self, "Reporte de Incidencias", "La incidencia se ha reportado correctamente.")
         else:
-            response = json.loads(reply.readAll().decode())
-            QMessageBox.information(self, "Respuesta de la API", response.get("message", "No se recibió mensaje"))
-
-    def update_status_bar(self):
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.status_bar.showMessage(f"Fecha y Hora Actual: {current_time}")
+            QMessageBox.warning(self, "Reporte de Incidencias", f"Error al reportar la incidencia: {reply.errorString()}")
 
     def update_last_incidence(self):
         if self.last_incidence:
-            for index in range(self.tabWidget.count()):
-                tab = self.tabWidget.widget(index)
-                last_incidence_label = tab.findChild(QLabel)  # Buscar la etiqueta de última incidencia en la pestaña
-                if last_incidence_label:
-                    last_incidence_label.setText(f"Última incidencia confirmada: {self.last_incidence['bloque']} - {self.last_incidence['incidencia']} ({self.last_incidence['timestamp']})")
+            block = self.last_incidence["bloque"]
+            incidence = self.last_incidence["incidencia"]
+            timestamp = self.last_incidence["timestamp"]
+            label_text = f"Última incidencia confirmada: {incidence} a las {timestamp}"
+            if block in self.last_incidence_labels:
+                self.last_incidence_labels[block].setText(label_text)
 
-if __name__ == '__main__':
+    def update_status_bar(self):
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.status_bar.showMessage(f"Hora actual: {current_time}")
+
+if __name__ == "__main__":
     app = QApplication(sys.argv)
-    ex = TicketManagement()
-    ex.last_incidence_changed.connect(ex.update_last_incidence)
-    ex.show()
+
+    login_window = LoginWindow()
+    ticket_management = TicketManagement()
+
+    def on_login_successful():
+        ticket_management.show()
+
+    login_window.login_successful.connect(on_login_successful)
+    login_window.show()
+
     sys.exit(app.exec_())

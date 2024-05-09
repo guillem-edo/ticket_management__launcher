@@ -1,25 +1,69 @@
 import sys
 import json
 import csv
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QComboBox, QPushButton, QMessageBox, QTabWidget
-from PyQt5.QtGui import QFont
+from datetime import datetime
+from PyQt5.QtWidgets import (
+    QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox, QTabWidget, QLabel, QListWidget, QListWidgetItem, QStatusBar, QHBoxLayout
+)
+from PyQt5.QtGui import QFont, QIcon, QPixmap
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
-from PyQt5.QtCore import QUrl, QByteArray
+from PyQt5.QtCore import QUrl, QByteArray, QTimer, Qt, pyqtSignal
 
 class TicketManagement(QMainWindow):
+    last_incidence_changed = pyqtSignal()
+
     def __init__(self):
         super().__init__()
         self.initUI()
         self.network_manager = QNetworkAccessManager(self)
-        self.network_manager.finished.connect(self.on_network_reply)  # Conectar la respuesta de red
+        self.network_manager.finished.connect(self.on_network_reply)
+        self.last_incidence = None
+        self.csv_file = 'Incidencias_Pideu.csv'
+        self.last_incidence_labels = {}  # Diccionario para almacenar las etiquetas de última incidencia
 
     def initUI(self):
         self.setWindowTitle("Ticket Management")
         self.setGeometry(100, 100, 1200, 800)
-        self.setStyleSheet("""<Estilos CSS Aquí>""")
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #f4f6f7;
+            }
+            QPushButton {
+                background-color: #3498db;
+                color: white;
+                border-radius: 5px;
+                padding: 5px 50px;
+                font-size: 18px;
+                height: 40px;
+            }
+            QListWidget::item:selected {
+                background-color: #3498db;
+                color: white;
+            }
+            QListWidget::item {
+                padding: 5px;
+                border: 1px solid #dcdcdc;
+                border-radius: 3px;
+            }
+            QTabWidget {
+                font-size: 14px;
+            }
+            QLabel {
+                font-size: 14px;
+            }
+        """)
+
         self.tabWidget = QTabWidget(self)
         self.tabWidget.setFont(QFont('Arial', 12))
         self.setCentralWidget(self.tabWidget)
+
+        self.status_bar = QStatusBar(self)
+        self.setStatusBar(self.status_bar)
+        self.update_status_bar()
+
+        timer = QTimer(self)
+        timer.timeout.connect(self.update_status_bar)
+        timer.start(1000)
 
         # Definición de incidencias
         self.incidencias = {
@@ -43,7 +87,6 @@ class TicketManagement(QMainWindow):
                     "Soldadura defectuosa","Error en sensor de salida"] 
         }
 
-        # Creación de pestañas para cada bloque de incidencias
         for name, incidences in self.incidencias.items():
             self.create_tab(name, incidences)
 
@@ -51,16 +94,49 @@ class TicketManagement(QMainWindow):
         tab = QWidget()
         self.tabWidget.addTab(tab, name)
         layout = QVBoxLayout(tab)
-        comboBox = QComboBox()
-        comboBox.addItems(incidences)
-        layout.addWidget(comboBox)
+
+        title = QLabel(f"Incidencias - {name}")
+        title.setFont(QFont('Arial', 16))
+        layout.addWidget(title)
+
+        listWidget = QListWidget()
+        for incidence in incidences:
+            item = QListWidgetItem(QIcon("app\logo.png"), incidence)
+            item.setFont(QFont('Arial', 12))
+            listWidget.addItem(item)
+        layout.addWidget(listWidget)
+
+        buttonLayout = QHBoxLayout()
+
+        # Botón confirmar
         confirmButton = QPushButton("Confirmar")
-        confirmButton.clicked.connect(lambda: self.on_confirm(name, comboBox.currentText()))
-        layout.addWidget(confirmButton)
+        confirmButton.setIcon(QIcon("app\logo.png"))
+        confirmButton.clicked.connect(lambda: self.on_confirm(name, listWidget.currentItem().text() if listWidget.currentItem() else ""))
+        buttonLayout.addWidget(confirmButton)
+
+        # Logo FICOSA más grande y alineado
+        logoLabel = QLabel()
+        pixmap = QPixmap("app\logo.png")  # Ruta del logo
+        logoLabel.setPixmap(pixmap)
+        logoLabel.setScaledContents(True)
+        logoLabel.setMaximumSize(500, 60)  # Tamaño ajustado más grande
+        buttonLayout.addWidget(logoLabel, 0, Qt.AlignRight | Qt.AlignBottom)
+
+        layout.addLayout(buttonLayout)
+
+        self.last_incidence_labels[name] = QLabel("Última incidencia confirmada: N/A")
+        layout.addWidget(self.last_incidence_labels[name])
 
     def on_confirm(self, name, incidence):
-        self.send_data_to_api(name, incidence)
-        self.write_to_csv(name, incidence)
+        if incidence:
+            response = QMessageBox.question(self, "Confirmar Incidencia", f"¿Estás seguro de confirmar la incidencia '{incidence}' en {name}?", QMessageBox.Yes | QMessageBox.No)
+            if response == QMessageBox.Yes:
+                self.last_incidence = {"bloque": name, "incidencia": incidence, "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+                self.update_last_incidence()
+                self.send_data_to_api(name, incidence)
+                self.write_to_csv(name, incidence)
+        else:
+            QMessageBox.warning(self, "Selección Vacía", "Por favor, selecciona una incidencia.")
 
     def send_data_to_api(self, block, incidence):
         data = {"bloque": block, "incidencia": incidence}
@@ -72,10 +148,8 @@ class TicketManagement(QMainWindow):
     def write_to_csv(self, block, incidence):
         with open(self.csv_file, 'a', newline='') as file:
             writer = csv.writer(file)
-            from datetime import datetime
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             writer.writerow([block, incidence, timestamp])
-        pass
 
     def on_network_reply(self, reply):
         err = reply.error()
@@ -86,7 +160,18 @@ class TicketManagement(QMainWindow):
             response = json.loads(reply.readAll().decode())
             QMessageBox.information(self, "Respuesta de la API", response.get("message", "No se recibió mensaje"))
 
+    def update_status_bar(self):
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.status_bar.showMessage(f"Fecha y Hora Actual: {current_time}")
+
+    def update_last_incidence(self):
+        if self.last_incidence:
+            for name, label in self.last_incidence_labels.items():  # Recorrer el diccionario de etiquetas de última incidencia
+                label.setText(f"Última incidencia confirmada: {self.last_incidence['bloque']} - {self.last_incidence['incidencia']} ({self.last_incidence['timestamp']})")
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = TicketManagement()
+    ex.last_incidence_changed.connect(ex.update_last_incidence)
+    ex.show()
     sys.exit(app.exec_())
