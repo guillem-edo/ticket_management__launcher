@@ -32,6 +32,15 @@ class TicketManagement(QMainWindow):
                 padding: 5px 10px;
                 font-size: 12px;
             }
+            QListWidget::item:selected {
+                background-color: #3498db;
+                color: white;
+            }
+            QListWidget::item {
+                padding: 5px;
+                border: 1px solid #dcdcdc;
+                border-radius: 3px;
+            }
             QTabWidget {
                 font-size: 14px;
             }
@@ -88,7 +97,7 @@ class TicketManagement(QMainWindow):
 
         listWidget = QListWidget()
         for incidence in incidences:
-            item = QListWidgetItem(incidence)
+            item = QListWidgetItem(QIcon("app\logo.png"), incidence)
             item.setFont(QFont('Arial', 12))
             listWidget.addItem(item)
         layout.addWidget(listWidget)
@@ -97,17 +106,17 @@ class TicketManagement(QMainWindow):
 
         # Botón confirmar
         confirmButton = QPushButton("Confirmar")
-        confirmButton.setIcon(QIcon("path/to/check_icon.png"))  # Asegúrate de usar la ruta correcta al archivo de imagen del icono
+        confirmButton.setIcon(QIcon("path/to/check_icon.png"))
         confirmButton.clicked.connect(lambda: self.on_confirm(name, listWidget.currentItem().text() if listWidget.currentItem() else ""))
         buttonLayout.addWidget(confirmButton)
 
-        # Logo FICOSA
+        # Logo FICOSA más grande y alineado
         logoLabel = QLabel()
-        pixmap = QPixmap("app\logo.png")  # Asegúrate de usar la ruta correcta al archivo de imagen
+        pixmap = QPixmap("/path/to/Ficosa1.png")  # Ruta del logo
         logoLabel.setPixmap(pixmap)
         logoLabel.setScaledContents(True)
-        logoLabel.setMaximumSize(100, 50)  # Ajusta el tamaño según sea necesario
-        buttonLayout.addWidget(logoLabel, 0, Qt.AlignRight)  # Alineación a la derecha
+        logoLabel.setMaximumSize(120, 60)  # Tamaño ajustado más grande
+        buttonLayout.addWidget(logoLabel, 0, Qt.AlignRight | Qt.AlignBottom)
 
         layout.addLayout(buttonLayout)
 
