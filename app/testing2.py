@@ -1,6 +1,7 @@
 import sys
 import json
 import csv
+import os
 
 from openpyxl import Workbook, load_workbook
 
@@ -111,7 +112,8 @@ class TicketManagement(QMainWindow):
         self.network_manager = QNetworkAccessManager(self)
         self.network_manager.finished.connect(self.on_network_reply)
         self.last_incidence = None
-        self.csv_file = 'Incidencias_Pideu.csv'
+        self.excel_file = 'Incidencias_Pideu.xlsx'
+        self.create_excel_file()
 
     def initUI(self):
         self.setWindowTitle("Ticket Management")
@@ -157,7 +159,6 @@ class TicketManagement(QMainWindow):
         timer.timeout.connect(self.update_status_bar)
         timer.start(1000)
 
-        # Definición de incidencias
         self.incidencias = {
             "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva",
                         "Fallo en paletizador", "No coge placa", "Palet atascado en la curva",
@@ -176,7 +177,7 @@ class TicketManagement(QMainWindow):
                         "Robot no coloca bien ferrita","No coloca bien el core","Fallo Funcional","Fallo visión core","Fallo cámara cover","Repeat funcional","Fallo cámara QR",
                         "No coloca bien foam"],
             "SPL": ["Sensor de PCB detecta que hay placa cuando no la hay","No detecta marcas Power","Colisión placas","Fallo dispensación glue","Marco atascado en parte inferior",
-                    "Soldadura defectuosa","Error en sensor de salida"] 
+                    "Soldadura defectuosa","Error en sensor de salida"]
         }
 
         for name, incidences in self.incidencias.items():
@@ -191,12 +192,10 @@ class TicketManagement(QMainWindow):
         title.setFont(QFont('Arial', 16))
         layout.addWidget(title)
 
-        # Label para la última incidencia confirmada
         last_incidence_label = QLabel("Última incidencia: Ninguna")
         last_incidence_label.setFont(QFont('Arial', 40))
         layout.addWidget(last_incidence_label)
 
-        # Guardamos el label en el diccionario para actualizarlo más tarde
         self.last_incidence_labels[name] = last_incidence_label
 
         listWidget = QListWidget()
@@ -208,7 +207,6 @@ class TicketManagement(QMainWindow):
 
         buttonLayout = QHBoxLayout()
 
-        # Botón confirmar
         confirmButton = QPushButton("Confirmar")
         confirmButton.setIcon(QIcon("app/logo.png"))
         confirmButton.clicked.connect(lambda: self.on_confirm(name, listWidget.currentItem().text() if listWidget.currentItem() else ""))
@@ -222,15 +220,24 @@ class TicketManagement(QMainWindow):
             if response == QMessageBox.Yes:
                 self.last_incidence = {"bloque": name, "incidencia": incidence, "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
                 self.update_last_incidence()
-                # self.send_data_to_api(name, incidence)
-                self.write_to_csv(name, incidence)
+                self.write_to_excel(name, incidence)
         else:
             QMessageBox.warning(self, "Selección Vacía", "Por favor, selecciona una incidencia.")
 
-    def write_to_csv(self, block, incidence):
-        with open(self.csv_file, 'a', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow([block, incidence, datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
+    def create_excel_file(self):
+        if not os.path.exists(self.excel_file):
+            workbook = Workbook()
+            sheet = workbook.active
+            sheet.title = "Incidencias"
+            sheet.append(["Bloque", "Incidencia", "Timestamp"])
+            workbook.save(self.excel_file)
+
+    def write_to_excel(self, block, incidence):
+        workbook = load_workbook(self.excel_file)
+        sheet = workbook.active
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        sheet.append([block, incidence, timestamp])
+        workbook.save(self.excel_file)
 
     def on_network_reply(self, reply):
         if reply.error() == QNetworkReply.NoError:
