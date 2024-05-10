@@ -113,7 +113,7 @@ class TicketManagement(QMainWindow):
         self.network_manager.finished.connect(self.on_network_reply)
         self.last_incidence = None
         self.blocks = ["WC47 NACP", "WC48 POWER 5F", "WC49 POWER 5H", "WV50 FILTER", "SPL"]
-        self.excel_file = 'Incidencias_Pideu_2.xlsx'
+        self.excel_file = 'Incidencias_Pideu.xlsx'
         self.create_excel_file()
 
     def initUI(self):
@@ -226,29 +226,35 @@ class TicketManagement(QMainWindow):
             QMessageBox.warning(self, "Selección Vacía", "Por favor, selecciona una incidencia.")
 
     def create_excel_file(self):
+        """Crea el archivo Excel si no existe, incluyendo los encabezados."""
         if not os.path.exists(self.excel_file):
             workbook = Workbook()
             sheet = workbook.active
             sheet.title = "Incidencias"
-            # Establece la primera fila como los nombres de los bloques
-            for col_num, block in enumerate(self.blocks, start=1):
+            sheet.cell(row=1, column=1, value='Fecha y Hora')
+            for col_num, block in enumerate(self.blocks, start=2):
                 sheet.cell(row=1, column=col_num, value=block)
             workbook.save(self.excel_file)
 
     def write_to_excel(self, block, incidence):
+        """Escribe las incidencias en el archivo Excel de acuerdo al bloque."""
         workbook = load_workbook(self.excel_file)
         sheet = workbook.active
 
-        # Encuentra la columna que corresponde al bloque
-        col_num = self.blocks.index(block) + 1
+        # Identificar la columna correcta del bloque
+        col_num = self.blocks.index(block) + 2
 
-        # Busca la primera fila vacía en la columna correspondiente
+        # Encuentra la primera fila vacía para registrar la nueva incidencia
         row_num = 2
-        while sheet.cell(row=row_num, column=col_num).value is not None:
+        while sheet.cell(row=row_num, column=1).value is not None:
             row_num += 1
 
-        # Escribe la incidencia en la primera fila vacía
-        sheet.cell(row=row_num, column=col_num, value=f"{incidence} ({datetime.now().strftime('%Y-%m-%d %H:%M:%S')})")
+        # Registrar la fecha y hora en la primera columna
+        current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        sheet.cell(row=row_num, column=1, value=current_datetime)
+
+        # Registrar la incidencia en la columna correspondiente al bloque
+        sheet.cell(row=row_num, column=col_num, value=incidence)
         workbook.save(self.excel_file)
 
     def on_network_reply(self, reply):
