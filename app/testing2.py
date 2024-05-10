@@ -85,7 +85,7 @@ class TicketManagement(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.last_incidence_labels = {}  # Aseguramos que este diccionario esté inicializado aquí
+        self.last_incidence_labels = {}
         self.initUI()
         self.network_manager = QNetworkAccessManager(self)
         self.network_manager.finished.connect(self.on_network_reply)
