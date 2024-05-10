@@ -225,33 +225,37 @@ class TicketManagement(QMainWindow):
         else:
             QMessageBox.warning(self, "Selección Vacía", "Por favor, selecciona una incidencia.")
 
+    
     def create_excel_file(self):
-        """Crea el archivo Excel si no existe, incluyendo los encabezados."""
+        """Crea el archivo Excel si no existe, incluyendo los encabezados para Fecha y Hora separadamente."""
         if not os.path.exists(self.excel_file):
             workbook = Workbook()
             sheet = workbook.active
             sheet.title = "Incidencias"
-            sheet.cell(row=1, column=1, value='Fecha y Hora')
-            for col_num, block in enumerate(self.blocks, start=2):
-                sheet.cell(row=1, column=col_num, value=block)
+            headers = ['Fecha', 'Hora'] + self.blocks  # Agrega 'Fecha' y 'Hora' como las dos primeras columnas
+            sheet.append(headers)
             workbook.save(self.excel_file)
 
     def write_to_excel(self, block, incidence):
-        """Escribe las incidencias en el archivo Excel de acuerdo al bloque."""
+        """Escribe las incidencias en el archivo Excel de acuerdo al bloque, separando fecha y hora."""
         workbook = load_workbook(self.excel_file)
         sheet = workbook.active
 
         # Identificar la columna correcta del bloque
-        col_num = self.blocks.index(block) + 2
+        col_num = self.blocks.index(block) + 3  # Ajuste por las dos nuevas columnas de Fecha y Hora
 
         # Encuentra la primera fila vacía para registrar la nueva incidencia
         row_num = 2
         while sheet.cell(row=row_num, column=1).value is not None:
             row_num += 1
 
-        # Registrar la fecha y hora en la primera columna
-        current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        sheet.cell(row=row_num, column=1, value=current_datetime)
+        # Separar fecha y hora
+        current_date = datetime.now().strftime('%Y-%m-%d')
+        current_time = datetime.now().strftime('%H:%M:%S')
+
+        # Registrar la fecha y hora en las primeras dos columnas
+        sheet.cell(row=row_num, column=1, value=current_date)
+        sheet.cell(row=row_num, column=2, value=current_time)
 
         # Registrar la incidencia en la columna correspondiente al bloque
         sheet.cell(row=row_num, column=col_num, value=incidence)
