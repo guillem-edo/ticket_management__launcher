@@ -2,13 +2,17 @@ import sys
 import json
 import csv
 import os
+
+from openpyxl import Workbook, load_workbook
+
 from datetime import datetime
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox, QTabWidget, QLabel, QListWidget, QListWidgetItem, QStatusBar, QHBoxLayout, QLineEdit
+    QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox, QTabWidget, QLabel, QListWidget, QListWidgetItem, QStatusBar, QHBoxLayout, QLineEdit, QFileDialog
 )
 from PyQt5.QtGui import QFont, QIcon, QPixmap
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
 from PyQt5.QtCore import QUrl, QByteArray, QTimer, Qt, pyqtSignal, QRect
+
 
 class LoginWindow(QWidget):
     login_successful = pyqtSignal()
@@ -16,7 +20,7 @@ class LoginWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Inicio de Sesión")
-        self.resize(280,360)
+        self.resize(280, 360)
 
         self.center_window()
 
@@ -32,7 +36,7 @@ class LoginWindow(QWidget):
         # Etiquetas personalizadas de "Usuario" y "Contraseña"
         user_label = QLabel("Usuario")
         password_label = QLabel("Contraseña")
-        
+
         # Configura estilos con el método setStyleSheet
         self.setStyleSheet("""
             QWidget {
@@ -99,49 +103,30 @@ class LoginWindow(QWidget):
         else:
             QMessageBox.warning(self, "Error de Inicio de Sesión", "Usuario o contraseña incorrectos")
 
+
 class TicketManagement(QMainWindow):
     last_incidence_changed = pyqtSignal()
 
     def __init__(self):
         super().__init__()
         self.last_incidence_labels = {}
-        self.csv_file = 'Incidencias_Pideu.csv'
+        self.initUI()
         self.network_manager = QNetworkAccessManager(self)
         self.network_manager.finished.connect(self.on_network_reply)
         self.last_incidence = None
-
-        # Define incidencias
-        self.incidencias = {
-            "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva",
-                        "Fallo en paletizador", "No coge placa", "Palet atascado en la curva",
-                        "Ascensor no sube", "No pone tornillo", "Fallo tornillo", "AOI no detecta pieza",
-                        "No atornilla clips", "Fallo fijador tapa", "Secuencia atornillador",
-                        "Fallo atornillador", "Fallo cámara visión"],
-            "WC48 POWER 5F": ["Etiquetadora","AOI (fallo etiqueta)","AOI (malla)","Cámara no detecta Pcb","Cámara no detecta skeleton",
-                            "Cámara no detecta foams","Cámara no detecta busbar","Cámara no detecta foam derecho","No detecta presencia power CP",
-                            "Tornillo atascado en tolva","Cámara no detecta Power CP","Cámara no detecta Top cover","Detección de sealling mal puesto",
-                            "Robot no coge busbar","Fallo etiqueta","Power atascado en prensa, cuesta sacar","No coloca bien el sealling"],
-            "WC49 POWER 5H": ["La cámara no detecta Busbar","La cámara no detecta Top Cover","Screw K30 no lo detecta puesto","Atasco tuerca",
-                            "Tornillo atascado","Etiquetadora","Detección de sealling mal puesto","No coloca bien el sealling","Power atascado en prensa, cuesta sacar",
-                            "No lee QR"],
-            "WV50 FILTER": ["Fallo cámara ferrite","NOK Soldadura Plástico","NOK Soldadura metal","Traza","NOK Soldad. Plástico+Metal","Robot no coloca bien filter en palet",
-                            "No coloca bien la pcb","QR desplazado","Core enganchado","Robot no coge PCB","Fallo atornillador","Pieza enganchada en HV Test","Cover atascado",
-                            "Robot no coloca bien ferrita","No coloca bien el core","Fallo Funcional","Fallo visión core","Fallo cámara cover","Repeat funcional","Fallo cámara QR",
-                            "No coloca bien foam"],
-            "SPL": ["Sensor de PCB detecta que hay placa cuando no la hay","No detecta marcas Power","Colisión placas","Fallo dispensación glue","Marco atascado en parte inferior",
-                    "Soldadura defectuosa","Error en sensor de salida"]
-        }
-
-        self.incidence_records = {key: [] for key in self.incidencias.keys()}
-
-        # Inicializa la interfaz y el archivo CSV
-        self.initUI()
-        self.initialize_csv()
+        self.blocks = ["WC47 NACP", "WC48 POWER 5F", "WC49 POWER 5H", "WV50 FILTER", "SPL"]
+        self.excel_file = None  # Se inicializa como None antes de ser asignado
+        self.select_or_create_excel_file()  # Llamar a la nueva función
 
     def initUI(self):
-        """Inicializa la interfaz gráfica."""
+        # Rectángulo del escritorio
+        screen_rect_1 = QApplication.desktop().availableGeometry()
+        # Coordenadas
+        x = (screen_rect_1.width() - self.width()) // 2
+        y = (screen_rect_1.height() - self.height()) // 2
+        # Posicionar la ventana
+        self.setGeometry(QRect(x, y, self.width(), self.height()))
         self.setWindowTitle("Ticket Management")
-        self.setGeometry(100, 100, 1200, 800)
         self.setStyleSheet("""
             QMainWindow {
                 background-color: #f4f6f7;
@@ -183,22 +168,31 @@ class TicketManagement(QMainWindow):
         timer.timeout.connect(self.update_status_bar)
         timer.start(1000)
 
-        self.create_tabs()
+        self.incidencias = {
+            "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva",
+                        "Fallo en paletizador", "No coge placa", "Palet atascado en la curva",
+                        "Ascensor no sube", "No pone tornillo", "Fallo tornillo", "AOI no detecta pieza",
+                        "No atornilla clips", "Fallo fijador tapa", "Secuencia atornillador",
+                        "Fallo atornillador", "Fallo cámara visión"],
+            "WC48 POWER 5F": ["Etiquetadora", "AOI (fallo etiqueta)", "AOI (malla)", "Cámara no detecta Pcb", "Cámara no detecta skeleton",
+                            "Cámara no detecta foams", "Cámara no detecta busbar", "Cámara no detecta foam derecho", "No detecta presencia power CP",
+                            "Tornillo atascado en tolva", "Cámara no detecta Power CP", "Cámara no detecta Top cover", "Detección de sealling mal puesto",
+                            "Robot no coge busbar", "Fallo etiqueta", "Power atascado en prensa, cuesta sacar", "No coloca bien el sealling"],
+            "WC49 POWER 5H": ["La cámara no detecta Busbar", "La cámara no detecta Top Cover", "Screw K30 no lo detecta puesto", "Atasco tuerca",
+                            "Tornillo atascado", "Etiquetadora", "Detección de sealling mal puesto", "No coloca bien el sealling", "Power atascado en prensa, cuesta sacar",
+                            "No lee QR"],
+            "WV50 FILTER": ["Fallo cámara ferrite", "NOK Soldadura Plástico", "NOK Soldadura metal", "Traza", "NOK Soldad. Plástico+Metal", "Robot no coloca bien filter en palet",
+                            "No coloca bien la pcb", "QR desplazado", "Core enganchado", "Robot no coge PCB", "Fallo atornillador", "Pieza enganchada en HV Test", "Cover atascado",
+                            "Robot no coloca bien ferrita", "No coloca bien el core", "Fallo Funcional", "Fallo visión core", "Fallo cámara cover", "Repeat funcional", "Fallo cámara QR",
+                            "No coloca bien foam"],
+            "SPL": ["Sensor de PCB detecta que hay placa cuando no la hay", "No detecta marcas Power", "Colisión placas", "Fallo dispensación glue", "Marco atascado en parte inferior",
+                    "Soldadura defectuosa", "Error en sensor de salida"]
+        }
 
-    def initialize_csv(self):
-        """Crea el archivo CSV con el encabezado inicial si no existe."""
-        if not os.path.isfile(self.csv_file):
-            with open(self.csv_file, 'w', newline='') as f:
-                writer = csv.writer(f)
-                writer.writerow(['Timestamp'] + list(self.incidencias.keys()))
-
-    def create_tabs(self):
-        """Crea todas las pestañas de máquinas basándose en `self.incidencias`."""
         for name, incidences in self.incidencias.items():
             self.create_tab(name, incidences)
 
     def create_tab(self, name, incidences):
-        """Crea una pestaña específica para cada máquina."""
         tab = QWidget()
         self.tabWidget.addTab(tab, name)
         layout = QVBoxLayout(tab)
@@ -210,75 +204,84 @@ class TicketManagement(QMainWindow):
         last_incidence_label = QLabel("Última incidencia: Ninguna")
         last_incidence_label.setFont(QFont('Arial', 40))
         layout.addWidget(last_incidence_label)
-
         self.last_incidence_labels[name] = last_incidence_label
 
-        listWidget = QListWidget()
+        list_widget = QListWidget()
         for incidence in incidences:
-            item = QListWidgetItem(QIcon("app/logo.png"), incidence)
-            item.setFont(QFont('Arial', 14))
-            listWidget.addItem(item)
-        layout.addWidget(listWidget)
+            item = QListWidgetItem(incidence)
+            list_widget.addItem(item)
+        list_widget.itemClicked.connect(self.report_incidence)
+        layout.addWidget(list_widget)
 
-        buttonLayout = QHBoxLayout()
-        confirmButton = QPushButton("Confirmar")
-        confirmButton.setIcon(QIcon("app/logo.png"))
-        confirmButton.clicked.connect(lambda: self.on_confirm(name, listWidget.currentItem().text() if listWidget.currentItem() else ""))
-        buttonLayout.addWidget(confirmButton)
+    def report_incidence(self, item):
+        current_tab = self.tabWidget.currentWidget()
+        tab_name = self.tabWidget.tabText(self.tabWidget.indexOf(current_tab))
+        self.last_incidence = f"Incidencia reportada en {tab_name}: {item.text()} a las {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        self.last_incidence_labels[tab_name].setText(self.last_incidence)
+        self.last_incidence_changed.emit()
 
-        layout.addLayout(buttonLayout)
+        # Llamar a la función para guardar en Excel
+        self.log_incidence_to_excel(tab_name, item.text())
 
-    def on_confirm(self, name, incidence):
-        """Confirma una incidencia y actualiza el CSV."""
-        if incidence:
-            response = QMessageBox.question(self, "Confirmar Incidencia", f"¿Estás seguro de confirmar la incidencia '{incidence}' en {name}?", QMessageBox.Yes | QMessageBox.No)
-            if response == QMessageBox.Yes:
-                self.last_incidence = {"bloque": name, "incidencia": incidence, "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-                self.update_last_incidence()
-                self.incidence_records[name].append(incidence)
-                self.write_to_csv()
+    def select_or_create_excel_file(self):
+        """Función que permite al usuario seleccionar un archivo Excel existente o crear uno nuevo"""
+        file_dialog = QFileDialog()
+        file_dialog.setAcceptMode(QFileDialog.AcceptOpen)
+        file_dialog.setNameFilter("Excel Files (*.xlsx)")
+        file_dialog.setFileMode(QFileDialog.AnyFile)
+        file_dialog.setOption(QFileDialog.DontUseNativeDialog, False)
+        file_dialog.setLabelText(QFileDialog.Accept, "Abrir")
+        file_dialog.setLabelText(QFileDialog.Reject, "Cancelar")
+        file_dialog.setWindowTitle("Seleccionar archivo Excel existente o crear uno nuevo")
+
+        # Mostrar el cuadro de diálogo y obtener el nombre del archivo
+        if file_dialog.exec_() == QFileDialog.Accepted:
+            selected_file = file_dialog.selectedFiles()[0]
+            if not selected_file.endswith(".xlsx"):
+                selected_file += ".xlsx"
+
+            # Verificar si el archivo ya existe o si es nuevo
+            if os.path.exists(selected_file):
+                self.excel_file = selected_file
+            else:
+                self.create_excel_file(selected_file)
         else:
-            QMessageBox.warning(self, "Selección Vacía", "Por favor, selecciona una incidencia.")
+            QMessageBox.warning(self, "Selección de archivo cancelada", "Por favor, seleccione un archivo Excel válido.")
 
-    def write_to_csv(self):
-        """Actualiza el CSV con las incidencias organizadas por máquina."""
-        with open(self.csv_file, 'a', newline='') as f:
-            writer = csv.writer(f)
+    def create_excel_file(self, file_path):
+        """Función para crear un nuevo archivo Excel"""
+        workbook = Workbook()
+        worksheet = workbook.active
+        worksheet.title = "Incidencias"
+        worksheet.append(["Fecha", "Hora", "Bloque", "Incidencia"])
+        workbook.save(file_path)
+        self.excel_file = file_path
 
-            max_length = max(len(incidences) for incidences in self.incidence_records.values())
-
-            for i in range(max_length):
-                row = [datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
-                for machine in self.incidence_records.keys():
-                    row.append(self.incidence_records[machine][i] if i < len(self.incidence_records[machine]) else '')
-                writer.writerow(row)
-
-    def on_network_reply(self, reply):
-        """Maneja la respuesta de la red al confirmar una incidencia."""
-        if reply.error() == QNetworkReply.NoError:
-            QMessageBox.information(self, "Reporte de Incidencias", "La incidencia se ha reportado correctamente.")
+    def log_incidence_to_excel(self, block_name, incidence):
+        """Función para registrar incidencias en el archivo Excel"""
+        if self.excel_file:
+            try:
+                workbook = load_workbook(self.excel_file)
+                worksheet = workbook.active
+                current_datetime = datetime.now()
+                worksheet.append([current_datetime.strftime("%Y-%m-%d"), current_datetime.strftime("%H:%M:%S"), block_name, incidence])
+                workbook.save(self.excel_file)
+                self.status_bar.showMessage(f"Incidencia '{incidence}' registrada exitosamente.", 5000)
+            except Exception as e:
+                QMessageBox.critical(self, "Error al guardar", f"No se pudo guardar la incidencia en el archivo Excel: {e}")
         else:
-            QMessageBox.warning(self, "Reporte de Incidencias", f"Error al reportar la incidencia: {reply.errorString()}")
-
-    def update_last_incidence(self):
-        """Actualiza la etiqueta con la última incidencia confirmada."""
-        if self.last_incidence:
-            block = self.last_incidence["bloque"]
-            incidence = self.last_incidence["incidencia"]
-            timestamp = self.last_incidence["timestamp"]
-            label_text = f"Última incidencia confirmada: {incidence} a las {timestamp}"
-            if block in self.last_incidence_labels:
-                self.last_incidence_labels[block].setText(label_text)
+            QMessageBox.warning(self, "Error de archivo Excel", "No se ha seleccionado un archivo Excel válido.")
 
     def update_status_bar(self):
-        """Actualiza la barra de estado con la hora actual."""
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.status_bar.showMessage(f"Hora actual: {current_time}")
+        if self.last_incidence:
+            self.status_bar.showMessage(self.last_incidence)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app = QApplication(sys.argv)
-
+    login_window = LoginWindow()
     ticket_management = TicketManagement()
-    ticket_management.show()
 
+    login_window.login_successful.connect(ticket_management.show)
+
+    login_window.show()
     sys.exit(app.exec_())

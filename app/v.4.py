@@ -117,8 +117,15 @@ class TicketManagement(QMainWindow):
         self.create_excel_file()
 
     def initUI(self):
+        # Rectángulo del escritorio
+        screen_rect_1 = QApplication.desktop().availableGeometry()
+        # Coordenadas
+        x = (screen_rect_1.width() - self.width()) // 2
+        y = (screen_rect_1.height() - self.height()) // 2
+        # Posicionar la ventana
+        self.setGeometry(QRect(x, y, self.width(), self.height()))
         self.setWindowTitle("Ticket Management")
-        self.setGeometry(100, 100, 1200, 800)
+        # self.setGeometry(100, 100, 1200, 800)
         self.setStyleSheet("""
             QMainWindow {
                 background-color: #f4f6f7;
