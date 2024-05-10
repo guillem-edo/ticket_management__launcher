@@ -112,7 +112,8 @@ class TicketManagement(QMainWindow):
         self.network_manager = QNetworkAccessManager(self)
         self.network_manager.finished.connect(self.on_network_reply)
         self.last_incidence = None
-        self.excel_file = 'Incidencias_Pideu.xlsx'
+        self.blocks = ["WC47 NACP", "WC48 POWER 5F", "WC49 POWER 5H", "WV50 FILTER", "SPL"]
+        self.excel_file = 'Incidencias_Pideu_2.xlsx'
         self.create_excel_file()
 
     def initUI(self):
@@ -229,14 +230,25 @@ class TicketManagement(QMainWindow):
             workbook = Workbook()
             sheet = workbook.active
             sheet.title = "Incidencias"
-            sheet.append(["Bloque", "Incidencia", "Timestamp"])
+            # Establece la primera fila como los nombres de los bloques
+            for col_num, block in enumerate(self.blocks, start=1):
+                sheet.cell(row=1, column=col_num, value=block)
             workbook.save(self.excel_file)
 
     def write_to_excel(self, block, incidence):
         workbook = load_workbook(self.excel_file)
         sheet = workbook.active
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        sheet.append([block, incidence, timestamp])
+
+        # Encuentra la columna que corresponde al bloque
+        col_num = self.blocks.index(block) + 1
+
+        # Busca la primera fila vacía en la columna correspondiente
+        row_num = 2
+        while sheet.cell(row=row_num, column=col_num).value is not None:
+            row_num += 1
+
+        # Escribe la incidencia en la primera fila vacía
+        sheet.cell(row=row_num, column=col_num, value=f"{incidence} ({datetime.now().strftime('%Y-%m-%d %H:%M:%S')})")
         workbook.save(self.excel_file)
 
     def on_network_reply(self, reply):
