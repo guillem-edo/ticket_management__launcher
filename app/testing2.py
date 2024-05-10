@@ -1,13 +1,16 @@
 import sys
 import json
 import csv
+
+from openpyxl import Workbook, load_workbook
+
 from datetime import datetime
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox, QTabWidget, QLabel, QListWidget, QListWidgetItem, QStatusBar, QHBoxLayout, QLineEdit
 )
 from PyQt5.QtGui import QFont, QIcon, QPixmap
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
-from PyQt5.QtCore import QUrl, QByteArray, QTimer, Qt, pyqtSignal
+from PyQt5.QtCore import QUrl, QByteArray, QTimer, Qt, pyqtSignal, QRect
 
 class LoginWindow(QWidget):
     login_successful = pyqtSignal()
@@ -15,25 +18,36 @@ class LoginWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Inicio de Sesión")
-        self.setGeometry(550, 300, 280, 360)  # Ventana más estrecha y pequeña
+        self.resize(280,360)
+
+        self.center_window()
 
         layout = QVBoxLayout()
 
-        # Logo aún más grande y centrado
+        # Logo
         logo_label = QLabel()
         pixmap = QPixmap("app/logo.png").scaled(180, 180, Qt.KeepAspectRatio)
         logo_label.setPixmap(pixmap)
         logo_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(logo_label)
 
-        # Estilo moderno con fuente aún más grande para usuario y contraseña
+        # Etiquetas personalizadas de "Usuario" y "Contraseña"
+        user_label = QLabel("Usuario")
+        password_label = QLabel("Contraseña")
+        
+        # Configura estilos con el método setStyleSheet
         self.setStyleSheet("""
             QWidget {
                 background-color: #ffffff;
             }
+            QLabel {
+                font-size: 20px;
+                color: #34495e;
+                margin-bottom: 5px;
+            }
             QLineEdit {
-                font-size: 26px;  # Fuente más grande
-                padding: 12px;
+                font-size: 28px;
+                padding: 20px;
                 margin: 10px 0;
                 border: 2px solid #2980b9;
                 border-radius: 8px;
@@ -44,32 +58,39 @@ class LoginWindow(QWidget):
                 color: #ffffff;
                 border-radius: 8px;
                 font-size: 20px;
-                height: 45px;
+                height: 60px;
                 margin-top: 15px;
-            }
-            QLabel {
-                font-size: 24px;  # Fuente más grande para el logo
-                color: #34495e;
-                margin: 15px 0;
             }
         """)
 
-        # Campos de entrada con tamaño de letra más grande
+        # Campo de entrada de "Usuario"
+        layout.addWidget(user_label)
         self.username_input = QLineEdit()
-        self.username_input.setPlaceholderText("Usuario")
+        self.username_input.setPlaceholderText("User")
         layout.addWidget(self.username_input)
 
+        # Campo de entrada de "Contraseña"
+        layout.addWidget(password_label)
         self.password_input = QLineEdit()
-        self.password_input.setPlaceholderText("Contraseña")
+        self.password_input.setPlaceholderText("Password")
         self.password_input.setEchoMode(QLineEdit.Password)
         layout.addWidget(self.password_input)
 
         # Botón de inicio de sesión
-        login_button = QPushButton("Iniciar Sesión")
+        login_button = QPushButton("Confirmar")
         login_button.clicked.connect(self.login)
         layout.addWidget(login_button)
 
         self.setLayout(layout)
+
+    def center_window(self):
+        # Rectángulo del escritorio
+        screen_rect = QApplication.desktop().availableGeometry()
+        # Coordenadas
+        x = (screen_rect.width() - self.width()) // 2
+        y = (screen_rect.height() - self.height()) // 2
+        # Posicionar la ventana
+        self.setGeometry(QRect(x, y, self.width(), self.height()))
 
     def login(self):
         username = self.username_input.text()
@@ -172,7 +193,7 @@ class TicketManagement(QMainWindow):
 
         # Label para la última incidencia confirmada
         last_incidence_label = QLabel("Última incidencia: Ninguna")
-        last_incidence_label.setFont(QFont('Arial', 12))
+        last_incidence_label.setFont(QFont('Arial', 40))
         layout.addWidget(last_incidence_label)
 
         # Guardamos el label en el diccionario para actualizarlo más tarde
@@ -181,7 +202,7 @@ class TicketManagement(QMainWindow):
         listWidget = QListWidget()
         for incidence in incidences:
             item = QListWidgetItem(QIcon("app/logo.png"), incidence)
-            item.setFont(QFont('Arial', 12))
+            item.setFont(QFont('Arial', 14))
             listWidget.addItem(item)
         layout.addWidget(listWidget)
 
@@ -201,17 +222,10 @@ class TicketManagement(QMainWindow):
             if response == QMessageBox.Yes:
                 self.last_incidence = {"bloque": name, "incidencia": incidence, "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
                 self.update_last_incidence()
-                self.send_data_to_api(name, incidence)
+                # self.send_data_to_api(name, incidence)
                 self.write_to_csv(name, incidence)
         else:
             QMessageBox.warning(self, "Selección Vacía", "Por favor, selecciona una incidencia.")
-
-    def send_data_to_api(self, block, incidence):
-        data = {"bloque": block, "incidencia": incidence}
-        url = QUrl("http://1000:5000/report_incidence")
-        req = QNetworkRequest(url)
-        req.setHeader(QNetworkRequest.ContentTypeHeader, "application/json")
-        self.network_manager.post(req, QByteArray(json.dumps(data).encode('utf-8')))
 
     def write_to_csv(self, block, incidence):
         with open(self.csv_file, 'a', newline='') as f:

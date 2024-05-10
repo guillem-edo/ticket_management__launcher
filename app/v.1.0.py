@@ -9,6 +9,109 @@ from PyQt5.QtGui import QFont, QIcon, QPixmap
 from PyQt5.QtCore import QUrl, QByteArray, QTimer, Qt
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
 
+
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox)
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtCore import pyqtSignal, Qt
+
+class LoginWindow(QWidget):
+    login_successful = pyqtSignal()
+
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Inicio de Sesión")
+        self.setGeometry(550, 300, 280, 360)
+
+        layout = QVBoxLayout()
+
+        # Logo
+        logo_label = QLabel()
+        pixmap = QPixmap("app/logo.png").scaled(180, 180, Qt.KeepAspectRatio)
+        logo_label.setPixmap(pixmap)
+        logo_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(logo_label)
+
+        # Etiquetas personalizadas de "Usuario" y "Contraseña"
+        user_label = QLabel("Usuario")
+        password_label = QLabel("Contraseña")
+        
+        # Configura estilos con el método setStyleSheet
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #ffffff;
+            }
+            QLabel {
+                font-size: 28px;
+                color: #34495e;
+                margin-bottom: 10px;
+            }
+            QLineEdit {
+                font-size: 28px;
+                padding: 20px;
+                margin: 10px 0;
+                border: 2px solid #2980b9;
+                border-radius: 8px;
+                background-color: #f0f4f8;
+            }
+            QPushButton {
+                background-color: #2980b9;
+                color: #ffffff;
+                border-radius: 8px;
+                font-size: 40px;
+                height: 60px;
+                margin-top: 15px;
+            }
+        """)
+
+        # Campo de entrada de "Usuario"
+        layout.addWidget(user_label)
+        self.username_input = QLineEdit()
+        self.username_input.setPlaceholderText("Escribe tu usuario")
+        layout.addWidget(self.username_input)
+
+        # Campo de entrada de "Contraseña"
+        layout.addWidget(password_label)
+        self.password_input = QLineEdit()
+        self.password_input.setPlaceholderText("Escribe tu contraseña")
+        self.password_input.setEchoMode(QLineEdit.Password)
+        layout.addWidget(self.password_input)
+
+        # Botón de inicio de sesión
+        login_button = QPushButton("Iniciar Sesión")
+        login_button.clicked.connect(self.login)
+        layout.addWidget(login_button)
+
+        self.setLayout(layout)
+
+    def login(self):
+        username = self.username_input.text()
+        password = self.password_input.text()
+        if username == "ficosa_pideu" and password == "1111":
+            self.login_successful.emit()
+            self.close()
+        else:
+            QMessageBox.warning(self, "Error de Inicio de Sesión", "Usuario o contraseña incorrectos")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class TicketManagement(QMainWindow):
     def __init__(self):
         super().__init__()
