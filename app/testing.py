@@ -1,6 +1,7 @@
 import sys
 import os
 from openpyxl import Workbook, load_workbook
+from openpyxl.styles import PatternFill
 from datetime import datetime
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox, QTabWidget, QLabel,
@@ -9,6 +10,8 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import QTimer, Qt, pyqtSignal, QRect
 from PyQt5.QtGui import QFont
 
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 
 class LoginWindow(QWidget):
     login_successful = pyqtSignal()
@@ -112,10 +115,11 @@ class TicketManagement(QMainWindow):
         right_layout.addWidget(self.excel_path_display)
 
         self.table_widget = QTableWidget(self)
-        self.table_widget.setFixedSize(400, 300)
+        self.table_widget.setFixedSize(600, 400)  # Tamaño fijo para la tabla
         right_layout.addWidget(self.table_widget)
 
         self.confirmed_incidence_display = QLabel("Información de la última incidencia confirmada:")
+        self.confirmed_incidence_display.setWordWrap(True)  # Permite el ajuste automático de texto
         right_layout.addWidget(self.confirmed_incidence_display)
         
         right_layout.addStretch()
@@ -194,7 +198,7 @@ class TicketManagement(QMainWindow):
         if not os.path.exists(file_path):
             workbook = Workbook()
             sheet = workbook.active
-            headers = ["Fecha", "Hora"] + self.blocks
+            headers = ["Fecha", "Hora"] + self.blocks  # Cabeceras con los nombres de los bloques
             sheet.append(headers)
             workbook.save(file_path)
 
@@ -203,9 +207,10 @@ class TicketManagement(QMainWindow):
             try:
                 workbook = load_workbook(self.excel_file)
                 sheet = workbook.active
-                new_row = [date_str, time_str] + [""] * len(self.blocks)
+                new_row = [date_str, time_str] + ["-"] * len(self.blocks)
                 if block_name in self.blocks:
-                    new_row[self.blocks.index(block_name) + 2] = incidence_text
+                    new_row[self.blocks.index(block_name) + 2] = incidence_text  # Asegúrate de ajustar el índice correctamente
+
                 sheet.append(new_row)
                 workbook.save(self.excel_file)
             except Exception as e:
@@ -232,13 +237,27 @@ class TicketManagement(QMainWindow):
             sheet = workbook.active
             rows = list(sheet.iter_rows(values_only=True))
 
-            self.table_widget.setRowCount(len(rows))
-            self.table_widget.setColumnCount(len(rows[0]) if rows else 0)
-            self.table_widget.setHorizontalHeaderLabels(rows[0] if rows else [])
+            # Definir siempre las cabeceras como los bloques de la aplicación
+            headers = ["Fecha", "Hora"] + self.blocks
+            self.table_widget.setColumnCount(len(headers))
+            self.table_widget.setHorizontalHeaderLabels(headers)
 
-            for row_idx, row_data in enumerate(rows[1:], start=1):
-                for col_idx, cell_value in enumerate(row_data):
-                    self.table_widget.setItem(row_idx, col_idx, QTableWidgetItem(str(cell_value)))
+            if rows:
+                self.table_widget.setRowCount(len(rows) - 1)  # -1 porque la primera fila son las cabeceras
+                for row_idx, row_data in enumerate(rows[1:], start=1):
+                    for col_idx, cell_value in enumerate(row_data):
+                        self.table_widget.setItem(row_idx - 1, col_idx, QTableWidgetItem(str(cell_value) if cell_value else "-"))
+            else:
+            # Si el archivo está vacío, solo inicializa las cabeceras
+                self.table_widget.setRowCount(0)
+        else:
+            QMessageBox.warning(self, "Archivo no encontrado", "No se encontró el archivo Excel válido.")
+        # Inicializar la tabla con las cabeceras de los bloques pero sin filas
+            headers = ["Fecha", "Hora"] + self.blocks
+            self.table_widget.setColumnCount(len(headers))
+            self.table_widget.setRowCount(0)
+            self.table_widget.setHorizontalHeaderLabels(headers)
+
 
     def apply_styles(self):
         font = QFont()
