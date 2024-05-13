@@ -11,7 +11,8 @@ from PyQt5.QtCore import QTimer, Qt, pyqtSignal, QRect
 from PyQt5.QtGui import QFont
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 class LoginWindow(QWidget):
     login_successful = pyqtSignal()
@@ -56,7 +57,6 @@ class LoginWindow(QWidget):
         else:
             QMessageBox.warning(self, "Error de Inicio de Sesión", "Usuario o contraseña incorrectos")
 
-
 class TicketManagement(QMainWindow):
     config_file = "config.txt"
 
@@ -65,6 +65,7 @@ class TicketManagement(QMainWindow):
         self.excel_file = None
         self.blocks = ["WC47 NACP", "WC48 POWER 5F", "WC49 POWER 5H", "WV50 FILTER", "SPL"]
         self.last_incidence_labels = {}
+        self.incidences_count = {block: 0 for block in self.blocks}  # Contador de incidencias confirmadas por bloque
         self.incidencias = {
             "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva",
                         "Fallo en paletizador", "No coge placa", "Palet atascado en la curva",
@@ -115,12 +116,18 @@ class TicketManagement(QMainWindow):
         right_layout.addWidget(self.excel_path_display)
 
         self.table_widget = QTableWidget(self)
-        self.table_widget.setFixedSize(600, 400)  # Tamaño fijo para la tabla
+        self.table_widget.setFixedSize(600, 200)  # Tamaño fijo reducido para la tabla
         right_layout.addWidget(self.table_widget)
 
-        self.confirmed_incidence_display = QLabel("Información de la última incidencia confirmada:")
-        self.confirmed_incidence_display.setWordWrap(True)  # Permite el ajuste automático de texto
-        right_layout.addWidget(self.confirmed_incidence_display)
+        # Añadir la gráfica
+        self.figure = plt.figure()
+        self.canvas = FigureCanvas(self.figure)
+        self.canvas.setFixedSize(600, 300)  # Tamaño fijo para la gráfica
+        right_layout.addWidget(self.canvas)
+
+        # Lista global para mostrar todas las incidencias confirmadas
+        self.global_incidence_list = QListWidget(self)
+        right_layout.addWidget(self.global_incidence_list)
         
         right_layout.addStretch()
 
@@ -158,10 +165,10 @@ class TicketManagement(QMainWindow):
         layout.addWidget(list_widget)
 
         confirm_button = QPushButton("Confirmar Incidencia")
-        confirm_button.clicked.connect(lambda: self.report_incidence(name, list_widget))
+        confirm_button.clicked.connect(lambda: self.confirm_incidence(name, list_widget))
         layout.addWidget(confirm_button)
 
-    def report_incidence(self, block_name, list_widget):
+    def confirm_incidence(self, block_name, list_widget):
         current_item = list_widget.currentItem()
         if current_item:
             incidence_text = current_item.text()
@@ -176,11 +183,24 @@ class TicketManagement(QMainWindow):
 
             # Actualizar la tabla y la información de la incidencia confirmada
             self.update_excel_table()
-            self.confirmed_incidence_display.setText(
-                f"Última incidencia confirmada: {incidence_text} en {block_name} a las {time_str} del {date_str}"
-            )
+
+            # Actualizar el conteo de incidencias y la gráfica
+            self.incidences_count[block_name] += 1
+            self.update_graph()
+
+            # Añadir incidencia a la lista global
+            self.global_incidence_list.addItem(f"{block_name}: {incidence_text} a las {time_str} del {date_str}")
         else:
             QMessageBox.warning(self, "Ninguna Incidencia Seleccionada", "Selecciona una incidencia para confirmar.")
+
+    def update_graph(self):
+        self.figure.clear()
+        ax = self.figure.add_subplot(111)
+        ax.bar(self.incidences_count.keys(), self.incidences_count.values())
+        ax.set_xlabel('Bloques')
+        ax.set_ylabel('Incidencias Confirmadas')
+        ax.set_title('Conteo de Incidencias Confirmadas por Bloque')
+        self.canvas.draw()
 
     def select_excel_file(self):
         file_dialog = QFileDialog()
@@ -248,16 +268,15 @@ class TicketManagement(QMainWindow):
                     for col_idx, cell_value in enumerate(row_data):
                         self.table_widget.setItem(row_idx - 1, col_idx, QTableWidgetItem(str(cell_value) if cell_value else "-"))
             else:
-            # Si el archivo está vacío, solo inicializa las cabeceras
+                # Si el archivo está vacío, solo inicializa las cabeceras
                 self.table_widget.setRowCount(0)
         else:
             QMessageBox.warning(self, "Archivo no encontrado", "No se encontró el archivo Excel válido.")
-        # Inicializar la tabla con las cabeceras de los bloques pero sin filas
+            # Inicializar la tabla con las cabeceras de los bloques pero sin filas
             headers = ["Fecha", "Hora"] + self.blocks
             self.table_widget.setColumnCount(len(headers))
             self.table_widget.setRowCount(0)
             self.table_widget.setHorizontalHeaderLabels(headers)
-
 
     def apply_styles(self):
         font = QFont()
@@ -266,7 +285,6 @@ class TicketManagement(QMainWindow):
 
         for widget in self.findChildren(QWidget):
             widget.setFont(font)
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
