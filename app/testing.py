@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import QTimer, Qt, pyqtSignal, QRect
 from PyQt5.QtGui import QFont
 
+from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -51,7 +52,7 @@ class LoginWindow(QWidget):
     def login(self):
         username = self.username_input.text()
         password = self.password_input.text()
-        if username == "ficosa_pideu" and password == "1111":
+        if username == "pideu" and password == "1111":
             self.login_successful.emit()
             self.close()
         else:
@@ -63,35 +64,35 @@ class TicketManagement(QMainWindow):
     def __init__(self):
         super().__init__()
         self.excel_file = None
-        self.blocks = ["WC47 NACP", "WC48 POWER 5F", "WC49 POWER 5H", "WV50 FILTER", "SPL"]
+        self.blocks = ["WC47 NACP", "WC48 P5F", "WC49 P5H", "WV50 FILTER", "SPL"]
         self.last_incidence_labels = {}
-        self.incidences_count = {block: 0 for block in self.blocks}  # Contador de incidencias confirmadas por bloque
         self.incidencias = {
             "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva",
                         "Fallo en paletizador", "No coge placa", "Palet atascado en la curva",
                         "Ascensor no sube", "No pone tornillo", "Fallo tornillo", "AOI no detecta pieza",
                         "No atornilla clips", "Fallo fijador tapa", "Secuencia atornillador",
                         "Fallo atornillador", "Fallo cámara visión"],
-            "WC48 POWER 5F": ["Etiquetadora","AOI (fallo etiqueta)","AOI (malla)","Cámara no detecta Pcb","Cámara no detecta skeleton",
-                        "Cámara no detecta foams","Cámara no detecta busbar","Cámara no detecta foam derecho","No detecta presencia power CP",
-                        "Tornillo atascado en tolva","Cámara no detecta Power CP","Cámara no detecta Top cover","Detección de sealling mal puesto",
-                        "Robot no coge busbar","Fallo etiqueta","Power atascado en prensa, cuesta sacar","No coloca bien el sealling"],
-            "WC49 POWER 5H": ["La cámara no detecta Busbar","La cámara no detecta Top Cover","Screw K30 no lo detecta puesto","Atasco tuerca",
-                        "Tornillo atascado","Etiquetadora","Detección de sealling mal puesto","No coloca bien el sealling","Power atascado en prensa, cuesta sacar",
+            "WC48 P5F": ["Etiquetadora", "AOI (fallo etiqueta)", "AOI (malla)", "Cámara no detecta Pcb", "Cámara no detecta skeleton",
+                        "Cámara no detecta foams", "Cámara no detecta busbar", "Cámara no detecta foam derecho", "No detecta presencia power CP",
+                        "Tornillo atascado en tolva", "Cámara no detecta Power CP", "Cámara no detecta Top cover", "Detección de sealling mal puesto",
+                        "Robot no coge busbar", "Fallo etiqueta", "Power atascado en prensa, cuesta sacar", "No coloca bien el sealling"],
+            "WC49 P5H": ["La cámara no detecta Busbar", "La cámara no detecta Top Cover", "Screw K30 no lo detecta puesto", "Atasco tuerca",
+                        "Tornillo atascado", "Etiquetadora", "Detección de sealling mal puesto", "No coloca bien el sealling", "Power atascado en prensa, cuesta sacar",
                         "No lee QR"],
-            "WV50 FILTER": ["Fallo cámara ferrite","NOK Soldadura Plástico","NOK Soldadura metal","Traza","NOK Soldad. Plástico+Metal","Robot no coloca bien filter en palet",
-                        "No coloca bien la pcb","QR desplazado","Core enganchado","Robot no coge PCB","Fallo atornillador","Pieza enganchada en HV Test","Cover atascado",
-                        "Robot no coloca bien ferrita","No coloca bien el core","Fallo Funcional","Fallo visión core","Fallo cámara cover","Repeat funcional","Fallo cámara QR",
-                        "No coloca bien foam"],
-            "SPL": ["Sensor de PCB detecta que hay placa cuando no la hay","No detecta marcas Power","Colisión placas","Fallo dispensación glue","Marco atascado en parte inferior",
-                    "Soldadura defectuosa","Error en sensor de salida"]
+            "WV50 FILTER": ["Fallo cámara ferrite", "NOK Soldadura Plástico", "NOK Soldadura metal", "Traza", "NOK Soldad. Plástico+Metal", "Robot no coloca bien filter en palet",
+                            "No coloca bien la pcb", "QR desplazado", "Core enganchado", "Robot no coge PCB", "Fallo atornillador", "Pieza enganchada en HV Test", "Cover atascado",
+                            "Robot no coloca bien ferrita", "No coloca bien el core", "Fallo Funcional", "Fallo visión core", "Fallo cámara cover", "Repeat funcional", "Fallo cámara QR",
+                            "No coloca bien foam"],
+            "SPL": ["Sensor de PCB detecta que hay placa cuando no la hay", "No detecta marcas Power", "Colisión placas", "Fallo dispensación glue", "Marco atascado en parte inferior",
+                    "Soldadura defectuosa", "Error en sensor de salida"]
         }
+        self.incidences_count = {block: 0 for block in self.blocks}
         self.initUI()
         self.load_last_excel_file()
 
     def initUI(self):
         self.setWindowTitle("Ticket Management")
-        self.setGeometry(200, 200, 900, 600)
+        self.setGeometry(200, 200, 1200, 800)  # Tamaño de ventana ajustado
 
         main_layout = QHBoxLayout()
         central_widget = QWidget()
@@ -116,19 +117,20 @@ class TicketManagement(QMainWindow):
         right_layout.addWidget(self.excel_path_display)
 
         self.table_widget = QTableWidget(self)
-        self.table_widget.setFixedSize(600, 200)  # Tamaño fijo reducido para la tabla
+        self.table_widget.setFixedSize(600, 300)  # Tamaño fijo para la tabla
         right_layout.addWidget(self.table_widget)
 
-        # Añadir la gráfica
-        self.figure = plt.figure()
-        self.canvas = FigureCanvas(self.figure)
-        self.canvas.setFixedSize(600, 300)  # Tamaño fijo para la gráfica
-        right_layout.addWidget(self.canvas)
-
-        # Lista global para mostrar todas las incidencias confirmadas
         self.global_incidence_list = QListWidget(self)
         right_layout.addWidget(self.global_incidence_list)
-        
+
+        # Sección del gráfico
+        graph_layout = QVBoxLayout()
+        self.figure = Figure()
+        self.canvas = FigureCanvas(self.figure)
+        graph_layout.addWidget(self.canvas)
+
+        right_layout.addLayout(graph_layout)  # Añadir el layout del gráfico al layout de la derecha
+
         right_layout.addStretch()
 
         right_widget = QWidget()
@@ -185,22 +187,12 @@ class TicketManagement(QMainWindow):
             self.update_excel_table()
 
             # Actualizar el conteo de incidencias y la gráfica
-            self.incidences_count[block_name] += 1
             self.update_graph()
 
             # Añadir incidencia a la lista global
             self.global_incidence_list.addItem(f"{block_name}: {incidence_text} a las {time_str} del {date_str}")
         else:
             QMessageBox.warning(self, "Ninguna Incidencia Seleccionada", "Selecciona una incidencia para confirmar.")
-
-    def update_graph(self):
-        self.figure.clear()
-        ax = self.figure.add_subplot(111)
-        ax.bar(self.incidences_count.keys(), self.incidences_count.values())
-        ax.set_xlabel('Bloques')
-        ax.set_ylabel('Incidencias Confirmadas')
-        ax.set_title('Conteo de Incidencias Confirmadas por Bloque')
-        self.canvas.draw()
 
     def select_excel_file(self):
         file_dialog = QFileDialog()
@@ -211,8 +203,8 @@ class TicketManagement(QMainWindow):
             self.excel_path_display.setText(file_path)
             with open(self.config_file, "w") as config:
                 config.write(file_path)
-            self.create_excel_if_not_exists(file_path)
             self.update_excel_table()
+            self.update_graph()
 
     def create_excel_if_not_exists(self, file_path):
         if not os.path.exists(file_path):
@@ -227,20 +219,27 @@ class TicketManagement(QMainWindow):
             try:
                 workbook = load_workbook(self.excel_file)
                 sheet = workbook.active
-                new_row = [date_str, time_str] + ["-"] * len(self.blocks)
-                if block_name in self.blocks:
-                    new_row[self.blocks.index(block_name) + 2] = incidence_text  # Asegúrate de ajustar el índice correctamente
 
+                # Verificar si el archivo ya tiene las cabeceras correctas
+                headers = [cell.value for cell in sheet[1]]
+                if headers != ["Fecha", "Hora"] + self.blocks:
+                    sheet.delete_rows(1, 1)  # Eliminar la primera fila incorrecta
+                    sheet.insert_rows(1)  # Insertar una nueva primera fila
+                    for idx, header in enumerate(["Fecha", "Hora"] + self.blocks):
+                        sheet.cell(row=1, column=idx + 1, value=header)
+
+                new_row = [date_str, time_str] + ["-"] * len(self.blocks)
+                block_index = self.blocks.index(block_name) + 2
+                new_row[block_index] = incidence_text
                 sheet.append(new_row)
+
                 workbook.save(self.excel_file)
             except Exception as e:
-                QMessageBox.critical(self, "Error", f"Error al guardar en el archivo Excel: {e}")
-        else:
-            QMessageBox.warning(self, "Archivo no encontrado", "Selecciona un archivo Excel válido.")
+                QMessageBox.critical(self, "Error", f"Error al registrar la incidencia en Excel: {e}")
 
     def update_status_bar(self):
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.status_bar.showMessage(f"Hora actual: {current_time}")
+        self.statusBar().showMessage(f"Fecha y Hora Actual: {current_time}")
 
     def load_last_excel_file(self):
         if os.path.exists(self.config_file):
@@ -250,46 +249,74 @@ class TicketManagement(QMainWindow):
                     self.excel_file = file_path
                     self.excel_path_display.setText(file_path)
                     self.update_excel_table()
+                    self.update_graph()
 
     def update_excel_table(self):
         if self.excel_file and os.path.exists(self.excel_file):
+            try:
+                workbook = load_workbook(self.excel_file)
+                sheet = workbook.active
+                self.table_widget.setRowCount(sheet.max_row)
+                self.table_widget.setColumnCount(sheet.max_column)
+
+                headers = [cell.value for cell in sheet[1]]  # Leer las cabeceras
+                self.table_widget.setHorizontalHeaderLabels(headers)  # Configurar las cabeceras
+
+                for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=1):  # Empezar desde la segunda fila
+                    for col_idx, cell_value in enumerate(row):
+                        item = QTableWidgetItem(str(cell_value) if cell_value is not None else "")
+                        self.table_widget.setItem(row_idx - 1, col_idx, item)  # Ajustar el índice de fila
+
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Error al actualizar la tabla: {e}")
+
+    def update_graph(self):
+        # Reiniciar el conteo de incidencias
+        self.incidences_count = {block: 0 for block in self.blocks}
+        
+        if self.excel_file and os.path.exists(self.excel_file):
             workbook = load_workbook(self.excel_file)
             sheet = workbook.active
-            rows = list(sheet.iter_rows(values_only=True))
+            for row in sheet.iter_rows(min_row=2, values_only=True):  # Ignorar la fila de cabeceras
+                for i, block in enumerate(self.blocks, start=2):
+                    if row[i] != "-":  # Si hay una incidencia registrada
+                        self.incidences_count[block] += 1
 
-            # Definir siempre las cabeceras como los bloques de la aplicación
-            headers = ["Fecha", "Hora"] + self.blocks
-            self.table_widget.setColumnCount(len(headers))
-            self.table_widget.setHorizontalHeaderLabels(headers)
+        self.figure.clear()
+        ax = self.figure.add_subplot(111)
+        ax.bar(self.incidences_count.keys(), self.incidences_count.values())
+        ax.set_xlabel('Bloques')
+        ax.set_ylabel('Incidencias Confirmadas')
+        ax.set_title('Conteo de Incidencias Confirmadas por Bloque')
 
-            if rows:
-                self.table_widget.setRowCount(len(rows) - 1)  # -1 porque la primera fila son las cabeceras
-                for row_idx, row_data in enumerate(rows[1:], start=1):
-                    for col_idx, cell_value in enumerate(row_data):
-                        self.table_widget.setItem(row_idx - 1, col_idx, QTableWidgetItem(str(cell_value) if cell_value else "-"))
-            else:
-                # Si el archivo está vacío, solo inicializa las cabeceras
-                self.table_widget.setRowCount(0)
-        else:
-            QMessageBox.warning(self, "Archivo no encontrado", "No se encontró el archivo Excel válido.")
-            # Inicializar la tabla con las cabeceras de los bloques pero sin filas
-            headers = ["Fecha", "Hora"] + self.blocks
-            self.table_widget.setColumnCount(len(headers))
-            self.table_widget.setRowCount(0)
-            self.table_widget.setHorizontalHeaderLabels(headers)
+        # Reducir nombres del eje X
+        short_labels = [block.split()[0] for block in self.blocks]
+        ax.set_xticklabels(short_labels, rotation=45, ha="right")
+
+        self.canvas.draw()
 
     def apply_styles(self):
-        font = QFont()
-        font.setPointSize(12)  # Cambiar este valor para ajustar el tamaño de la fuente
-        self.setFont(font)
+        title_font = QFont("Arial", 16, QFont.Bold)
+        normal_font = QFont("Arial", 12)
 
-        for widget in self.findChildren(QWidget):
-            widget.setFont(font)
+        for i in range(self.tabWidget.count()):
+            tab = self.tabWidget.widget(i)
+            for widget in tab.findChildren(QLabel):
+                if "Última incidencia" in widget.text():
+                    widget.setFont(normal_font)
+                else:
+                    widget.setFont(title_font)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication(sys.argv)
+
     login_window = LoginWindow()
-    main_window = TicketManagement()
-    login_window.login_successful.connect(main_window.show)
+    ticket_management = TicketManagement()
+
+    def on_login_successful():
+        ticket_management.show()
+
+    login_window.login_successful.connect(on_login_successful)
     login_window.show()
+
     sys.exit(app.exec_())
