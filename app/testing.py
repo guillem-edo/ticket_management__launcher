@@ -124,12 +124,9 @@ class TicketManagement(QMainWindow):
         right_layout.addWidget(self.global_incidence_list)
 
         # Sección del gráfico
-        graph_layout = QVBoxLayout()
         self.figure = Figure()
         self.canvas = FigureCanvas(self.figure)
-        graph_layout.addWidget(self.canvas)
-
-        right_layout.addLayout(graph_layout)  # Añadir el layout del gráfico al layout de la derecha
+        right_layout.addWidget(self.canvas)
 
         right_layout.addStretch()
 
@@ -256,7 +253,7 @@ class TicketManagement(QMainWindow):
             try:
                 workbook = load_workbook(self.excel_file)
                 sheet = workbook.active
-                self.table_widget.setRowCount(sheet.max_row)
+                self.table_widget.setRowCount(sheet.max_row - 1)
                 self.table_widget.setColumnCount(sheet.max_column)
 
                 headers = [cell.value for cell in sheet[1]]  # Leer las cabeceras
@@ -286,17 +283,21 @@ class TicketManagement(QMainWindow):
         ax = self.figure.add_subplot(111)
         ax.bar(self.incidences_count.keys(), self.incidences_count.values())
         ax.set_xlabel('Bloques')
-        ax.set_ylabel('Incidencias Confirmadas')
-        ax.set_title('Conteo de Incidencias Confirmadas por Bloque')
+        ax.set_ylabel('CANTIDAD')
+        ax.set_title('TOTAL INCIDENCIAS')
 
         # Reducir nombres del eje X
         short_labels = [block.split()[0] for block in self.blocks]
-        ax.set_xticklabels(short_labels, rotation=45, ha="right")
+        ax.set_xticks(range(len(short_labels)))
+        ax.set_xticklabels(short_labels, rotation=0, ha="right")
+
+        # Reducir el tamaño de la fuente de las etiquetas del eje X
+        ax.tick_params(axis='x', labelsize=10)
 
         self.canvas.draw()
 
     def apply_styles(self):
-        title_font = QFont("Arial", 16, QFont.Bold)
+        title_font = QFont("Arial", 14, QFont.Bold)
         normal_font = QFont("Arial", 12)
 
         for i in range(self.tabWidget.count()):
