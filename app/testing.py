@@ -167,6 +167,8 @@ class TicketManagement(QMainWindow):
         self.last_incidence_labels[name] = last_incidence_label
 
         list_widget = QListWidget()
+        font = QFont("Arial", 16)  # Cambia aquí para ajustar el tamaño de la fuente
+        list_widget.setFont(font)
         for incidence in incidences:
             item = QListWidgetItem(incidence)
             list_widget.addItem(item)
@@ -174,6 +176,9 @@ class TicketManagement(QMainWindow):
         layout.addWidget(list_widget)
 
         confirm_button = QPushButton("Confirmar Incidencia")
+        button_font = QFont("Arial", 12)  # Aumentar el tamaño de la fuente para el botón
+        confirm_button.setFont(button_font)
+        confirm_button.setFixedSize(700, 50)  # Define un tamaño fijo para el botón
         confirm_button.clicked.connect(lambda: self.confirm_incidence(name, list_widget))
         layout.addWidget(confirm_button)
 
