@@ -8,12 +8,12 @@ from PyQt5.QtWidgets import (
     QListWidget, QListWidgetItem, QStatusBar, QLineEdit, QFileDialog, QHBoxLayout, QTableWidget, QTableWidgetItem
 )
 from PyQt5.QtCore import QTimer, Qt, pyqtSignal, QRect
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QPixmap
 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+
 
 class LoginWindow(QWidget):
     login_successful = pyqtSignal()
@@ -23,16 +23,26 @@ class LoginWindow(QWidget):
         self.setWindowTitle("Inicio de Sesión")
         self.resize(280, 360)
         self.center_window()
+        self.setStyleSheet("background-color: white;")  # Establece el color de fondo de la ventana
 
         layout = QVBoxLayout()
-        logo_label = QLabel("Inicio de Sesión")
+        logo_pixmap = QPixmap("app\logo.png")  # Carga la imagen del logo
+
+        logo_label = QLabel()
+        logo_label.setPixmap(logo_pixmap.scaled(200, 200, Qt.KeepAspectRatio))  # Ajusta el tamaño manteniendo la relación de aspecto
+        logo_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(logo_label)
 
+        font = QFont()
+        font.setPointSize(12)  # Tamaño de fuente más grande para los campos de entrada
+
         self.username_input = QLineEdit()
+        self.username_input.setFont(font)
         self.username_input.setPlaceholderText("Usuario")
         layout.addWidget(self.username_input)
 
         self.password_input = QLineEdit()
+        self.password_input.setFont(font)
         self.password_input.setPlaceholderText("Contraseña")
         self.password_input.setEchoMode(QLineEdit.Password)
         layout.addWidget(self.password_input)
