@@ -6,15 +6,13 @@ from datetime import datetime, timedelta
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox, QTabWidget, QLabel,
     QListWidget, QListWidgetItem, QStatusBar, QLineEdit, QFileDialog, QHBoxLayout, QTableWidget, QTableWidgetItem, 
-    QDialog, QDateTimeEdit, QComboBox, QCheckBox, QGridLayout, QTimeEdit, QCalendarWidget
+    QDialog, QComboBox
 )
-from PyQt5.QtCore import QTimer, Qt, pyqtSignal, QRect, QDateTime, QTime
+from PyQt5.QtCore import QTimer, Qt, pyqtSignal, QRect
 from PyQt5.QtGui import QFont, QPixmap
 
 from matplotlib.figure import Figure
-from matplotlib.dates import DateFormatter, HourLocator
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-import matplotlib.pyplot as plt
 from collections import Counter, defaultdict
 
 
@@ -26,18 +24,18 @@ class LoginWindow(QWidget):
         self.setWindowTitle("Inicio de Sesión")
         self.resize(280, 360)
         self.center_window()
-        self.setStyleSheet("background-color: white;")  # Establece el color de fondo de la ventana
+        self.setStyleSheet("background-color: white;")
 
         layout = QVBoxLayout()
-        logo_pixmap = QPixmap("app\logo.png")  # Carga la imagen del logo
+        logo_pixmap = QPixmap("app/logo.png")
 
         logo_label = QLabel()
-        logo_label.setPixmap(logo_pixmap.scaled(200, 200, Qt.KeepAspectRatio))  # Ajusta el tamaño manteniendo la relación de aspecto
+        logo_label.setPixmap(logo_pixmap.scaled(200, 200, Qt.KeepAspectRatio))
         logo_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(logo_label)
 
         font = QFont()
-        font.setPointSize(12)  # Tamaño de fuente más grande para los campos de entrada
+        font.setPointSize(12)
 
         self.username_input = QLineEdit()
         self.username_input.setFont(font)
@@ -72,18 +70,66 @@ class LoginWindow(QWidget):
             QMessageBox.warning(self, "Error de Inicio de Sesión", "Usuario o contraseña incorrectos")
 
 
+class GraphDialog(QDialog):
+    def __init__(self, parent=None, data=None):
+        super().__init__(parent)
+        self.setWindowTitle("Gráficos de Incidencias")
+        self.setGeometry(300, 300, 800, 600)
+
+        self.data = data
+
+        layout = QVBoxLayout()
+
+        self.figure = Figure()
+        self.canvas = FigureCanvas(self.figure)
+        layout.addWidget(self.canvas)
+
+        self.fullscreen_button = QPushButton("Pantalla Completa")
+        self.fullscreen_button.clicked.connect(self.toggle_fullscreen)
+        layout.addWidget(self.fullscreen_button)
+
+        self.setLayout(layout)
+        self.generate_top_10_charts()
+
+    def generate_top_10_charts(self):
+        self.figure.clear()
+        ax = self.figure.add_subplot(111)
+
+        all_incidents = []
+        for data in self.data.values():
+            all_incidents.extend(data['incidences'])
+
+        counter = Counter(all_incidents)
+        top_10_incidents = counter.most_common(10)
+
+        if top_10_incidents:
+            incidents, counts = zip(*top_10_incidents)
+            ax.barh(incidents, counts)
+
+        ax.set_xlabel('Número de Incidencias')
+        ax.set_ylabel('Incidencias')
+        ax.set_title('Top 10 Incidencias')
+        self.canvas.draw()
+
+    def toggle_fullscreen(self):
+        if self.isFullScreen():
+            self.showNormal()
+            self.fullscreen_button.setText("Pantalla Completa")
+        else:
+            self.showFullScreen()
+            self.fullscreen_button.setText("Salir de Pantalla Completa")
+
+
 class AdvancedFilterDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Filtro Avanzado")
-        self.setGeometry(300, 300, 1000, 800)  # Tamaño ampliado de la ventana
+        self.setGeometry(300, 300, 1000, 800)
 
         layout = QVBoxLayout()
 
-        # Rango de fecha y hora
         range_layout = QHBoxLayout()
 
-        # Fecha inicial
         date_layout = QVBoxLayout()
         date_layout.addWidget(QLabel("Desde Fecha:"))
         self.start_date_combo = QComboBox()
@@ -95,7 +141,6 @@ class AdvancedFilterDialog(QDialog):
 
         range_layout.addLayout(date_layout)
 
-        # Hora inicial
         time_layout = QVBoxLayout()
         time_layout.addWidget(QLabel("Desde Hora:"))
         self.start_time_combo = QComboBox()
@@ -111,7 +156,6 @@ class AdvancedFilterDialog(QDialog):
 
         layout.addLayout(range_layout)
 
-        # Selección de bloques
         block_layout = QHBoxLayout()
         block_layout.addWidget(QLabel("Seleccionar Bloque:"))
         self.block_selector = QComboBox()
@@ -121,38 +165,30 @@ class AdvancedFilterDialog(QDialog):
 
         layout.addLayout(block_layout)
 
-        # Botón para aplicar el filtro
         filter_button = QPushButton("Aplicar Filtro")
         filter_button.clicked.connect(self.apply_filter)
         layout.addWidget(filter_button)
 
-        # Crear un TabWidget para mostrar resultados y gráficos
         self.tab_widget = QTabWidget()
         layout.addWidget(self.tab_widget)
 
-        # Tab de resultados
         self.results_tab = QWidget()
-        self.results_layout = QGridLayout(self.results_tab)
+        self.results_layout = QVBoxLayout(self.results_tab)
         self.tab_widget.addTab(self.results_tab, "Resultados")
 
         self.results_table = QTableWidget()
         self.results_table.setColumnCount(3)
         self.results_table.setHorizontalHeaderLabels(["Bloque", "Número de Incidencias", "Incidencia más frecuente"])
-        self.results_layout.addWidget(self.results_table, 0, 0, 1, 2)
+        self.results_layout.addWidget(self.results_table)
 
-        self.top_5_incidents_table = QTableWidget()
-        self.top_5_incidents_table.setColumnCount(2)
-        self.top_5_incidents_table.setHorizontalHeaderLabels(["Incidencia", "Número de Incidencias"])
-        self.results_layout.addWidget(self.top_5_incidents_table, 1, 0, 1, 2)
+        self.incidents_table = QTableWidget()
+        self.incidents_table.setColumnCount(2)
+        self.incidents_table.setHorizontalHeaderLabels(["Incidencia", "Número de Incidencias"])
+        self.results_layout.addWidget(self.incidents_table)
 
-        # Tab de gráficos
-        self.charts_tab = QWidget()
-        self.charts_layout = QVBoxLayout(self.charts_tab)
-        self.tab_widget.addTab(self.charts_tab, "Gráficos")
-
-        self.figure = Figure()
-        self.canvas = FigureCanvas(self.figure)
-        self.charts_layout.addWidget(self.canvas)
+        self.graph_button = QPushButton("Ver Gráficos")
+        self.graph_button.clicked.connect(self.open_graph_dialog)
+        layout.addWidget(self.graph_button)
 
         self.setLayout(layout)
         self.populate_date_combos()
@@ -183,52 +219,34 @@ class AdvancedFilterDialog(QDialog):
 
         results, trends = self.parent().get_filtered_incidents(start_dt, end_dt, selected_block)
 
-        # Mostrar los resultados en la tabla
         self.results_table.setRowCount(len(results))
         for row, (block, data) in enumerate(results.items()):
             self.results_table.setItem(row, 0, QTableWidgetItem(block))
             self.results_table.setItem(row, 1, QTableWidgetItem(str(data['count'])))
             self.results_table.setItem(row, 2, QTableWidgetItem(data['most_common_incidence']))
 
-        # Mostrar el top 5 de incidencias
-        self.update_top_5_incidents(results)
+        self.update_incidents_table(results)
+        self.trends = results
 
-        # Generar los gráficos del top 15 de incidencias por bloque
-        self.generate_top_15_charts(trends)
-
-    def update_top_5_incidents(self, results):
+    def update_incidents_table(self, results):
         all_incidents = []
         for block, data in results.items():
             all_incidents.extend(data['incidences'])
 
         counter = Counter(all_incidents)
-        top_5 = counter.most_common(5)
+        sorted_incidents = counter.most_common()
 
-        self.top_5_incidents_table.setRowCount(len(top_5))
-        for row, (incident, count) in enumerate(top_5):
-            self.top_5_incidents_table.setItem(row, 0, QTableWidgetItem(incident))
-            self.top_5_incidents_table.setItem(row, 1, QTableWidgetItem(str(count)))
+        self.incidents_table.setRowCount(len(sorted_incidents))
+        for row, (incident, count) in enumerate(sorted_incidents):
+            self.incidents_table.setItem(row, 0, QTableWidgetItem(incident))
+            self.incidents_table.setItem(row, 1, QTableWidgetItem(str(count)))
 
-    def generate_top_15_charts(self, trends):
-        self.figure.clear()
-        ax = self.figure.add_subplot(111)
-
-        all_incidents = defaultdict(list)
-        for block, times in trends.items():
-            for time, count in times.items():
-                all_incidents[block].append(count)
-
-        for block, incidents in all_incidents.items():
-            counter = Counter(incidents)
-            top_15 = counter.most_common(15)
-            incidents, counts = zip(*top_15)
-            ax.barh(incidents, counts, label=block)
-
-        ax.set_xlabel('Número de Incidencias')
-        ax.set_ylabel('Incidencias')
-        ax.set_title('Top 15 Incidencias por Bloque')
-        ax.legend()
-        self.canvas.draw()
+    def open_graph_dialog(self):
+        if hasattr(self, 'trends'):
+            self.graph_dialog = GraphDialog(self, data=self.trends)
+            self.graph_dialog.exec_()
+        else:
+            QMessageBox.warning(self, "Error", "Primero aplica el filtro para ver los gráficos.")
 
 
 class TicketManagement(QMainWindow):
@@ -272,14 +290,12 @@ class TicketManagement(QMainWindow):
         central_widget.setLayout(main_layout)
         self.setCentralWidget(central_widget)
 
-        # Sección de Tabs de Incidencias
         self.tabWidget = QTabWidget(self)
         main_layout.addWidget(self.tabWidget, 2)
 
         for name, incidences in self.incidencias.items():
             self.create_tab(name, incidences)
 
-        # Sección para Seleccionar Excel y mostrar incidencias confirmadas
         right_layout = QVBoxLayout()
         select_excel_button = QPushButton("Seleccionar Archivo Excel", self)
         select_excel_button.clicked.connect(self.select_excel_file)
@@ -296,12 +312,10 @@ class TicketManagement(QMainWindow):
         self.global_incidence_list = QListWidget(self)
         right_layout.addWidget(self.global_incidence_list)
 
-        # Botón para abrir el filtro avanzado
         filter_button = QPushButton("Filtro Avanzado", self)
         filter_button.clicked.connect(self.open_advanced_filter_dialog)
         right_layout.addWidget(filter_button)
 
-        # Sección del gráfico
         self.figure = Figure()
         self.canvas = FigureCanvas(self.figure)
         right_layout.addWidget(self.canvas)
@@ -519,6 +533,9 @@ class TicketManagement(QMainWindow):
             for widget in tab.findChildren(QLabel):
                 if "Última incidencia" in widget.text():
                     widget.setFont(normal_font)
+                else:
+                    widget.setFont(title_font)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
