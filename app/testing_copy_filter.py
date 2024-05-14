@@ -188,11 +188,10 @@ class AdvancedFilterDialog(QDialog):
             counts = [times.get(time.strftime("%Y-%m-%d %H:00:00"), 0) for time in time_range]
             ax.plot(time_range, counts, label=block)
 
-        ax.set_xlabel('Hora')
+        ax.set_xlabel('Rango de Tiempo')
         ax.set_ylabel('Número de Incidencias')
-        ax.set_title('Tendencia de Incidencias por Hora')
-        ax.xaxis.set_major_locator(HourLocator(interval=1))
-        ax.xaxis.set_major_formatter(DateFormatter('%H:%M'))
+        ax.set_title('Tendéncia')
+        ax.set_xticklabels([])  # Eliminar todas las etiquetas de tiempo (eje x)
         ax.legend()
         ax.grid(True)
         self.canvas.draw()
