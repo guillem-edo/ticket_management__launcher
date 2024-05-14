@@ -76,7 +76,7 @@ class AdvancedFilterDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Filtro Avanzado")
-        self.setGeometry(300, 300, 800, 600)
+        self.setGeometry(300, 300, 1000, 800)  # Tamaño ampliado de la ventana
 
         layout = QVBoxLayout()
 
@@ -88,7 +88,7 @@ class AdvancedFilterDialog(QDialog):
         date_layout.addWidget(QLabel("Desde Fecha:"))
         self.start_date_combo = QComboBox()
         date_layout.addWidget(self.start_date_combo)
-        
+
         date_layout.addWidget(QLabel("Hasta Fecha:"))
         self.end_date_combo = QComboBox()
         date_layout.addWidget(self.end_date_combo)
@@ -101,14 +101,14 @@ class AdvancedFilterDialog(QDialog):
         self.start_time_combo = QComboBox()
         self.populate_time_combo(self.start_time_combo)
         time_layout.addWidget(self.start_time_combo)
-        
+
         time_layout.addWidget(QLabel("Hasta Hora:"))
         self.end_time_combo = QComboBox()
         self.populate_time_combo(self.end_time_combo)
         time_layout.addWidget(self.end_time_combo)
 
         range_layout.addLayout(time_layout)
-        
+
         layout.addLayout(range_layout)
 
         # Selección de bloques
@@ -126,16 +126,33 @@ class AdvancedFilterDialog(QDialog):
         filter_button.clicked.connect(self.apply_filter)
         layout.addWidget(filter_button)
 
-        # Tabla para mostrar resultados
+        # Crear un TabWidget para mostrar resultados y gráficos
+        self.tab_widget = QTabWidget()
+        layout.addWidget(self.tab_widget)
+
+        # Tab de resultados
+        self.results_tab = QWidget()
+        self.results_layout = QGridLayout(self.results_tab)
+        self.tab_widget.addTab(self.results_tab, "Resultados")
+
         self.results_table = QTableWidget()
         self.results_table.setColumnCount(3)
         self.results_table.setHorizontalHeaderLabels(["Bloque", "Número de Incidencias", "Incidencia más frecuente"])
-        layout.addWidget(self.results_table)
+        self.results_layout.addWidget(self.results_table, 0, 0, 1, 2)
 
-        # Gráfico de líneas
+        self.top_5_incidents_table = QTableWidget()
+        self.top_5_incidents_table.setColumnCount(2)
+        self.top_5_incidents_table.setHorizontalHeaderLabels(["Incidencia", "Número de Incidencias"])
+        self.results_layout.addWidget(self.top_5_incidents_table, 1, 0, 1, 2)
+
+        # Tab de gráficos
+        self.charts_tab = QWidget()
+        self.charts_layout = QVBoxLayout(self.charts_tab)
+        self.tab_widget.addTab(self.charts_tab, "Gráficos")
+
         self.figure = Figure()
         self.canvas = FigureCanvas(self.figure)
-        layout.addWidget(self.canvas)
+        self.charts_layout.addWidget(self.canvas)
 
         self.setLayout(layout)
         self.populate_date_combos()
@@ -161,10 +178,9 @@ class AdvancedFilterDialog(QDialog):
         end_date = self.end_date_combo.currentText()
         end_time = self.end_time_combo.currentText()
         end_dt = datetime.strptime(f"{end_date} {end_time}:00", "%Y-%m-%d %H:%M:%S")
-        
+
         selected_block = self.block_selector.currentText()
 
-        # Llamar a la función del padre para obtener los datos filtrados
         results, trends = self.parent().get_filtered_incidents(start_dt, end_dt, selected_block)
 
         # Mostrar los resultados en la tabla
@@ -174,26 +190,44 @@ class AdvancedFilterDialog(QDialog):
             self.results_table.setItem(row, 1, QTableWidgetItem(str(data['count'])))
             self.results_table.setItem(row, 2, QTableWidgetItem(data['most_common_incidence']))
 
-        # Actualizar el gráfico
-        self.update_graph(trends, start_dt, end_dt)
+        # Mostrar el top 5 de incidencias
+        self.update_top_5_incidents(results)
 
-    def update_graph(self, trends, start_dt, end_dt):
+        # Generar los gráficos del top 15 de incidencias por bloque
+        self.generate_top_15_charts(trends)
+
+    def update_top_5_incidents(self, results):
+        all_incidents = []
+        for block, data in results.items():
+            all_incidents.extend(data['incidences'])
+
+        counter = Counter(all_incidents)
+        top_5 = counter.most_common(5)
+
+        self.top_5_incidents_table.setRowCount(len(top_5))
+        for row, (incident, count) in enumerate(top_5):
+            self.top_5_incidents_table.setItem(row, 0, QTableWidgetItem(incident))
+            self.top_5_incidents_table.setItem(row, 1, QTableWidgetItem(str(count)))
+
+    def generate_top_15_charts(self, trends):
         self.figure.clear()
         ax = self.figure.add_subplot(111)
 
-        interval = timedelta(hours=1)
-        time_range = [start_dt + i * interval for i in range(int((end_dt - start_dt) / interval) + 1)]
-
+        all_incidents = defaultdict(list)
         for block, times in trends.items():
-            counts = [times.get(time.strftime("%Y-%m-%d %H:00:00"), 0) for time in time_range]
-            ax.plot(time_range, counts, label=block)
+            for time, count in times.items():
+                all_incidents[block].append(count)
 
-        ax.set_xlabel('Rango de Tiempo')
-        ax.set_ylabel('Número de Incidencias')
-        ax.set_title('Tendéncia')
-        ax.set_xticklabels([])  # Eliminar todas las etiquetas de tiempo (eje x)
+        for block, incidents in all_incidents.items():
+            counter = Counter(incidents)
+            top_15 = counter.most_common(15)
+            incidents, counts = zip(*top_15)
+            ax.barh(incidents, counts, label=block)
+
+        ax.set_xlabel('Número de Incidencias')
+        ax.set_ylabel('Incidencias')
+        ax.set_title('Top 15 Incidencias por Bloque')
         ax.legend()
-        ax.grid(True)
         self.canvas.draw()
 
 
@@ -485,8 +519,6 @@ class TicketManagement(QMainWindow):
             for widget in tab.findChildren(QLabel):
                 if "Última incidencia" in widget.text():
                     widget.setFont(normal_font)
-                else:
-                    widget.setFont(title_font)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
