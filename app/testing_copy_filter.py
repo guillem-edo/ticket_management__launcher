@@ -12,7 +12,7 @@ from PyQt5.QtCore import QTimer, Qt, pyqtSignal, QRect, QDateTime, QTime
 from PyQt5.QtGui import QFont, QPixmap
 
 from matplotlib.figure import Figure
-from matplotlib.dates import DateFormatter
+from matplotlib.dates import DateFormatter, HourLocator
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 from collections import Counter, defaultdict
@@ -150,18 +150,17 @@ class AdvancedFilterDialog(QDialog):
 
     def populate_time_combo(self, combo):
         for hour in range(24):
-            for minute in ["00", "15", "30", "45"]:
-                time_str = f"{hour:02}:{minute}:00"
-                combo.addItem(time_str)
+            time_str = f"{hour:02}:00"
+            combo.addItem(time_str)
 
     def apply_filter(self):
         start_date = self.start_date_combo.currentText()
         start_time = self.start_time_combo.currentText()
-        start_dt = datetime.strptime(f"{start_date} {start_time}", "%Y-%m-%d %H:%M:%S")
+        start_dt = datetime.strptime(f"{start_date} {start_time}:00", "%Y-%m-%d %H:%M:%S")
 
         end_date = self.end_date_combo.currentText()
         end_time = self.end_time_combo.currentText()
-        end_dt = datetime.strptime(f"{end_date} {end_time}", "%Y-%m-%d %H:%M:%S")
+        end_dt = datetime.strptime(f"{end_date} {end_time}:00", "%Y-%m-%d %H:%M:%S")
         
         selected_block = self.block_selector.currentText()
 
@@ -192,7 +191,8 @@ class AdvancedFilterDialog(QDialog):
         ax.set_xlabel('Hora')
         ax.set_ylabel('Número de Incidencias')
         ax.set_title('Tendencia de Incidencias por Hora')
-        ax.xaxis.set_major_formatter(DateFormatter('%Y-%m-%d %H:%M'))
+        ax.xaxis.set_major_locator(HourLocator(interval=1))
+        ax.xaxis.set_major_formatter(DateFormatter('%H:%M'))
         ax.legend()
         ax.grid(True)
         self.canvas.draw()
