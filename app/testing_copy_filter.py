@@ -1,7 +1,7 @@
 import sys
 import os
 from openpyxl import Workbook, load_workbook
-from openpyxl.styles import PatternFill
+from openpyxl.styles import PatternFill, Border, Side, Alignment, Font
 from datetime import datetime, timedelta
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox, QTabWidget, QLabel,
@@ -14,6 +14,13 @@ from PyQt5.QtGui import QFont, QPixmap
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from collections import Counter, defaultdict
+
+# Clase User para almacenar información de usuario
+class User:
+    def __init__(self, username, password, blocks):
+        self.username = username
+        self.password = password
+        self.blocks = blocks
 
 # Clase User para almacenar información de usuario
 class User:
@@ -41,7 +48,6 @@ class LoginWindow(QWidget):
             User("pideu4", "1111", ["WV50 FILTER"]),
             User("pideu5", "1111", ["SPL"])
         ]
-
         layout = QVBoxLayout()
         logo_pixmap = QPixmap("app/logo.png")
 
@@ -519,8 +525,24 @@ class TicketManagement(QMainWindow):
                         item = QTableWidgetItem(str(cell_value) if cell_value is not None else "")
                         self.table_widget.setItem(row_idx - 1, col_idx, item)
 
+                # Aplicar estilos
+                self.style_excel_table()
+
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Error al actualizar la tabla: {e}")
+
+    def style_excel_table(self):
+        # Aplicar bordes y colores alternados
+        for row in range(self.table_widget.rowCount()):
+            for col in range(self.table_widget.columnCount()):
+                item = self.table_widget.item(row, col)
+                if item:
+                    item.setFont(QFont("Arial", 10))
+                    if row % 2 == 0:
+                        item.setBackground(QColor(240, 240, 240))  # Gris claro para filas pares
+                    else:
+                        item.setBackground(QColor(255, 255, 255))  # Blanco para filas impares
+                    item.setTextAlignment(Qt.AlignCenter)
 
     def update_graph(self):
         self.incidences_count = {block: 0 for block in self.blocks}
@@ -535,16 +557,23 @@ class TicketManagement(QMainWindow):
 
         self.figure.clear()
         ax = self.figure.add_subplot(111)
-        ax.bar(self.incidences_count.keys(), self.incidences_count.values())
+
+        # Obtener las incidencias más comunes
+        incidents, counts = zip(*Counter(self.incidences_count).most_common())
+
+        # Crear el gráfico de barras
+        bars = ax.bar(incidents, counts, color='skyblue')
+
+        # Añadir etiquetas de cantidad encima de las barras
+        for bar in bars:
+            yval = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2, yval + 0.5, int(yval), ha='center', va='bottom')
+
         ax.set_xlabel('Bloques')
-        ax.set_ylabel('CANTIDAD')
-        ax.set_title('TOTAL INCIDENCIAS')
-
-        short_labels = [block.split()[0] for block in self.blocks]
-        ax.set_xticks(range(len(short_labels)))
-        ax.set_xticklabels(short_labels, rotation=0, ha="right")
-
-        ax.tick_params(axis='x', labelsize=10)
+        ax.set_ylabel('Cantidad de Incidencias')
+        ax.set_title('Incidencias Más Comunes')
+        ax.set_xticks(range(len(incidents)))
+        ax.set_xticklabels(incidents, rotation=45, ha="right")
 
         self.canvas.draw()
 

@@ -1,0 +1,13 @@
+IDEAS:
+
+Filtro avanzado:
+    - Incorporar en el filtro, que se puedan visualizar todas las incidencias de todos los bloques independientemente
+    si logeas con un usuario u otro.
+    - Que se pueda visualizar mejor y mas estructuradas las incidencias por bloques
+    - El grafico mas legible, hacerlo mas pequeño si hace falta y que haya un boton 
+    para ampliarlo como el usario desee.
+
+# Archivo excel:
+#    - Tiene que existir solo un archivo excel donde se guardan todas las incidencias independientemente del usuario
+#    que haga login.
+
