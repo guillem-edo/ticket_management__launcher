@@ -16,7 +16,7 @@ Filtro avanzado:
     de una forma normal, manteniendo la estructura de siempre, y en la ventana en cuestión de la app.
 
 
-//WORKING// - Añadir un boton que cuando se confirme una incidencia, se genere al lado de esta un mensaje que ponga "Fixing"
+//DONE// - Añadir un boton que cuando se confirme una incidencia, se genere al lado de esta un mensaje que ponga "Fixing"
 en color rojo, y tambien añadir un boton que ponga "Correct" de color verde al lado del mensaje en rojo para cuando 
 el usuario le haga click, la incidencia pase a estar reparada y también se informe en el excel a que hora se ha
 reparado. También añadir un botón para que el usuario pueda escribir algún detalle sobre la incidencia en cuestión,
@@ -26,4 +26,4 @@ la app, que se llame "Mensajes detallados", y aqui puede acceder el usuario siem
 //WORKING// - Mejorar la pestaña de "Detalles de incidencias mas relevantes", quitando el nombre de "Bloque:" en el titulo de
 cada uno, y dejando solamente el nombre del bloque en cuestión. Tambien aumentaremos la fuente de las incidencias
 que se ven dentro de la pestaña y añadiremos algun logo como una flecha verde hacia arriba, de tamaño pequeño, 
-al lado de las incidencias confirmadas donde hay mayor numero.
+al lado de las incidencias confirmadas donde exista mayor numero.
