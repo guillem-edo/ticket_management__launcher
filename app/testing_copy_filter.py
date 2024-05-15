@@ -547,9 +547,10 @@ class TicketManagement(QMainWindow):
             workbook = load_workbook(self.excel_file)
             sheet = workbook.active
             for row in sheet.iter_rows(min_row=2, values_only=True):
-                for i, block in enumerate(self.incidencias.keys(), start=2):
-                    if row[i] != "-":
-                        self.incidences_count[block] += 1
+                if len(row) == len(self.incidencias) + 2:  # Asegurarse de que la fila tiene la longitud esperada
+                    for i, block in enumerate(list(self.incidencias.keys()), start=2):
+                        if row[i] and row[i] != "-":
+                            self.incidences_count[block] += 1
 
         top_incidents = Counter(self.incidences_count).most_common(5)
         self.top_incidents_list.clear()
