@@ -1,4 +1,4 @@
-IDEAS:
+
 
 Filtro avanzado:
     - Incorporar en el filtro, que se puedan visualizar todas las incidencias de todos los bloques independientemente
@@ -15,9 +15,15 @@ Filtro avanzado:
     los bloques en varias pestañas y todas las incidencias que se van añadiendo que se incluyan tanto en el excel,
     de una forma normal, manteniendo la estructura de siempre, y en la ventana en cuestión de la app.
 
-- Añadir un boton que cuando se confirme una incidencia, se genere al lado de esta un mensaje que ponga "Repairing"
-en color rojo, y tambien añadir un boton que ponga "Repared" de color verde al lado del mensaje en rojo para cuando 
+
+//WORKING// - Añadir un boton que cuando se confirme una incidencia, se genere al lado de esta un mensaje que ponga "Fixing"
+en color rojo, y tambien añadir un boton que ponga "Correct" de color verde al lado del mensaje en rojo para cuando 
 el usuario le haga click, la incidencia pase a estar reparada y también se informe en el excel a que hora se ha
 reparado. También añadir un botón para que el usuario pueda escribir algún detalle sobre la incidencia en cuestión,
 siempre y cuando el usuario quiera. Los mensajes que se escriban, tienen que quedar registrados en otra pestaña de
 la app, que se llame "Mensajes detallados", y aqui puede acceder el usuario siempre que quiera.
+
+//WORKING// - Mejorar la pestaña de "Detalles de incidencias mas relevantes", quitando el nombre de "Bloque:" en el titulo de
+cada uno, y dejando solamente el nombre del bloque en cuestión. Tambien aumentaremos la fuente de las incidencias
+que se ven dentro de la pestaña y añadiremos algun logo como una flecha verde hacia arriba, de tamaño pequeño, 
+al lado de las incidencias confirmadas donde hay mayor numero.

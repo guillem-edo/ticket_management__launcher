@@ -341,10 +341,12 @@ class TicketManagement(QMainWindow):
         self.apply_styles()
     
     def center_window_app(self):
-        screen_rect_app = QApplication.desktop().availableGeometry()
-        x = (screen_rect_app.width() - self.width()) // 2
-        y = (screen_rect_app.height() - self.height()) // 2
-        self.setGeometry(QRect(x, y, self.width(), self.height()))
+        screen_rect = QApplication.desktop().availableGeometry()
+        window_width = self.width()
+        window_height = self.height()
+        x = (screen_rect.width() - window_width) // 2
+        y = (screen_rect.height() - window_height) // 2
+        self.setGeometry(QRect(x, y, window_width, window_height))
 
     def open_advanced_filter_dialog(self):
         self.filter_dialog = AdvancedFilterDialog(self)
