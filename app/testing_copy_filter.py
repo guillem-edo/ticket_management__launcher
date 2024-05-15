@@ -9,18 +9,9 @@ from PyQt5.QtWidgets import (
     QDialog, QComboBox
 )
 from PyQt5.QtCore import QTimer, Qt, pyqtSignal, QRect
-from PyQt5.QtGui import QFont, QPixmap
+from PyQt5.QtGui import QFont, QPixmap, QColor
 
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from collections import Counter, defaultdict
-
-# Clase User para almacenar información de usuario
-class User:
-    def __init__(self, username, password, blocks):
-        self.username = username
-        self.password = password
-        self.blocks = blocks
 
 # Clase User para almacenar información de usuario
 class User:
@@ -48,6 +39,7 @@ class LoginWindow(QWidget):
             User("pideu4", "1111", ["WV50 FILTER"]),
             User("pideu5", "1111", ["SPL"])
         ]
+
         layout = QVBoxLayout()
         logo_pixmap = QPixmap("app/logo.png")
 
@@ -301,7 +293,7 @@ class TicketManagement(QMainWindow):
             "SPL": ["Sensor de PCB detecta que hay placa cuando no la hay", "No detecta marcas Power", "Colisión placas", "Fallo dispensación glue", "Marco atascado en parte inferior",
                     "Soldadura defectuosa", "Error en sensor de salida"]
         }
-        self.incidences_count = {block: 0 for block in self.blocks}
+        self.incidences_count = {block: 0 for block in self.incidencias.keys()}
         self.initUI()
         self.load_last_excel_file()
 
@@ -330,7 +322,7 @@ class TicketManagement(QMainWindow):
         right_layout.addWidget(self.excel_path_display)
 
         self.table_widget = QTableWidget(self)
-        self.table_widget.setFixedSize(600, 300)
+        self.table_widget.setFixedSize(800, 300)
         right_layout.addWidget(self.table_widget)
 
         self.global_incidence_list = QListWidget(self)
@@ -340,9 +332,12 @@ class TicketManagement(QMainWindow):
         filter_button.clicked.connect(self.open_advanced_filter_dialog)
         right_layout.addWidget(filter_button)
 
-        self.figure = Figure()
-        self.canvas = FigureCanvas(self.figure)
-        right_layout.addWidget(self.canvas)
+        # Reemplazar el gráfico con la lista de incidencias más relevantes
+        self.top_incidents_label = QLabel("Incidencias Más Relevantes")
+        right_layout.addWidget(self.top_incidents_label)
+
+        self.top_incidents_list = QListWidget(self)
+        right_layout.addWidget(self.top_incidents_list)
 
         right_layout.addStretch()
 
@@ -376,8 +371,8 @@ class TicketManagement(QMainWindow):
         workbook = load_workbook(self.excel_file)
         sheet = workbook.active
 
-        filtered_counts = {block: {'count': 0, 'incidences': []} for block in self.blocks}
-        trends = {block: defaultdict(int) for block in self.blocks}
+        filtered_counts = {block: {'count': 0, 'incidences': []} for block in self.incidencias.keys()}
+        trends = {block: defaultdict(int) for block in self.incidencias.keys()}
 
         for row in sheet.iter_rows(min_row=2, values_only=True):
             date_str, time_str, *incidences = row
@@ -387,7 +382,7 @@ class TicketManagement(QMainWindow):
                 hour_str = row_datetime.strftime("%Y-%m-%d %H:00:00")
                 for i, incidence in enumerate(incidences):
                     if incidence != "-":
-                        block = self.blocks[i]
+                        block = list(self.incidencias.keys())[i]
                         if selected_block == "Todos" or selected_block == block:
                             filtered_counts[block]['count'] += 1
                             filtered_counts[block]['incidences'].append(incidence)
@@ -447,7 +442,7 @@ class TicketManagement(QMainWindow):
             QMessageBox.information(self, "Confirmación", "Incidencia confirmada.")
 
             self.update_excel_table()
-            self.update_graph()
+            self.update_top_incidents()
 
             self.global_incidence_list.addItem(f"{block_name}: {incidence_text} a las {time_str} del {date_str}")
         else:
@@ -463,13 +458,13 @@ class TicketManagement(QMainWindow):
             with open(self.config_file, "w") as config:
                 config.write(file_path)
             self.update_excel_table()
-            self.update_graph()
+            self.update_top_incidents()
 
     def create_excel_if_not_exists(self, file_path):
         if not os.path.exists(file_path):
             workbook = Workbook()
             sheet = workbook.active
-            headers = ["Fecha", "Hora"] + self.blocks
+            headers = ["Fecha", "Hora"] + list(self.incidencias.keys())
             sheet.append(headers)
             workbook.save(file_path)
 
@@ -480,14 +475,15 @@ class TicketManagement(QMainWindow):
                 sheet = workbook.active
 
                 headers = [cell.value for cell in sheet[1]]
-                if headers != ["Fecha", "Hora"] + self.blocks:
+                expected_headers = ["Fecha", "Hora"] + list(self.incidencias.keys())
+                if headers != expected_headers:
                     sheet.delete_rows(1, 1)
                     sheet.insert_rows(1)
-                    for idx, header in enumerate(["Fecha", "Hora"] + self.blocks):
+                    for idx, header in enumerate(expected_headers):
                         sheet.cell(row=1, column=idx + 1, value=header)
 
-                new_row = [date_str, time_str] + ["-"] * len(self.blocks)
-                block_index = self.blocks.index(block_name) + 2
+                new_row = [date_str, time_str] + ["-"] * len(self.incidencias)
+                block_index = list(self.incidencias.keys()).index(block_name) + 2
                 new_row[block_index] = incidence_text
                 sheet.append(new_row)
 
@@ -507,7 +503,7 @@ class TicketManagement(QMainWindow):
                     self.excel_file = file_path
                     self.excel_path_display.setText(file_path)
                     self.update_excel_table()
-                    self.update_graph()
+                    self.update_top_incidents()
 
     def update_excel_table(self):
         if self.excel_file and os.path.exists(self.excel_file):
@@ -544,38 +540,21 @@ class TicketManagement(QMainWindow):
                         item.setBackground(QColor(255, 255, 255))  # Blanco para filas impares
                     item.setTextAlignment(Qt.AlignCenter)
 
-    def update_graph(self):
-        self.incidences_count = {block: 0 for block in self.blocks}
+    def update_top_incidents(self):
+        self.incidences_count = {block: 0 for block in self.incidencias.keys()}
 
         if self.excel_file and os.path.exists(self.excel_file):
             workbook = load_workbook(self.excel_file)
             sheet = workbook.active
             for row in sheet.iter_rows(min_row=2, values_only=True):
-                for i, block in enumerate(self.blocks, start=2):
+                for i, block in enumerate(self.incidencias.keys(), start=2):
                     if row[i] != "-":
                         self.incidences_count[block] += 1
 
-        self.figure.clear()
-        ax = self.figure.add_subplot(111)
-
-        # Obtener las incidencias más comunes
-        incidents, counts = zip(*Counter(self.incidences_count).most_common())
-
-        # Crear el gráfico de barras
-        bars = ax.bar(incidents, counts, color='skyblue')
-
-        # Añadir etiquetas de cantidad encima de las barras
-        for bar in bars:
-            yval = bar.get_height()
-            ax.text(bar.get_x() + bar.get_width()/2, yval + 0.5, int(yval), ha='center', va='bottom')
-
-        ax.set_xlabel('Bloques')
-        ax.set_ylabel('Cantidad de Incidencias')
-        ax.set_title('Incidencias Más Comunes')
-        ax.set_xticks(range(len(incidents)))
-        ax.set_xticklabels(incidents, rotation=45, ha="right")
-
-        self.canvas.draw()
+        top_incidents = Counter(self.incidences_count).most_common(5)
+        self.top_incidents_list.clear()
+        for incident, count in top_incidents:
+            self.top_incidents_list.addItem(f"{incident}: {count}")
 
     def apply_styles(self):
         title_font = QFont("Arial", 14, QFont.Bold)

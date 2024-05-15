@@ -10,4 +10,8 @@ Filtro avanzado:
 # Archivo excel:
 #    - Tiene que existir solo un archivo excel donde se guardan todas las incidencias independientemente del usuario
 #    que haga login.
+    - Visualización mejorada, que se integre el excel a la app haciendolo mas visual y mejorar lo estetico.
+    - En vez de la ventana de visualización del excel, que exista una ventana propia de la app, donde esta tenga 
+    los bloques en varias pestañas y todas las incidencias que se van añadiendo que se incluyan tanto en el excel,
+    de una forma normal, manteniendo la estructura de siempre, y en la ventana en cuestión de la app.
 
