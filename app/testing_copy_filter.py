@@ -15,9 +15,16 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from collections import Counter, defaultdict
 
+# Clase User para almacenar información de usuario
+class User:
+    def __init__(self, username, password, blocks):
+        self.username = username
+        self.password = password
+        self.blocks = blocks
 
+# Clase LoginWindow para manejar inicio de sesión
 class LoginWindow(QWidget):
-    login_successful = pyqtSignal()
+    login_successful = pyqtSignal(User)
 
     def __init__(self):
         super().__init__()
@@ -25,6 +32,15 @@ class LoginWindow(QWidget):
         self.resize(280, 360)
         self.center_window()
         self.setStyleSheet("background-color: white;")
+
+        # Lista de usuarios
+        self.users = [
+            User("pideu1", "1111", ["WC47 NACP"]),
+            User("pideu2", "1111", ["WC48 P5F"]),
+            User("pideu3", "1111", ["WC49 P5H"]),
+            User("pideu4", "1111", ["WV50 FILTER"]),
+            User("pideu5", "1111", ["SPL"])
+        ]
 
         layout = QVBoxLayout()
         logo_pixmap = QPixmap("app/logo.png")
@@ -63,17 +79,18 @@ class LoginWindow(QWidget):
     def login(self):
         username = self.username_input.text()
         password = self.password_input.text()
-        if username == "pideu" and password == "1111":
-            self.login_successful.emit()
-            self.close()
-        else:
-            QMessageBox.warning(self, "Error de Inicio de Sesión", "Usuario o contraseña incorrectos")
+        for user in self.users:
+            if username == user.username and password == user.password:
+                self.login_successful.emit(user)
+                self.close()
+                return
+        QMessageBox.warning(self, "Error de Inicio de Sesión", "Usuario o contraseña incorrectos")
 
-
+# Clase GraphDialog para mostrar gráficos de incidencias
 class GraphDialog(QDialog):
     def __init__(self, parent=None, data=None):
         super().__init__(parent)
-        self.setWindowTitle("Gráficos de Incidencias")
+        self.setWindowTitle("Gráfico de Incidencias")
         self.setGeometry(300, 300, 800, 600)
 
         self.data = data
@@ -119,7 +136,7 @@ class GraphDialog(QDialog):
             self.showFullScreen()
             self.fullscreen_button.setText("Salir de Pantalla Completa")
 
-
+# Clase AdvancedFilterDialog para el filtro avanzado
 class AdvancedFilterDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -248,14 +265,15 @@ class AdvancedFilterDialog(QDialog):
         else:
             QMessageBox.warning(self, "Error", "Primero aplica el filtro para ver los gráficos.")
 
-
+# Clase TicketManagement para manejar la gestión de tickets
 class TicketManagement(QMainWindow):
     config_file = "config.txt"
 
-    def __init__(self):
+    def __init__(self, user):
         super().__init__()
+        self.user = user
         self.excel_file = None
-        self.blocks = ["WC47 NACP", "WC48 P5F", "WC49 P5H", "WV50 FILTER", "SPL"]
+        self.blocks = user.blocks
         self.last_incidence_labels = {}
         self.incidencias = {
             "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva",
@@ -282,8 +300,8 @@ class TicketManagement(QMainWindow):
         self.load_last_excel_file()
 
     def initUI(self):
-        self.setWindowTitle("Ticket Management")
-        self.setGeometry(200, 200, 1200, 800)
+        self.setWindowTitle(f"Ticket Management - {self.user.username}")
+        self.center_window_app()
 
         main_layout = QHBoxLayout()
         central_widget = QWidget()
@@ -293,8 +311,8 @@ class TicketManagement(QMainWindow):
         self.tabWidget = QTabWidget(self)
         main_layout.addWidget(self.tabWidget, 2)
 
-        for name, incidences in self.incidencias.items():
-            self.create_tab(name, incidences)
+        for name in self.blocks:
+            self.create_tab(name, self.incidencias[name])
 
         right_layout = QVBoxLayout()
         select_excel_button = QPushButton("Seleccionar Archivo Excel", self)
@@ -334,6 +352,12 @@ class TicketManagement(QMainWindow):
         timer.start(1000)
 
         self.apply_styles()
+    
+    def center_window_app(self):
+        screen_rect_app = QApplication.desktop().availableGeometry()
+        x = (screen_rect_app.width() - self.width()) // 2
+        y = (screen_rect_app.height() - self.height()) // 2
+        self.setGeometry(QRect(x, y, self.width(), self.height()))
 
     def open_advanced_filter_dialog(self):
         self.filter_dialog = AdvancedFilterDialog(self)
@@ -541,9 +565,9 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     login_window = LoginWindow()
-    ticket_management = TicketManagement()
 
-    def on_login_successful():
+    def on_login_successful(user):
+        ticket_management = TicketManagement(user)
         ticket_management.show()
 
     login_window.login_successful.connect(on_login_successful)
