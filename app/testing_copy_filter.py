@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox, QTabWidget, QLabel,
     QListWidget, QListWidgetItem, QStatusBar, QLineEdit, QFileDialog, QHBoxLayout, QTableWidget, QTableWidgetItem, 
-    QDialog, QComboBox
+    QDialog, QComboBox, QScrollArea
 )
 from PyQt5.QtCore import QTimer, Qt, pyqtSignal, QRect
 from PyQt5.QtGui import QFont, QPixmap, QColor
@@ -83,56 +83,6 @@ class LoginWindow(QWidget):
                 self.close()
                 return
         QMessageBox.warning(self, "Error de Inicio de Sesión", "Usuario o contraseña incorrectos")
-
-# Clase GraphDialog para mostrar gráficos de incidencias
-class GraphDialog(QDialog):
-    def __init__(self, parent=None, data=None):
-        super().__init__(parent)
-        self.setWindowTitle("Gráfico de Incidencias")
-        self.setGeometry(300, 300, 800, 600)
-
-        self.data = data
-
-        layout = QVBoxLayout()
-
-        self.figure = Figure()
-        self.canvas = FigureCanvas(self.figure)
-        layout.addWidget(self.canvas)
-
-        self.fullscreen_button = QPushButton("Pantalla Completa")
-        self.fullscreen_button.clicked.connect(self.toggle_fullscreen)
-        layout.addWidget(self.fullscreen_button)
-
-        self.setLayout(layout)
-        self.generate_top_10_charts()
-
-    def generate_top_10_charts(self):
-        self.figure.clear()
-        ax = self.figure.add_subplot(111)
-
-        all_incidents = []
-        for data in self.data.values():
-            all_incidents.extend(data['incidences'])
-
-        counter = Counter(all_incidents)
-        top_10_incidents = counter.most_common(10)
-
-        if top_10_incidents:
-            incidents, counts = zip(*top_10_incidents)
-            ax.barh(incidents, counts)
-
-        ax.set_xlabel('Número de Incidencias')
-        ax.set_ylabel('Incidencias')
-        ax.set_title('Top 10 Incidencias')
-        self.canvas.draw()
-
-    def toggle_fullscreen(self):
-        if self.isFullScreen():
-            self.showNormal()
-            self.fullscreen_button.setText("Pantalla Completa")
-        else:
-            self.showFullScreen()
-            self.fullscreen_button.setText("Salir de Pantalla Completa")
 
 # Clase AdvancedFilterDialog para el filtro avanzado
 class AdvancedFilterDialog(QDialog):
@@ -263,6 +213,39 @@ class AdvancedFilterDialog(QDialog):
         else:
             QMessageBox.warning(self, "Error", "Primero aplica el filtro para ver los gráficos.")
 
+# Clase para mostrar detalles de incidencias más relevantes
+class TopIncidentsDialog(QDialog):
+    def __init__(self, parent=None, incident_details=None):
+        super().__init__(parent)
+        self.setWindowTitle("Detalles de Incidencias Más Relevantes")
+        self.setGeometry(300, 300, 800, 600)
+
+        layout = QVBoxLayout()
+        
+        scroll_area = QScrollArea()
+        scroll_widget = QWidget()
+        scroll_layout = QVBoxLayout(scroll_widget)
+
+        for block, details in incident_details.items():
+            block_label = QLabel(f"Bloque: {block}")
+            block_label.setFont(QFont("Arial", 12, QFont.Bold))
+            scroll_layout.addWidget(block_label)
+
+            top_incidents = details.most_common(5)
+            for incident, count in top_incidents:
+                incident_label = QLabel(f"  {incident}: {count}")
+                scroll_layout.addWidget(incident_label)
+
+        scroll_area.setWidget(scroll_widget)
+        scroll_area.setWidgetResizable(True)
+        layout.addWidget(scroll_area)
+
+        close_button = QPushButton("Cerrar")
+        close_button.clicked.connect(self.close)
+        layout.addWidget(close_button)
+
+        self.setLayout(layout)
+
 # Clase TicketManagement para manejar la gestión de tickets
 class TicketManagement(QMainWindow):
     config_file = "config.txt"
@@ -322,22 +305,24 @@ class TicketManagement(QMainWindow):
         right_layout.addWidget(self.excel_path_display)
 
         self.table_widget = QTableWidget(self)
-        self.table_widget.setFixedSize(800, 300)
+        self.table_widget.setFixedSize(800, 400)  # Aumentar el tamaño de la tabla de Excel
         right_layout.addWidget(self.table_widget)
 
         self.global_incidence_list = QListWidget(self)
+        self.global_incidence_list.setFixedSize(800, 200)  # Aumentar el tamaño de la lista de incidencias globales
         right_layout.addWidget(self.global_incidence_list)
 
         filter_button = QPushButton("Filtro Avanzado", self)
         filter_button.clicked.connect(self.open_advanced_filter_dialog)
         right_layout.addWidget(filter_button)
 
-        # Reemplazar el gráfico con la lista de incidencias más relevantes
+        # Sección para incidencias más relevantes
         self.top_incidents_label = QLabel("Incidencias Más Relevantes")
         right_layout.addWidget(self.top_incidents_label)
 
-        self.top_incidents_list = QListWidget(self)
-        right_layout.addWidget(self.top_incidents_list)
+        self.view_details_button = QPushButton("Ver Detalles")
+        self.view_details_button.clicked.connect(self.open_top_incidents_dialog)
+        right_layout.addWidget(self.view_details_button)
 
         right_layout.addStretch()
 
@@ -363,6 +348,10 @@ class TicketManagement(QMainWindow):
     def open_advanced_filter_dialog(self):
         self.filter_dialog = AdvancedFilterDialog(self)
         self.filter_dialog.exec_()
+
+    def open_top_incidents_dialog(self):
+        self.top_incidents_dialog = TopIncidentsDialog(self, incident_details=self.incident_details)
+        self.top_incidents_dialog.exec_()
 
     def get_filtered_incidents(self, start_dt, end_dt, selected_block):
         if not self.excel_file or not os.path.exists(self.excel_file):
@@ -542,6 +531,7 @@ class TicketManagement(QMainWindow):
 
     def update_top_incidents(self):
         self.incidences_count = {block: 0 for block in self.incidencias.keys()}
+        self.incident_details = {block: Counter() for block in self.incidencias.keys()}
 
         if self.excel_file and os.path.exists(self.excel_file):
             workbook = load_workbook(self.excel_file)
@@ -551,11 +541,7 @@ class TicketManagement(QMainWindow):
                     for i, block in enumerate(list(self.incidencias.keys()), start=2):
                         if row[i] and row[i] != "-":
                             self.incidences_count[block] += 1
-
-        top_incidents = Counter(self.incidences_count).most_common(5)
-        self.top_incidents_list.clear()
-        for incident, count in top_incidents:
-            self.top_incidents_list.addItem(f"{incident}: {count}")
+                            self.incident_details[block][row[i]] += 1
 
     def apply_styles(self):
         title_font = QFont("Arial", 14, QFont.Bold)
