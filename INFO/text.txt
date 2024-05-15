@@ -15,3 +15,7 @@ Filtro avanzado:
     los bloques en varias pestañas y todas las incidencias que se van añadiendo que se incluyan tanto en el excel,
     de una forma normal, manteniendo la estructura de siempre, y en la ventana en cuestión de la app.
 
+- Añadir un boton que cuando se confirme una incidencia, se genere al lado de esta un mensaje que ponga "Repairing"
+en color rojo, y tambien añadir un boton que ponga "Repared" de color verde al lado del mensaje en rojo para cuando 
+el operario le haga click, la incidencia pase a estar reparada y también se informe en el excel a que hora se ha
+reparado.

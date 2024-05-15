@@ -89,7 +89,7 @@ class AdvancedFilterDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Filtro Avanzado")
-        self.setGeometry(300, 300, 1000, 800)
+        self.setGeometry(300, 300, 800, 600)
 
         layout = QVBoxLayout()
 
@@ -218,7 +218,7 @@ class TopIncidentsDialog(QDialog):
     def __init__(self, parent=None, incident_details=None):
         super().__init__(parent)
         self.setWindowTitle("Detalles de Incidencias Más Relevantes")
-        self.setGeometry(300, 300, 800, 600)
+        self.setGeometry(300, 300, 600, 400)
 
         layout = QVBoxLayout()
         
@@ -282,6 +282,7 @@ class TicketManagement(QMainWindow):
 
     def initUI(self):
         self.setWindowTitle(f"Ticket Management - {self.user.username}")
+        self.resize(1200, 800)
         self.center_window_app()
 
         main_layout = QHBoxLayout()
@@ -305,11 +306,11 @@ class TicketManagement(QMainWindow):
         right_layout.addWidget(self.excel_path_display)
 
         self.table_widget = QTableWidget(self)
-        self.table_widget.setFixedSize(800, 400)  # Aumentar el tamaño de la tabla de Excel
+        self.table_widget.setFixedSize(600, 300)
         right_layout.addWidget(self.table_widget)
 
         self.global_incidence_list = QListWidget(self)
-        self.global_incidence_list.setFixedSize(800, 200)  # Aumentar el tamaño de la lista de incidencias globales
+        self.global_incidence_list.setFixedSize(600, 200)
         right_layout.addWidget(self.global_incidence_list)
 
         filter_button = QPushButton("Filtro Avanzado", self)
@@ -403,7 +404,7 @@ class TicketManagement(QMainWindow):
         self.last_incidence_labels[name] = last_incidence_label
 
         list_widget = QListWidget()
-        font = QFont("Arial", 16)
+        font = QFont("Arial", 12)
         list_widget.setFont(font)
         for incidence in incidences:
             item = QListWidgetItem(incidence)
@@ -412,9 +413,9 @@ class TicketManagement(QMainWindow):
         layout.addWidget(list_widget)
 
         confirm_button = QPushButton("Confirmar Incidencia")
-        button_font = QFont("Arial", 12)
+        button_font = QFont("Arial", 10)
         confirm_button.setFont(button_font)
-        confirm_button.setFixedSize(700, 50)
+        confirm_button.setFixedSize(500, 40)
         confirm_button.clicked.connect(lambda: self.confirm_incidence(name, list_widget))
         layout.addWidget(confirm_button)
 
