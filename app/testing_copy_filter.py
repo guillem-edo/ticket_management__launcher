@@ -305,6 +305,12 @@ class TicketManagement(QMainWindow):
         self.excel_path_display.setReadOnly(True)
         right_layout.addWidget(self.excel_path_display)
 
+        # Botón para alternar entre vista completa y vista filtrada del Excel
+        self.toggle_excel_view_button = QPushButton("Ver Excel Completo", self)
+        self.toggle_excel_view_button.clicked.connect(self.toggle_excel_view)
+        right_layout.addWidget(self.toggle_excel_view_button)
+        self.excel_view_mode = "completo"
+
         self.table_widget = QTableWidget(self)
         self.table_widget.setFixedSize(600, 300)
         right_layout.addWidget(self.table_widget)
@@ -362,6 +368,15 @@ class TicketManagement(QMainWindow):
     def open_top_incidents_dialog(self):
         self.top_incidents_dialog = TopIncidentsDialog(self, incident_details=self.incident_details)
         self.top_incidents_dialog.exec_()
+
+    def toggle_excel_view(self):
+        if self.excel_view_mode == "completo":
+            self.excel_view_mode = "filtrado"
+            self.toggle_excel_view_button.setText("Ver Excel Completo")
+        else:
+            self.excel_view_mode = "completo"
+            self.toggle_excel_view_button.setText("Ver Excel Filtrado")
+        self.update_excel_table()
 
     def get_filtered_incidents(self, start_dt, end_dt, selected_block):
         if not self.excel_file or not os.path.exists(self.excel_file):
@@ -567,16 +582,25 @@ class TicketManagement(QMainWindow):
             try:
                 workbook = load_workbook(self.excel_file)
                 sheet = workbook.active
-                self.table_widget.setRowCount(sheet.max_row - 1)
+                rows_to_display = []
+
+                if self.excel_view_mode == "completo":
+                    rows_to_display = list(sheet.iter_rows(min_row=2, values_only=True))
+                else:
+                    for row in sheet.iter_rows(min_row=2, values_only=True):
+                        if row[list(self.incidencias.keys()).index(self.blocks[0]) + 2] != "-":
+                            rows_to_display.append(row)
+
+                self.table_widget.setRowCount(len(rows_to_display))
                 self.table_widget.setColumnCount(sheet.max_column)
 
                 headers = [cell.value for cell in sheet[1]]
                 self.table_widget.setHorizontalHeaderLabels(headers)
 
-                for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=1):
+                for row_idx, row in enumerate(rows_to_display):
                     for col_idx, cell_value in enumerate(row):
                         item = QTableWidgetItem(str(cell_value) if cell_value is not None else "")
-                        self.table_widget.setItem(row_idx - 1, col_idx, item)
+                        self.table_widget.setItem(row_idx, col_idx, item)
 
                 # Aplicar estilos
                 self.style_excel_table()
@@ -605,7 +629,7 @@ class TicketManagement(QMainWindow):
             workbook = load_workbook(self.excel_file)
             sheet = workbook.active
             for row in sheet.iter_rows(min_row=2, values_only=True):
-                if len(row) == len(self.incidencias) + 2:  # Asegurarse de que la fila tiene la longitud esperada
+                if len(row) == len(self.incidencias) + 3:  # Asegurarse de que la fila tiene la longitud esperada
                     for i, block in enumerate(list(self.incidencias.keys()), start=2):
                         if row[i] and row[i] != "-":
                             self.incidences_count[block] += 1
