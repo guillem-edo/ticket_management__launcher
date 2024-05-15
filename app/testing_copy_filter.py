@@ -226,15 +226,25 @@ class TopIncidentsDialog(QDialog):
         scroll_widget = QWidget()
         scroll_layout = QVBoxLayout(scroll_widget)
 
+        arrow_up_pixmap = QPixmap("app/arrow_up.png").scaled(20, 20, Qt.KeepAspectRatio)
+
         for block, details in incident_details.items():
-            block_label = QLabel(f"Bloque: {block}")
-            block_label.setFont(QFont("Arial", 12, QFont.Bold))
+            block_label = QLabel(block)
+            block_label.setFont(QFont("Arial", 14, QFont.Bold))
             scroll_layout.addWidget(block_label)
 
             top_incidents = details.most_common(5)
+            max_count = top_incidents[0][1] if top_incidents else 0
             for incident, count in top_incidents:
-                incident_label = QLabel(f"  {incident}: {count}")
-                scroll_layout.addWidget(incident_label)
+                incident_layout = QHBoxLayout()
+                incident_label = QLabel(f"{incident}: {count}")
+                incident_label.setFont(QFont("Arial", 12))
+                incident_layout.addWidget(incident_label)
+                if count == max_count:
+                    arrow_label = QLabel()
+                    arrow_label.setPixmap(arrow_up_pixmap)
+                    incident_layout.addWidget(arrow_label)
+                scroll_layout.addLayout(incident_layout)
 
         scroll_area.setWidget(scroll_widget)
         scroll_area.setWidgetResizable(True)
