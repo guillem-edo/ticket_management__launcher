@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox, QTabWidget, QLabel,
     QListWidget, QListWidgetItem, QStatusBar, QLineEdit, QFileDialog, QHBoxLayout, QTableWidget, QTableWidgetItem, 
-    QDialog, QComboBox, QScrollArea
+    QDialog, QComboBox, QScrollArea, QTextEdit, QInputDialog
 )
 from PyQt5.QtCore import QTimer, Qt, pyqtSignal, QRect
 from PyQt5.QtGui import QFont, QPixmap, QColor
@@ -334,6 +334,13 @@ class TicketManagement(QMainWindow):
         self.status_bar = QStatusBar(self)
         self.setStatusBar(self.status_bar)
 
+        # Pestaña para mensajes detallados
+        self.detailed_messages_tab = QWidget()
+        self.detailed_messages_layout = QVBoxLayout(self.detailed_messages_tab)
+        self.tabWidget.addTab(self.detailed_messages_tab, "Mensajes detallados")
+        self.detailed_messages_list = QListWidget()
+        self.detailed_messages_layout.addWidget(self.detailed_messages_list)
+
         timer = QTimer(self)
         timer.timeout.connect(self.update_status_bar)
         timer.start(1000)
@@ -341,11 +348,11 @@ class TicketManagement(QMainWindow):
         self.apply_styles()
     
     def center_window_app(self):
-        screen_rect = QApplication.desktop().availableGeometry()
+        screen_rect_app = QApplication.desktop().availableGeometry()
         window_width = self.width()
         window_height = self.height()
-        x = (screen_rect.width() - window_width) // 2
-        y = (screen_rect.height() - window_height) // 2
+        x = (screen_rect_app.width() - window_width) // 2
+        y = (screen_rect_app.height() - window_height) // 2
         self.setGeometry(QRect(x, y, window_width, window_height))
 
     def open_advanced_filter_dialog(self):
@@ -433,12 +440,70 @@ class TicketManagement(QMainWindow):
 
             QMessageBox.information(self, "Confirmación", "Incidencia confirmada.")
 
+            # Añadir botones y mensajes al confirmar la incidencia
+            fixing_label = QLabel("Fixing")
+            fixing_label.setStyleSheet("color: red; font-weight: bold;")
+            correct_button = QPushButton("Correct")
+            correct_button.setStyleSheet("background-color: green; color: white; font-weight: bold;")
+            details_button = QPushButton("Añadir Detalles")
+            details_button.setStyleSheet("background-color: blue; color: white; font-weight: bold;")
+
+            item_widget = QWidget()
+            item_layout = QHBoxLayout(item_widget)
+            item_layout.addWidget(QLabel(f"{block_name}: {incidence_text} a las {time_str} del {date_str}"))
+            item_layout.addWidget(fixing_label)
+            item_layout.addWidget(correct_button)
+            item_layout.addWidget(details_button)
+            item_layout.addStretch()
+            item_widget.setLayout(item_layout)
+
+            list_item = QListWidgetItem()
+            list_item.setSizeHint(item_widget.sizeHint())
+
+            self.global_incidence_list.addItem(list_item)
+            self.global_incidence_list.setItemWidget(list_item, item_widget)
+
+            correct_button.clicked.connect(lambda: self.mark_incidence_as_fixed(block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str))
+            details_button.clicked.connect(lambda: self.add_incidence_details(block_name, incidence_text, date_str, time_str))
+            
             self.update_excel_table()
             self.update_top_incidents()
-
-            self.global_incidence_list.addItem(f"{block_name}: {incidence_text} a las {time_str} del {date_str}")
         else:
             QMessageBox.warning(self, "Ninguna Incidencia Seleccionada", "Selecciona una incidencia para confirmar.")
+
+    def mark_incidence_as_fixed(self, block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str):
+        fixing_label.setText("Reparada")
+        fixing_label.setStyleSheet("color: green; font-weight: bold;")
+        correct_button.setEnabled(False)
+        details_button.setEnabled(False)
+
+        # Registrar la hora de reparación en el Excel
+        repair_time_str = datetime.now().strftime("%H:%M:%S")
+        self.log_repair_time_to_excel(block_name, date_str, time_str, repair_time_str)
+
+    def add_incidence_details(self, block_name, incidence_text, date_str, time_str):
+        detail_text, ok = QInputDialog.getMultiLineText(self, "Añadir Detalles", "Escribe los detalles de la incidencia:")
+        if ok and detail_text:
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            detail_message = f"{timestamp} - {block_name}: {incidence_text} ({date_str} {time_str})\nDetalles: {detail_text}"
+
+            self.detailed_messages_list.addItem(detail_message)
+
+    def log_repair_time_to_excel(self, block_name, date_str, time_str, repair_time_str):
+        if self.excel_file and os.path.exists(self.excel_file):
+            try:
+                workbook = load_workbook(self.excel_file)
+                sheet = workbook.active
+
+                for row in sheet.iter_rows(min_row=2):
+                    if row[0].value == date_str and row[1].value == time_str:
+                        repair_time_cell = sheet.cell(row=row[0].row, column=len(self.incidencias) + 3)
+                        repair_time_cell.value = repair_time_str
+                        break
+
+                workbook.save(self.excel_file)
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Error al registrar la hora de reparación en Excel: {e}")
 
     def select_excel_file(self):
         file_dialog = QFileDialog()
@@ -456,7 +521,7 @@ class TicketManagement(QMainWindow):
         if not os.path.exists(file_path):
             workbook = Workbook()
             sheet = workbook.active
-            headers = ["Fecha", "Hora"] + list(self.incidencias.keys())
+            headers = ["Fecha", "Hora"] + list(self.incidencias.keys()) + ["Hora de Reparación"]
             sheet.append(headers)
             workbook.save(file_path)
 
@@ -467,14 +532,14 @@ class TicketManagement(QMainWindow):
                 sheet = workbook.active
 
                 headers = [cell.value for cell in sheet[1]]
-                expected_headers = ["Fecha", "Hora"] + list(self.incidencias.keys())
+                expected_headers = ["Fecha", "Hora"] + list(self.incidencias.keys()) + ["Hora de Reparación"]
                 if headers != expected_headers:
                     sheet.delete_rows(1, 1)
                     sheet.insert_rows(1)
                     for idx, header in enumerate(expected_headers):
                         sheet.cell(row=1, column=idx + 1, value=header)
 
-                new_row = [date_str, time_str] + ["-"] * len(self.incidencias)
+                new_row = [date_str, time_str] + ["-"] * len(self.incidencias) + [""]
                 block_index = list(self.incidencias.keys()).index(block_name) + 2
                 new_row[block_index] = incidence_text
                 sheet.append(new_row)
