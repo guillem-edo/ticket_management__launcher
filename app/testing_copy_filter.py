@@ -322,7 +322,6 @@ class TicketManagement(QMainWindow):
         self.excel_view_mode = "completo"
 
         self.table_widget = QTableWidget(self)
-        self.table_widget.setFixedSize(600, 300)
         right_layout.addWidget(self.table_widget)
 
         self.global_incidence_list = QListWidget(self)
@@ -474,13 +473,16 @@ class TicketManagement(QMainWindow):
             details_button.setStyleSheet("background-color: blue; color: white; font-weight: bold;")
 
             item_widget = QWidget()
-            item_layout = QHBoxLayout(item_widget)
-            item_layout.addWidget(QLabel(f"{block_name}: {incidence_text} a las {time_str} del {date_str}"))
-            item_layout.addWidget(fixing_label)
-            item_layout.addWidget(correct_button)
-            item_layout.addWidget(details_button)
-            item_layout.addStretch()
-            item_widget.setLayout(item_layout)
+            item_layout = QVBoxLayout(item_widget)
+            label_layout = QHBoxLayout()
+            label_layout.addWidget(QLabel(f"{block_name}: {incidence_text} a las {time_str} del {date_str}"))
+            item_layout.addLayout(label_layout)
+
+            buttons_layout = QVBoxLayout()
+            buttons_layout.addWidget(fixing_label)
+            buttons_layout.addWidget(correct_button)
+            buttons_layout.addWidget(details_button)
+            item_layout.addLayout(buttons_layout)
 
             list_item = QListWidgetItem()
             list_item.setSizeHint(item_widget.sizeHint())
@@ -500,11 +502,11 @@ class TicketManagement(QMainWindow):
         fixing_label.setText("Reparada")
         fixing_label.setStyleSheet("color: green; font-weight: bold;")
         correct_button.setEnabled(False)
-        details_button.setEnabled(False)
 
         # Registrar la hora de reparación en el Excel
         repair_time_str = datetime.now().strftime("%H:%M:%S")
         self.log_repair_time_to_excel(block_name, date_str, time_str, repair_time_str)
+        self.update_excel_table()  # Actualizar la tabla inmediatamente después de registrar la hora de reparación
 
     def add_incidence_details(self, block_name, incidence_text, date_str, time_str):
         detail_text, ok = QInputDialog.getMultiLineText(self, "Añadir Detalles", "Escribe los detalles de la incidencia:")
@@ -524,6 +526,13 @@ class TicketManagement(QMainWindow):
                     if row[0].value == date_str and row[1].value == time_str:
                         repair_time_cell = sheet.cell(row=row[0].row, column=len(self.incidencias) + 3)
                         repair_time_cell.value = repair_time_str
+
+                        # Calcular la diferencia de tiempo y registrarla
+                        start_time = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M:%S")
+                        end_time = datetime.strptime(f"{date_str} {repair_time_str}", "%Y-%m-%d %H:%M:%S")
+                        time_diff = end_time - start_time
+                        time_diff_cell = sheet.cell(row=row[0].row, column=len(self.incidencias) + 4)
+                        time_diff_cell.value = str(time_diff)
                         break
 
                 workbook.save(self.excel_file)
@@ -546,7 +555,7 @@ class TicketManagement(QMainWindow):
         if not os.path.exists(file_path):
             workbook = Workbook()
             sheet = workbook.active
-            headers = ["Fecha", "Hora"] + list(self.incidencias.keys()) + ["Hora de Reparación"]
+            headers = ["Fecha", "Hora"] + list(self.incidencias.keys()) + ["Hora de Reparación", "Tiempo de Reparación"]
             sheet.append(headers)
             workbook.save(file_path)
 
@@ -557,14 +566,14 @@ class TicketManagement(QMainWindow):
                 sheet = workbook.active
 
                 headers = [cell.value for cell in sheet[1]]
-                expected_headers = ["Fecha", "Hora"] + list(self.incidencias.keys()) + ["Hora de Reparación"]
+                expected_headers = ["Fecha", "Hora"] + list(self.incidencias.keys()) + ["Hora de Reparación", "Tiempo de Reparación"]
                 if headers != expected_headers:
                     sheet.delete_rows(1, 1)
                     sheet.insert_rows(1)
                     for idx, header in enumerate(expected_headers):
                         sheet.cell(row=1, column=idx + 1, value=header)
 
-                new_row = [date_str, time_str] + ["-"] * len(self.incidencias) + [""]
+                new_row = [date_str, time_str] + ["-"] * len(self.incidencias) + ["", ""]
                 block_index = list(self.incidencias.keys()).index(block_name) + 2
                 new_row[block_index] = incidence_text
                 sheet.append(new_row)
@@ -639,7 +648,7 @@ class TicketManagement(QMainWindow):
             workbook = load_workbook(self.excel_file)
             sheet = workbook.active
             for row in sheet.iter_rows(min_row=2, values_only=True):
-                if len(row) == len(self.incidencias) + 3:  # Asegurarse de que la fila tiene la longitud esperada
+                if len(row) == len(self.incidencias) + 4:  # Asegurarse de que la fila tiene la longitud esperada
                     for i, block in enumerate(list(self.incidencias.keys()), start=2):
                         if row[i] and row[i] != "-":
                             self.incidences_count[block] += 1

@@ -23,12 +23,14 @@ reparado. También añadir un botón para que el usuario pueda escribir algún d
 siempre y cuando el usuario quiera. Los mensajes que se escriban, tienen que quedar registrados en otra pestaña de
 la app, que se llame "Mensajes detallados", y aqui puede acceder el usuario siempre que quiera.
 
-//IN PROCESS// - Acabar de actualizar el boton de añadir detalles porque cuando esta "fixing" si que se puede añadir
+//DONE// - Acabar de actualizar el boton de añadir detalles porque cuando esta "fixing" si que se puede añadir
 pero cuando esta "correct" no. Hay que fixearlo.
 
 //WORKING// - Mejorar el aspecto de la ventana de incidencias confirmadas, el boton de "fixing" y "correct" que
 estén a la derecha de la ventana, por lo tanto si puedes, acortala hacia la izquierda y pon los botones correspondientes
-mas el de "añadir detalle" fuera de la ventana.
+mas el de "añadir detalle" fuera de la ventana para una mejor estetica. También mejorame la visualización del excel
+porque cuando le doy al boton de "Correct", no se observa la hora de reparación ni el tiempo de reparación, hasta que
+no confirmo otra incidencia, y lo que quiero es que se vea al momento de pulsar botones.
 
 //WORKING// - Mejorar la pestaña de "Detalles de incidencias mas relevantes", quitando el nombre de "Bloque:" en el titulo de
 cada uno, y dejando solamente el nombre del bloque en cuestión. Tambien aumentaremos la fuente de las incidencias
