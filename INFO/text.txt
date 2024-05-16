@@ -41,4 +41,14 @@ al lado de las incidencias confirmadas donde exista mayor numero.
 "Fixing" ya que no quiero que el usuario se le olvide darle a "Correct", si el usuario quiere seguir navegando por la app
 sin darle a "Correct", que lo indique y aparezca esa incidencia en modo "Pendiente" para que posteriormente pueda confirmarla.
 
-//WORIKING// - Mejora del Filtro avanzado 
+//WORIKING// - Mejora del Filtro avanzado, porque el filtro no funciona cuando se aplica, y quiero mejora visual y
+estetica, también quiero una pestaña donde se registren por rango de franja horaria y fecha, que seleccione el usuario,
+un gráfico(el que consideres tu mejor visualmente) con leyendas bien especificadas de los nombres de las incidencias 
+mas relevantes. Como si añades porcentajes o una linea de tendencia también.
+
+//WORKING// - Confirmación de la incidencia cuando aparece el cuadro que avisa al usuario de que la incidencia
+ha sido confirmada, pues ponerle al usuario si desea confirmar la incidencia o no para que no se equivoque.
+
+//WORKING// - El boton de "Ver excel Completo" o "filtrado", que sea mejor esteticamente y cuando este en un estado
+u otro, que cambie de color mediante un logo o algo distintivo para identificar mejor en que estado está.
+//WORKING// - 

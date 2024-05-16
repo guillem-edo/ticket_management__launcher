@@ -1,26 +1,26 @@
 import sys
 import os
+import json
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Font
 from datetime import datetime, timedelta
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox, QTabWidget, QLabel,
-    QListWidget, QListWidgetItem, QStatusBar, QLineEdit, QFileDialog, QHBoxLayout, QTableWidget, QTableWidgetItem, 
-    QDialog, QComboBox, QScrollArea, QTextEdit, QInputDialog
+    QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox, QListWidget, QListWidgetItem, QStatusBar, QLineEdit,
+    QFileDialog, QHBoxLayout, QTableWidget, QTableWidgetItem, QDialog, QComboBox, QScrollArea, QInputDialog, QLabel, QTabWidget, QAbstractItemView
 )
 from PyQt5.QtCore import QTimer, Qt, pyqtSignal, QRect
 from PyQt5.QtGui import QFont, QPixmap, QColor
 
 from collections import Counter, defaultdict
 
-# Clase User para almacenar información de usuario
+
 class User:
     def __init__(self, username, password, blocks):
         self.username = username
         self.password = password
         self.blocks = blocks
 
-# Clase LoginWindow para manejar inicio de sesión
+
 class LoginWindow(QWidget):
     login_successful = pyqtSignal(User)
 
@@ -31,7 +31,6 @@ class LoginWindow(QWidget):
         self.center_window()
         self.setStyleSheet("background-color: white;")
 
-        # Lista de usuarios
         self.users = [
             User("pideu1", "1111", ["WC47 NACP"]),
             User("pideu2", "1111", ["WC48 P5F"]),
@@ -86,7 +85,7 @@ class LoginWindow(QWidget):
                 return
         QMessageBox.warning(self, "Error de Inicio de Sesión", "Usuario o contraseña incorrectos")
 
-# Clase AdvancedFilterDialog para el filtro avanzado
+
 class AdvancedFilterDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -215,7 +214,7 @@ class AdvancedFilterDialog(QDialog):
         else:
             QMessageBox.warning(self, "Error", "Primero aplica el filtro para ver los gráficos.")
 
-# Clase para mostrar detalles de incidencias más relevantes
+
 class TopIncidentsDialog(QDialog):
     def __init__(self, parent=None, incident_details=None):
         super().__init__(parent)
@@ -223,7 +222,7 @@ class TopIncidentsDialog(QDialog):
         self.setGeometry(300, 300, 600, 400)
 
         layout = QVBoxLayout()
-        
+
         scroll_area = QScrollArea()
         scroll_widget = QWidget()
         scroll_layout = QVBoxLayout(scroll_widget)
@@ -258,9 +257,10 @@ class TopIncidentsDialog(QDialog):
 
         self.setLayout(layout)
 
-# Clase TicketManagement para manejar la gestión de tickets
+
 class TicketManagement(QMainWindow):
     config_file = "config.txt"
+    state_file = "incidence_state.json"
 
     def __init__(self, user):
         super().__init__()
@@ -289,8 +289,10 @@ class TicketManagement(QMainWindow):
                     "Soldadura defectuosa", "Error en sensor de salida"]
         }
         self.incidences_count = {block: 0 for block in self.incidencias.keys()}
+        self.pending_incidents = []
         self.initUI()
         self.load_last_excel_file()
+        self.load_incidence_state()
 
     def initUI(self):
         self.setWindowTitle(f"Ticket Management - {self.user.username}")
@@ -317,7 +319,6 @@ class TicketManagement(QMainWindow):
         self.excel_path_display.setReadOnly(True)
         right_layout.addWidget(self.excel_path_display)
 
-        # Botón para alternar entre vista completa y vista filtrada del Excel
         self.toggle_excel_view_button = QPushButton("Ver Excel Completo", self)
         self.toggle_excel_view_button.clicked.connect(self.toggle_excel_view)
         right_layout.addWidget(self.toggle_excel_view_button)
@@ -335,7 +336,6 @@ class TicketManagement(QMainWindow):
         filter_button.clicked.connect(self.open_advanced_filter_dialog)
         right_layout.addWidget(filter_button)
 
-        # Sección para incidencias más relevantes
         self.top_incidents_label = QLabel("Incidencias Más Relevantes")
         right_layout.addWidget(self.top_incidents_label)
 
@@ -352,7 +352,6 @@ class TicketManagement(QMainWindow):
         self.status_bar = QStatusBar(self)
         self.setStatusBar(self.status_bar)
 
-        # Pestaña para mensajes detallados
         self.detailed_messages_tab = QWidget()
         self.detailed_messages_layout = QVBoxLayout(self.detailed_messages_tab)
         self.tabWidget.addTab(self.detailed_messages_tab, "Mensajes detallados")
@@ -365,7 +364,7 @@ class TicketManagement(QMainWindow):
         timer.start(1000)
 
         self.apply_styles()
-    
+
     def center_window_app(self):
         screen_rect_app = QApplication.desktop().availableGeometry()
         window_width = self.width()
@@ -433,7 +432,7 @@ class TicketManagement(QMainWindow):
         self.tabWidget.addTab(tab, name)
         layout = QVBoxLayout(tab)
 
-        title = QLabel(f"Incidencias - {name}")
+        title = QLabel(name)
         title.setFont(QFont("Arial", 14, QFont.Bold))
         layout.addWidget(title)
 
@@ -445,6 +444,21 @@ class TicketManagement(QMainWindow):
         list_widget = QListWidget()
         font = QFont("Arial", 12)
         list_widget.setFont(font)
+        list_widget.setStyleSheet("""
+            QListWidget {
+                background-color: #f9f9f9;
+                border: 1px solid #ddd;
+                padding: 10px;
+            }
+            QListWidget::item {
+                padding: 10px;
+                border-bottom: 1px solid #ddd;
+            }
+            QListWidget::item:selected {
+                background-color: #4CAF50;
+                color: white;
+            }
+        """)
         for incidence in incidences:
             item = QListWidgetItem(incidence)
             list_widget.addItem(item)
@@ -470,7 +484,6 @@ class TicketManagement(QMainWindow):
 
             QMessageBox.information(self, "Confirmación", "Incidencia confirmada.")
 
-            # Añadir botones y mensajes al confirmar la incidencia
             fixing_label = QLabel("Fixing")
             fixing_label.setStyleSheet("color: red; font-weight: bold; font-size: 14px;")
             correct_button = QPushButton("Correct")
@@ -501,21 +514,54 @@ class TicketManagement(QMainWindow):
 
             correct_button.clicked.connect(lambda: self.mark_incidence_as_fixed(block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str))
             details_button.clicked.connect(lambda: self.add_incidence_details(block_name, incidence_text, date_str, time_str))
-            
+
+            QTimer.singleShot(60000, lambda: self.remind_user_to_fix(block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str))
+
             self.update_excel_table()
             self.update_top_incidents()
         else:
             QMessageBox.warning(self, "Ninguna Incidencia Seleccionada", "Selecciona una incidencia para confirmar.")
+
+    def remind_user_to_fix(self, block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str):
+        if fixing_label.text() == "Fixing":
+            msg_box = QMessageBox(self)
+            msg_box.setIcon(QMessageBox.Warning)
+            msg_box.setText(f'La incidencia "{incidence_text}" sigue en estado "Fixing".')
+            msg_box.setInformativeText("¿Deseas marcarla como 'Pendiente' o continuar?")
+            msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+            yes_button = msg_box.button(QMessageBox.Yes)
+            yes_button.setText("Pendiente")
+            no_button = msg_box.button(QMessageBox.No)
+            no_button.setText("Continuar")
+            msg_box.exec_()
+
+            if msg_box.clickedButton() == yes_button:
+                fixing_label.setText("Pendiente")
+                fixing_label.setStyleSheet("color: orange; font-weight: bold; font-size: 14px;")
+                self.pending_incidents.append((block_name, incidence_text, date_str, time_str))
+                self.redirect_to_pending_incidence(block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str)
+            else:
+                QTimer.singleShot(60000, lambda: self.remind_user_to_fix(block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str))
+
+    def redirect_to_pending_incidence(self, block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str):
+        for i in range(self.global_incidence_list.count()):
+            item = self.global_incidence_list.item(i)
+            item_widget = self.global_incidence_list.itemWidget(item)
+            if item_widget:
+                label = item_widget.findChild(QLabel)
+                if label and incidence_text in label.text():
+                    self.global_incidence_list.setCurrentRow(i)
+                    self.global_incidence_list.scrollToItem(item, QAbstractItemView.PositionAtCenter)
+                    break
 
     def mark_incidence_as_fixed(self, block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str):
         fixing_label.setText("Reparada")
         fixing_label.setStyleSheet("color: green; font-weight: bold; font-size: 14px;")
         correct_button.setEnabled(False)
 
-        # Registrar la hora de reparación en el Excel
         repair_time_str = datetime.now().strftime("%H:%M:%S")
         self.log_repair_time_to_excel(block_name, date_str, time_str, repair_time_str)
-        self.update_excel_table()  # Actualizar la tabla inmediatamente después de registrar la hora de reparación
+        self.update_excel_table()
 
     def add_incidence_details(self, block_name, incidence_text, date_str, time_str):
         detail_text, ok = QInputDialog.getMultiLineText(self, "Añadir Detalles", "Escribe los detalles de la incidencia:")
@@ -536,7 +582,6 @@ class TicketManagement(QMainWindow):
                         repair_time_cell = sheet.cell(row=row[0].row, column=len(self.incidencias) + 3)
                         repair_time_cell.value = repair_time_str
 
-                        # Calcular la diferencia de tiempo y registrarla
                         start_time = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M:%S")
                         end_time = datetime.strptime(f"{date_str} {repair_time_str}", "%Y-%m-%d %H:%M:%S")
                         time_diff = end_time - start_time
@@ -630,23 +675,21 @@ class TicketManagement(QMainWindow):
                         item = QTableWidgetItem(str(cell_value) if cell_value is not None else "")
                         self.table_widget.setItem(row_idx, col_idx, item)
 
-                # Aplicar estilos
                 self.style_excel_table()
 
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Error al actualizar la tabla: {e}")
 
     def style_excel_table(self):
-        # Aplicar bordes y colores alternados
         for row in range(self.table_widget.rowCount()):
             for col in range(self.table_widget.columnCount()):
                 item = self.table_widget.item(row, col)
                 if item:
                     item.setFont(QFont("Arial", 10))
                     if row % 2 == 0:
-                        item.setBackground(QColor(240, 240, 240))  # Gris claro para filas pares
+                        item.setBackground(QColor(240, 240, 240))
                     else:
-                        item.setBackground(QColor(255, 255, 255))  # Blanco para filas impares
+                        item.setBackground(QColor(255, 255, 255))
                     item.setTextAlignment(Qt.AlignCenter)
 
     def update_top_incidents(self):
@@ -657,7 +700,7 @@ class TicketManagement(QMainWindow):
             workbook = load_workbook(self.excel_file)
             sheet = workbook.active
             for row in sheet.iter_rows(min_row=2, values_only=True):
-                if len(row) == len(self.incidencias) + 4:  # Asegurarse de que la fila tiene la longitud esperada
+                if len(row) == len(self.incidencias) + 4:
                     for i, block in enumerate(list(self.incidencias.keys()), start=2):
                         if row[i] and row[i] != "-":
                             self.incidences_count[block] += 1
@@ -674,6 +717,72 @@ class TicketManagement(QMainWindow):
                     widget.setFont(normal_font)
                 else:
                     widget.setFont(title_font)
+
+    def save_incidence_state(self):
+        incidences = []
+        for i in range(self.global_incidence_list.count()):
+            item = self.global_incidence_list.item(i)
+            item_widget = self.global_incidence_list.itemWidget(item)
+            if item_widget:
+                labels = item_widget.findChildren(QLabel)
+                if labels:
+                    incidence_text = labels[0].text()
+                    status = labels[1].text() if len(labels) > 1 else "Fixing"
+                    incidences.append({
+                        "text": incidence_text,
+                        "status": status
+                    })
+        state = {
+            "user": self.user.username,
+            "incidences": incidences
+        }
+        with open(self.state_file, "w") as file:
+            json.dump(state, file, indent=4)
+
+    def load_incidence_state(self):
+        if os.path.exists(self.state_file):
+            with open(self.state_file, "r") as file:
+                state = json.load(file)
+                if state["user"] == self.user.username:
+                    for incidence in state["incidences"]:
+                        incidence_text = incidence["text"]
+                        status = incidence["status"]
+                        fixing_label = QLabel(status)
+                        if status == "Fixing":
+                            fixing_label.setStyleSheet("color: red; font-weight: bold; font-size: 14px;")
+                        elif status == "Pendiente":
+                            fixing_label.setStyleSheet("color: orange; font-weight: bold; font-size: 14px;")
+                        elif status == "Reparada":
+                            fixing_label.setStyleSheet("color: green; font-weight: bold; font-size: 14px;")
+                        correct_button = QPushButton("Correct")
+                        correct_button.setStyleSheet("background-color: green; color: white; font-weight: bold; font-size: 14px;")
+                        correct_button.setFixedSize(100, 30)
+                        details_button = QPushButton("Añadir Detalles")
+                        details_button.setStyleSheet("background-color: blue; color: white; font-weight: bold; font-size: 14px;")
+                        details_button.setFixedSize(150, 30)
+                        item_widget = QWidget()
+                        item_layout = QVBoxLayout(item_widget)
+                        label_layout = QHBoxLayout()
+                        label_layout.addWidget(QLabel(incidence_text))
+                        item_layout.addLayout(label_layout)
+                        buttons_layout = QHBoxLayout()
+                        buttons_layout.addStretch()
+                        buttons_layout.addWidget(fixing_label)
+                        buttons_layout.addWidget(correct_button)
+                        buttons_layout.addWidget(details_button)
+                        item_layout.addLayout(buttons_layout)
+                        list_item = QListWidgetItem()
+                        list_item.setSizeHint(item_widget.sizeHint())
+                        self.global_incidence_list.addItem(list_item)
+                        self.global_incidence_list.setItemWidget(list_item, item_widget)
+                        correct_button.clicked.connect(lambda f=fixing_label, cb=correct_button, db=details_button, ds=date_str, ts=time_str: self.mark_incidence_as_fixed(block_name, incidence_text, f, cb, db, ds, ts))
+                        details_button.clicked.connect(lambda: self.add_incidence_details(block_name, incidence_text, date_str, time_str))
+                        if status == "Fixing" or status == "Pendiente":
+                            QTimer.singleShot(60000, lambda: self.remind_user_to_fix(block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str))
+
+    def closeEvent(self, event):
+        self.save_incidence_state()
+        event.accept()
 
 
 if __name__ == "__main__":
