@@ -26,7 +26,7 @@ la app, que se llame "Mensajes detallados", y aqui puede acceder el usuario siem
 //DONE// - Acabar de actualizar el boton de añadir detalles porque cuando esta "fixing" si que se puede añadir
 pero cuando esta "correct" no. Hay que fixearlo.
 
-//WORKING// - Mejorar el aspecto de la ventana de incidencias confirmadas, el boton de "fixing" y "correct" que
+//DONE// - Mejorar el aspecto de la ventana de incidencias confirmadas, el boton de "fixing" y "correct" que
 estén a la derecha de la ventana, por lo tanto si puedes, acortala hacia la izquierda y pon los botones correspondientes
 mas el de "añadir detalle" fuera de la ventana para una mejor estetica. También mejorame la visualización del excel
 porque cuando le doy al boton de "Correct", no se observa la hora de reparación ni el tiempo de reparación, hasta que
@@ -36,3 +36,9 @@ no confirmo otra incidencia, y lo que quiero es que se vea al momento de pulsar 
 cada uno, y dejando solamente el nombre del bloque en cuestión. Tambien aumentaremos la fuente de las incidencias
 que se ven dentro de la pestaña y añadiremos algun logo como una flecha verde hacia arriba, de tamaño pequeño, 
 al lado de las incidencias confirmadas donde exista mayor numero.
+
+//WORKING// - Quiero que le salga un aviso al usuario cada vez que confirma una incidencia y está en el estado de 
+"Fixing" ya que no quiero que el usuario se le olvide darle a "Correct", si el usuario quiere seguir navegando por la app
+sin darle a "Correct", que lo indique y aparezca esa incidencia en modo "Pendiente" para que posteriormente pueda confirmarla.
+
+//WORIKING// - Mejora del Filtro avanzado 

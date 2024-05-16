@@ -63,6 +63,8 @@ class LoginWindow(QWidget):
         layout.addWidget(self.password_input)
 
         login_button = QPushButton("Confirmar")
+        login_button.setFont(font)
+        login_button.setStyleSheet("background-color: #4CAF50; color: white; padding: 10px 20px; font-size: 16px;")
         login_button.clicked.connect(self.login)
         layout.addWidget(login_button)
 
@@ -325,7 +327,8 @@ class TicketManagement(QMainWindow):
         right_layout.addWidget(self.table_widget)
 
         self.global_incidence_list = QListWidget(self)
-        self.global_incidence_list.setFixedSize(600, 200)
+        self.global_incidence_list.setFixedSize(600, 300)
+        self.global_incidence_list.setStyleSheet("QListWidget { background-color: #f0f0f0; border: 1px solid #ccc; }")
         right_layout.addWidget(self.global_incidence_list)
 
         filter_button = QPushButton("Filtro Avanzado", self)
@@ -354,6 +357,7 @@ class TicketManagement(QMainWindow):
         self.detailed_messages_layout = QVBoxLayout(self.detailed_messages_tab)
         self.tabWidget.addTab(self.detailed_messages_tab, "Mensajes detallados")
         self.detailed_messages_list = QListWidget()
+        self.detailed_messages_list.setStyleSheet("QListWidget { background-color: #f0f0f0; border: 1px solid #ccc; }")
         self.detailed_messages_layout.addWidget(self.detailed_messages_list)
 
         timer = QTimer(self)
@@ -430,9 +434,11 @@ class TicketManagement(QMainWindow):
         layout = QVBoxLayout(tab)
 
         title = QLabel(f"Incidencias - {name}")
+        title.setFont(QFont("Arial", 14, QFont.Bold))
         layout.addWidget(title)
 
         last_incidence_label = QLabel("Última incidencia: Ninguna")
+        last_incidence_label.setFont(QFont("Arial", 12))
         layout.addWidget(last_incidence_label)
         self.last_incidence_labels[name] = last_incidence_label
 
@@ -446,9 +452,9 @@ class TicketManagement(QMainWindow):
         layout.addWidget(list_widget)
 
         confirm_button = QPushButton("Confirmar Incidencia")
-        button_font = QFont("Arial", 10)
-        confirm_button.setFont(button_font)
+        confirm_button.setFont(QFont("Arial", 12))
         confirm_button.setFixedSize(500, 40)
+        confirm_button.setStyleSheet("background-color: #4CAF50; color: white;")
         confirm_button.clicked.connect(lambda: self.confirm_incidence(name, list_widget))
         layout.addWidget(confirm_button)
 
@@ -466,11 +472,13 @@ class TicketManagement(QMainWindow):
 
             # Añadir botones y mensajes al confirmar la incidencia
             fixing_label = QLabel("Fixing")
-            fixing_label.setStyleSheet("color: red; font-weight: bold;")
+            fixing_label.setStyleSheet("color: red; font-weight: bold; font-size: 14px;")
             correct_button = QPushButton("Correct")
-            correct_button.setStyleSheet("background-color: green; color: white; font-weight: bold;")
+            correct_button.setStyleSheet("background-color: green; color: white; font-weight: bold; font-size: 14px;")
+            correct_button.setFixedSize(100, 30)
             details_button = QPushButton("Añadir Detalles")
-            details_button.setStyleSheet("background-color: blue; color: white; font-weight: bold;")
+            details_button.setStyleSheet("background-color: blue; color: white; font-weight: bold; font-size: 14px;")
+            details_button.setFixedSize(150, 30)
 
             item_widget = QWidget()
             item_layout = QVBoxLayout(item_widget)
@@ -478,7 +486,8 @@ class TicketManagement(QMainWindow):
             label_layout.addWidget(QLabel(f"{block_name}: {incidence_text} a las {time_str} del {date_str}"))
             item_layout.addLayout(label_layout)
 
-            buttons_layout = QVBoxLayout()
+            buttons_layout = QHBoxLayout()
+            buttons_layout.addStretch()
             buttons_layout.addWidget(fixing_label)
             buttons_layout.addWidget(correct_button)
             buttons_layout.addWidget(details_button)
@@ -500,7 +509,7 @@ class TicketManagement(QMainWindow):
 
     def mark_incidence_as_fixed(self, block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str):
         fixing_label.setText("Reparada")
-        fixing_label.setStyleSheet("color: green; font-weight: bold;")
+        fixing_label.setStyleSheet("color: green; font-weight: bold; font-size: 14px;")
         correct_button.setEnabled(False)
 
         # Registrar la hora de reparación en el Excel
