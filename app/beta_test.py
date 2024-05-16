@@ -6,7 +6,7 @@ from openpyxl.styles import PatternFill, Border, Side, Alignment, Font
 from datetime import datetime, timedelta
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox, QListWidget, QListWidgetItem, QStatusBar, QLineEdit,
-    QFileDialog, QHBoxLayout, QTableWidget, QTableWidgetItem, QDialog, QComboBox, QScrollArea, QInputDialog, QLabel, QTabWidget, QAbstractItemView
+    QFileDialog, QHBoxLayout, QTableWidget, QTableWidgetItem, QDialog, QComboBox, QScrollArea, QInputDialog, QLabel, QTabWidget,  QAbstractItemView
 )
 from PyQt5.QtCore import QTimer, Qt, pyqtSignal, QRect
 from PyQt5.QtGui import QFont, QPixmap, QColor
@@ -512,7 +512,7 @@ class TicketManagement(QMainWindow):
             self.global_incidence_list.addItem(list_item)
             self.global_incidence_list.setItemWidget(list_item, item_widget)
 
-            correct_button.clicked.connect(lambda: self.mark_incidence_as_fixed(block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str))
+            correct_button.clicked.connect(lambda f=fixing_label, cb=correct_button, db=details_button: self.mark_incidence_as_fixed(block_name, incidence_text, f, cb, db, date_str, time_str))
             details_button.clicked.connect(lambda: self.add_incidence_details(block_name, incidence_text, date_str, time_str))
 
             QTimer.singleShot(60000, lambda: self.remind_user_to_fix(block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str))
@@ -747,6 +747,12 @@ class TicketManagement(QMainWindow):
                     for incidence in state["incidences"]:
                         incidence_text = incidence["text"]
                         status = incidence["status"]
+
+                        # Extraer date_str y time_str del texto de la incidencia
+                        text_parts = incidence_text.split(" ")
+                        date_str = text_parts[-3]
+                        time_str = text_parts[-2]
+
                         fixing_label = QLabel(status)
                         if status == "Fixing":
                             fixing_label.setStyleSheet("color: red; font-weight: bold; font-size: 14px;")
@@ -775,10 +781,10 @@ class TicketManagement(QMainWindow):
                         list_item.setSizeHint(item_widget.sizeHint())
                         self.global_incidence_list.addItem(list_item)
                         self.global_incidence_list.setItemWidget(list_item, item_widget)
-                        correct_button.clicked.connect(lambda f=fixing_label, cb=correct_button, db=details_button, ds=date_str, ts=time_str: self.mark_incidence_as_fixed(block_name, incidence_text, f, cb, db, ds, ts))
-                        details_button.clicked.connect(lambda: self.add_incidence_details(block_name, incidence_text, date_str, time_str))
+                        correct_button.clicked.connect(lambda f=fixing_label, cb=correct_button, db=details_button: self.mark_incidence_as_fixed(self.user.blocks[0], incidence_text, f, cb, db, date_str, time_str))
+                        details_button.clicked.connect(lambda: self.add_incidence_details(self.user.blocks[0], incidence_text, date_str, time_str))
                         if status == "Fixing" or status == "Pendiente":
-                            QTimer.singleShot(60000, lambda: self.remind_user_to_fix(block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str))
+                            QTimer.singleShot(60000, lambda: self.remind_user_to_fix(self.user.blocks[0], incidence_text, fixing_label, correct_button, details_button, date_str, time_str))
 
     def closeEvent(self, event):
         self.save_incidence_state()

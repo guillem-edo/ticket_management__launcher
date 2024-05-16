@@ -4,6 +4,14 @@
         {
             "text": "WC48 P5F: Etiquetadora a las 11:57:48 del 2024-05-16",
             "status": "Reparada"
+        },
+        {
+            "text": "WC48 P5F: C\u00e1mara no detecta skeleton a las 12:14:38 del 2024-05-16",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC48 P5F: AOI (fallo etiqueta) a las 12:14:42 del 2024-05-16",
+            "status": "Fixing"
         }
     ]
 }

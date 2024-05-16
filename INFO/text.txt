@@ -32,16 +32,16 @@ mas el de "añadir detalle" fuera de la ventana para una mejor estetica. Tambié
 porque cuando le doy al boton de "Correct", no se observa la hora de reparación ni el tiempo de reparación, hasta que
 no confirmo otra incidencia, y lo que quiero es que se vea al momento de pulsar botones.
 
-//WORKING// - Mejorar la pestaña de "Detalles de incidencias mas relevantes", quitando el nombre de "Bloque:" en el titulo de
+//DONE// - Mejorar la pestaña de "Detalles de incidencias mas relevantes", quitando el nombre de "Bloque:" en el titulo de
 cada uno, y dejando solamente el nombre del bloque en cuestión. Tambien aumentaremos la fuente de las incidencias
 que se ven dentro de la pestaña y añadiremos algun logo como una flecha verde hacia arriba, de tamaño pequeño, 
 al lado de las incidencias confirmadas donde exista mayor numero.
 
-//WORKING// - Quiero que le salga un aviso al usuario cada vez que confirma una incidencia y está en el estado de 
+//DONE// - Quiero que le salga un aviso al usuario cada vez que confirma una incidencia y está en el estado de 
 "Fixing" ya que no quiero que el usuario se le olvide darle a "Correct", si el usuario quiere seguir navegando por la app
 sin darle a "Correct", que lo indique y aparezca esa incidencia en modo "Pendiente" para que posteriormente pueda confirmarla.
 
-//WORIKING// - Mejora del Filtro avanzado, porque el filtro no funciona cuando se aplica, y quiero mejora visual y
+//WORKING// - Mejora del Filtro avanzado, porque el filtro no funciona cuando se aplica, y quiero mejora visual y
 estetica, también quiero una pestaña donde se registren por rango de franja horaria y fecha, que seleccione el usuario,
 un gráfico(el que consideres tu mejor visualmente) con leyendas bien especificadas de los nombres de las incidencias 
 mas relevantes. Como si añades porcentajes o una linea de tendencia también.
@@ -51,4 +51,7 @@ ha sido confirmada, pues ponerle al usuario si desea confirmar la incidencia o n
 
 //WORKING// - El boton de "Ver excel Completo" o "filtrado", que sea mejor esteticamente y cuando este en un estado
 u otro, que cambie de color mediante un logo o algo distintivo para identificar mejor en que estado está.
-//WORKING// - 
+
+//WORKING// - Crear un usuario general que tenga permisos para poder añadir, eliminar o modificar los diferentes
+bloques de incidencias, el listado de ellas para tener mejor flexibilidad el dia de mañana si surgen nuevas incidencias
+poder añadirlas o personalizar el listado.
