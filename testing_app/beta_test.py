@@ -6,12 +6,17 @@ from openpyxl.styles import PatternFill, Border, Side, Alignment, Font
 from datetime import datetime, timedelta
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox, QListWidget, QListWidgetItem, QStatusBar, QLineEdit,
-    QFileDialog, QHBoxLayout, QTableWidget, QTableWidgetItem, QDialog, QComboBox, QScrollArea, QInputDialog, QLabel, QTabWidget, QAbstractItemView
+    QFileDialog, QHBoxLayout, QTableWidget, QTableWidgetItem, QDialog, 
+    QComboBox, QScrollArea, QInputDialog, QLabel, QTabWidget, QAbstractItemView
 )
 from PyQt5.QtCore import QTimer, Qt, pyqtSignal, QRect
 from PyQt5.QtGui import QFont, QPixmap, QColor
 
 from collections import Counter, defaultdict
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
 
 class User:
@@ -42,10 +47,13 @@ class LoginWindow(QWidget):
         layout = QVBoxLayout()
         logo_pixmap = QPixmap("app/logo.png")
 
-        logo_label = QLabel()
-        logo_label.setPixmap(logo_pixmap.scaled(200, 200, Qt.KeepAspectRatio))
-        logo_label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(logo_label)
+        if not logo_pixmap.isNull():
+            logo_label = QLabel()
+            logo_label.setPixmap(logo_pixmap.scaled(200, 200, Qt.KeepAspectRatio))
+            logo_label.setAlignment(Qt.AlignCenter)
+            layout.addWidget(logo_label)
+        else:
+            print("Warning: Logo not found!")
 
         font = QFont()
         font.setPointSize(12)
@@ -135,26 +143,15 @@ class AdvancedFilterDialog(QDialog):
         filter_button.clicked.connect(self.apply_filter)
         layout.addWidget(filter_button)
 
-        self.tab_widget = QTabWidget()
-        layout.addWidget(self.tab_widget)
-
-        self.results_tab = QWidget()
-        self.results_layout = QVBoxLayout(self.results_tab)
-        self.tab_widget.addTab(self.results_tab, "Resultados")
-
         self.results_table = QTableWidget()
         self.results_table.setColumnCount(3)
         self.results_table.setHorizontalHeaderLabels(["Bloque", "Número de Incidencias", "Incidencia más frecuente"])
-        self.results_layout.addWidget(self.results_table)
+        layout.addWidget(self.results_table)
 
         self.incidents_table = QTableWidget()
         self.incidents_table.setColumnCount(2)
         self.incidents_table.setHorizontalHeaderLabels(["Incidencia", "Número de Incidencias"])
-        self.results_layout.addWidget(self.incidents_table)
-
-        self.graph_button = QPushButton("Ver Gráficos")
-        self.graph_button.clicked.connect(self.open_graph_dialog)
-        layout.addWidget(self.graph_button)
+        layout.addWidget(self.incidents_table)
 
         self.setLayout(layout)
         self.populate_date_combos()
@@ -173,26 +170,28 @@ class AdvancedFilterDialog(QDialog):
             combo.addItem(time_str)
 
     def apply_filter(self):
-        start_date = self.start_date_combo.currentText()
-        start_time = self.start_time_combo.currentText()
-        start_dt = datetime.strptime(f"{start_date} {start_time}:00", "%Y-%m-%d %H:%M:%S")
+        try:
+            start_date = self.start_date_combo.currentText()
+            start_time = self.start_time_combo.currentText()
+            start_dt = datetime.strptime(f"{start_date} {start_time}:00", "%Y-%m-%d %H:%M:%S")
 
-        end_date = self.end_date_combo.currentText()
-        end_time = self.end_time_combo.currentText()
-        end_dt = datetime.strptime(f"{end_date} {end_time}:00", "%Y-%m-%d %H:%M:%S")
+            end_date = self.end_date_combo.currentText()
+            end_time = self.end_time_combo.currentText()
+            end_dt = datetime.strptime(f"{end_date} {end_time}:00", "%Y-%m-%d %H:%M:%S")
 
-        selected_block = self.block_selector.currentText()
+            selected_block = self.block_selector.currentText()
 
-        results, trends = self.parent().get_filtered_incidents(start_dt, end_dt, selected_block)
+            results, trends = self.parent().get_filtered_incidents(start_dt, end_dt, selected_block)
 
-        self.results_table.setRowCount(len(results))
-        for row, (block, data) in enumerate(results.items()):
-            self.results_table.setItem(row, 0, QTableWidgetItem(block))
-            self.results_table.setItem(row, 1, QTableWidgetItem(str(data['count'])))
-            self.results_table.setItem(row, 2, QTableWidgetItem(data['most_common_incidence']))
+            self.results_table.setRowCount(len(results))
+            for row, (block, data) in enumerate(results.items()):
+                self.results_table.setItem(row, 0, QTableWidgetItem(block))
+                self.results_table.setItem(row, 1, QTableWidgetItem(str(data['count'])))
+                self.results_table.setItem(row, 2, QTableWidgetItem(data['most_common_incidence']))
 
-        self.update_incidents_table(results)
-        self.trends = results
+            self.update_incidents_table(results)
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error al aplicar el filtro: {e}")
 
     def update_incidents_table(self, results):
         all_incidents = []
@@ -206,13 +205,6 @@ class AdvancedFilterDialog(QDialog):
         for row, (incident, count) in enumerate(sorted_incidents):
             self.incidents_table.setItem(row, 0, QTableWidgetItem(incident))
             self.incidents_table.setItem(row, 1, QTableWidgetItem(str(count)))
-
-    def open_graph_dialog(self):
-        if hasattr(self, 'trends'):
-            self.graph_dialog = GraphDialog(self, data=self.trends)
-            self.graph_dialog.exec_()
-        else:
-            QMessageBox.warning(self, "Error", "Primero aplica el filtro para ver los gráficos.")
 
 
 class TopIncidentsDialog(QDialog):
@@ -258,6 +250,60 @@ class TopIncidentsDialog(QDialog):
         self.setLayout(layout)
 
 
+class GraphDialog(QDialog):
+    def __init__(self, parent=None, data=None):
+        super().__init__(parent)
+        self.setWindowTitle("Gráfico de Incidencias")
+        self.setGeometry(300, 300, 800, 600)
+
+        self.data = data
+
+        layout = QVBoxLayout()
+
+        self.figure = Figure()
+        self.canvas = FigureCanvas(self.figure)
+        self.toolbar = NavigationToolbar(self.canvas, self)
+        layout.addWidget(self.toolbar)
+        layout.addWidget(self.canvas)
+
+        self.fullscreen_button = QPushButton("Pantalla Completa")
+        self.fullscreen_button.clicked.connect(self.toggle_fullscreen)
+        layout.addWidget(self.fullscreen_button)
+
+        self.setLayout(layout)
+        self.generate_charts()
+
+    def generate_charts(self):
+        self.figure.clear()
+        ax = self.figure.add_subplot(111)
+
+        all_incidents = []
+        for data in self.data.values():
+            all_incidents.extend(data['incidences'])
+
+        counter = Counter(all_incidents)
+
+        if counter:
+            incidents, counts = zip(*counter.items())
+            ax.bar(incidents, counts)
+            ax.set_xlabel('Incidencias')
+            ax.set_ylabel('Número de Incidencias')
+            ax.set_title('Distribución de Incidencias')
+            ax.tick_params(axis='x', rotation=45)
+        else:
+            ax.text(0.5, 0.5, 'No data available', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+
+        self.canvas.draw()
+
+    def toggle_fullscreen(self):
+        if self.isFullScreen():
+            self.showNormal()
+            self.fullscreen_button.setText("Pantalla Completa")
+        else:
+            self.showFullScreen()
+            self.fullscreen_button.setText("Salir de Pantalla Completa")
+
+
 class TicketManagement(QMainWindow):
     config_file = "config.txt"
     state_file = "incidence_state.json"
@@ -290,6 +336,8 @@ class TicketManagement(QMainWindow):
         }
         self.incidences_count = {block: 0 for block in self.incidencias.keys()}
         self.pending_incidents = []
+        self.filtered_incidents_data = {}
+        self.incident_details = {}
         self.initUI()
         self.load_last_excel_file()
         self.load_incidence_state()
@@ -343,6 +391,10 @@ class TicketManagement(QMainWindow):
         self.view_details_button.clicked.connect(self.open_top_incidents_dialog)
         right_layout.addWidget(self.view_details_button)
 
+        self.graph_button = QPushButton("Ver Gráficos")
+        self.graph_button.clicked.connect(self.open_graph_dialog)
+        right_layout.addWidget(self.graph_button)
+
         right_layout.addStretch()
 
         right_widget = QWidget()
@@ -381,6 +433,10 @@ class TicketManagement(QMainWindow):
         self.top_incidents_dialog = TopIncidentsDialog(self, incident_details=self.incident_details)
         self.top_incidents_dialog.exec_()
 
+    def open_graph_dialog(self):
+        self.graph_dialog = GraphDialog(self, data=self.filtered_incidents_data)
+        self.graph_dialog.exec_()
+
     def toggle_excel_view(self):
         if self.excel_view_mode == "completo":
             self.excel_view_mode = "filtrado"
@@ -402,17 +458,20 @@ class TicketManagement(QMainWindow):
 
         for row in sheet.iter_rows(min_row=2, values_only=True):
             date_str, time_str, *incidences = row
-            row_datetime = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M:%S")
-
-            if start_dt <= row_datetime <= end_dt:
-                hour_str = row_datetime.strftime("%Y-%m-%d %H:00:00")
-                for i, incidence in enumerate(incidences):
-                    if incidence != "-":
-                        block = list(self.incidencias.keys())[i]
-                        if selected_block == "Todos" or selected_block == block:
-                            filtered_counts[block]['count'] += 1
-                            filtered_counts[block]['incidences'].append(incidence)
-                            trends[block][hour_str] += 1
+            if date_str and time_str:
+                try:
+                    row_datetime = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M:%S")
+                    if start_dt <= row_datetime <= end_dt:
+                        hour_str = row_datetime.strftime("%Y-%m-%d %H:00:00")
+                        for i, incidence in enumerate(incidences):
+                            if incidence != "-":
+                                block = list(self.incidencias.keys())[i]
+                                if selected_block == "Todos" or selected_block == block:
+                                    filtered_counts[block]['count'] += 1
+                                    filtered_counts[block]['incidences'].append(incidence)
+                                    trends[block][hour_str] += 1
+                except ValueError:
+                    continue
 
         for block, data in filtered_counts.items():
             if data['incidences']:
@@ -420,6 +479,8 @@ class TicketManagement(QMainWindow):
                 data['most_common_incidence'] = most_common_incidence
             else:
                 data['most_common_incidence'] = "N/A"
+
+        self.filtered_incidents_data = filtered_counts
 
         if selected_block != "Todos":
             filtered_counts = {selected_block: filtered_counts[selected_block]}
@@ -597,11 +658,10 @@ class TicketManagement(QMainWindow):
         file_dialog = QFileDialog()
         file_dialog.setNameFilter("Archivos Excel (*.xlsx)")
         if file_dialog.exec_():
-            file_path = file_dialog.selectedFiles()[0]
-            self.excel_file = file_path
-            self.excel_path_display.setText(file_path)
+            self.excel_file = file_dialog.selectedFiles()[0]
+            self.excel_path_display.setText(self.excel_file)
             with open(self.config_file, "w") as config:
-                config.write(file_path)
+                config.write(self.excel_file)
             self.update_excel_table()
             self.update_top_incidents()
 
