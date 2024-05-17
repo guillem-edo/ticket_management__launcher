@@ -45,7 +45,7 @@ class LoginWindow(QWidget):
         ]
 
         layout = QVBoxLayout()
-        logo_pixmap = QPixmap("app/logo.png")
+        logo_pixmap = QPixmap("testing_app/logo.png")
 
         if not logo_pixmap.isNull():
             logo_label = QLabel()
