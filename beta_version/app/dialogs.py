@@ -1,3 +1,4 @@
+# app/dialogs.py
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea, QWidget, QInputDialog, QMessageBox
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QPixmap

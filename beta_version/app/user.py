@@ -1,3 +1,4 @@
+# app/user.py
 class User:
     def __init__(self, username, password, blocks):
         self.username = username

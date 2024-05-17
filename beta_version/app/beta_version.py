@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QApplication
-from login_window import LoginWindow
-from ticket_management import TicketManagement
+from app.login_window import LoginWindow
+from app.ticket_management import TicketManagement
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -16,4 +16,3 @@ if __name__ == "__main__":
     login_window.show()
 
     sys.exit(app.exec_())
-    

@@ -1,3 +1,4 @@
+# app/ticket_management.py
 import json
 import os
 from datetime import datetime
@@ -6,11 +7,11 @@ from openpyxl import Workbook, load_workbook
 from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QLineEdit, QFileDialog, QTableWidget, QTableWidgetItem, QListWidget, QLabel, QTabWidget, QStatusBar, QInputDialog, QMessageBox, QAbstractItemView, QListWidgetItem, QApplication
 from PyQt5.QtCore import QTimer, Qt, QRect
 from PyQt5.QtGui import QFont, QColor
-from dialogs import AdvancedFilterDialog, TopIncidentsDialog, GraphDialog
+from app.dialogs import AdvancedFilterDialog, TopIncidentsDialog, GraphDialog
 
 class TicketManagement(QMainWindow):
-    config_file = "config.txt"
-    state_file = "incidence_state.json"
+    config_file = "app/config.txt"
+    state_file = "app/incidence_state.json"
 
     def __init__(self, user):
         super().__init__()

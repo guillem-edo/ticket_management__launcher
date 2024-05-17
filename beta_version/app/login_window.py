@@ -1,7 +1,8 @@
+# app/login_window.py
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox, QApplication
 from PyQt5.QtCore import pyqtSignal, Qt, QRect
 from PyQt5.QtGui import QFont, QPixmap
-from user import User
+from app.user import User
 
 class LoginWindow(QWidget):
     login_successful = pyqtSignal(User)
@@ -22,7 +23,7 @@ class LoginWindow(QWidget):
         ]
 
         layout = QVBoxLayout()
-        logo_pixmap = QPixmap("app/logo.png")
+        logo_pixmap = QPixmap("beta_version\app\logo.png")
 
         if not logo_pixmap.isNull():
             logo_label = QLabel()
