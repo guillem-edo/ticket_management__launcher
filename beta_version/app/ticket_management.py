@@ -15,8 +15,6 @@ class TicketManagement(QMainWindow):
         super().__init__()
         self.user = user
         self.excel_file = None
-        self.blocks = user.blocks
-        self.last_incidence_labels = {}
         self.incidencias = {
             "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva",
                         "Fallo en paletizador", "No coge placa", "Palet atascado en la curva",
@@ -37,6 +35,8 @@ class TicketManagement(QMainWindow):
             "SPL": ["Sensor de PCB detecta que hay placa cuando no la hay", "No detecta marcas Power", "Colisión placas", "Fallo dispensación glue", "Marco atascado en parte inferior",
                     "Soldadura defectuosa", "Error en sensor de salida"]
         }
+        self.blocks = user.blocks if not user.is_admin else list(self.incidencias.keys())
+        self.last_incidence_labels = {}
         self.incidences_count = {block: 0 for block in self.incidencias.keys()}
         self.pending_incidents = []
         self.filtered_incidents_data = {}
@@ -560,7 +560,3 @@ class TicketManagement(QMainWindow):
                         details_button.clicked.connect(lambda: self.add_incidence_details(self.user.blocks[0], incidence_text, date_str, time_str))
                         if status == "Fixing" or status == "Pendiente":
                             QTimer.singleShot(60000, lambda: self.remind_user_to_fix(self.user.blocks[0], incidence_text, fixing_label, correct_button, details_button, date_str, time_str))
-
-    def closeEvent(self, event):
-        self.save_incidence_state()
-        event.accept()
