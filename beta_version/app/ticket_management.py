@@ -1,4 +1,5 @@
 # app/ticket_management.py
+# app/ticket_management.py
 import json
 import os
 from datetime import datetime
@@ -10,9 +11,6 @@ from PyQt5.QtGui import QFont, QColor
 from app.dialogs import AdvancedFilterDialog, TopIncidentsDialog, GraphDialog
 
 class TicketManagement(QMainWindow):
-    config_file = "app/config.txt"
-    state_file = "app/incidence_state.json"
-
     def __init__(self, user):
         super().__init__()
         self.user = user
@@ -43,6 +41,8 @@ class TicketManagement(QMainWindow):
         self.pending_incidents = []
         self.filtered_incidents_data = {}
         self.incident_details = {}
+        self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.txt")
+        self.state_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidence_state.json")
         self.initUI()
         self.load_last_excel_file()
         self.load_incidence_state()
