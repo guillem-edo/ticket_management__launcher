@@ -13,6 +13,7 @@ from PyQt5.QtGui import QFont, QColor
 from app.dialogs import AdvancedFilterDialog, TopIncidentsDialog, GraphDialog
 from app.admin_dialog import AdminDialog
 
+
 class TicketManagement(QMainWindow):
     def __init__(self, user):
         super().__init__()
@@ -20,17 +21,17 @@ class TicketManagement(QMainWindow):
         self.excel_file = None
         self.incidencias = {
             "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva",
-                        "Fallo en paletizador", "No coge placa", "Palet atascado en la curva",
-                        "Ascensor no sube", "No pone tornillo", "Fallo tornillo", "AOI no detecta pieza",
-                        "No atornilla clips", "Fallo fijador tapa", "Secuencia atornillador",
-                        "Fallo atornillador", "Fallo cámara visión"],
+                          "Fallo en paletizador", "No coge placa", "Palet atascado en la curva",
+                          "Ascensor no sube", "No pone tornillo", "Fallo tornillo", "AOI no detecta pieza",
+                          "No atornilla clips", "Fallo fijador tapa", "Secuencia atornillador",
+                          "Fallo atornillador", "Fallo cámara visión"],
             "WC48 P5F": ["Etiquetadora", "AOI (fallo etiqueta)", "AOI (malla)", "Cámara no detecta Pcb", "Cámara no detecta skeleton",
-                        "Cámara no detecta foams", "Cámara no detecta busbar", "Cámara no detecta foam derecho", "No detecta presencia power CP",
-                        "Tornillo atascado en tolva", "Cámara no detecta Power CP", "Cámara no detecta Top cover", "Detección de sealling mal puesto",
-                        "Robot no coge busbar", "Fallo etiqueta", "Power atascado en prensa, cuesta sacar", "No coloca bien el sealling"],
+                         "Cámara no detecta foams", "Cámara no detecta busbar", "Cámara no detecta foam derecho", "No detecta presencia power CP",
+                         "Tornillo atascado en tolva", "Cámara no detecta Power CP", "Cámara no detecta Top cover", "Detección de sealling mal puesto",
+                         "Robot no coge busbar", "Fallo etiqueta", "Power atascado en prensa, cuesta sacar", "No coloca bien el sealling"],
             "WC49 P5H": ["La cámara no detecta Busbar", "La cámara no detecta Top Cover", "Screw K30 no lo detecta puesto", "Atasco tuerca",
-                        "Tornillo atascado", "Etiquetadora", "Detección de sealling mal puesto", "No coloca bien el sealling", "Power atascado en prensa, cuesta sacar",
-                        "No lee QR"],
+                         "Tornillo atascado", "Etiquetadora", "Detección de sealling mal puesto", "No coloca bien el sealling", "Power atascado en prensa, cuesta sacar",
+                         "No lee QR"],
             "WV50 FILTER": ["Fallo cámara ferrite", "NOK Soldadura Plástico", "NOK Soldadura metal", "Traza", "NOK Soldad. Plástico+Metal", "Robot no coloca bien filter en palet",
                             "No coloca bien la pcb", "QR desplazado", "Core enganchado", "Robot no coge PCB", "Fallo atornillador", "Pieza enganchada en HV Test", "Cover atascado",
                             "Robot no coloca bien ferrita", "No coloca bien el core", "Fallo Funcional", "Fallo visión core", "Fallo cámara cover", "Repeat funcional", "Fallo cámara QR",
@@ -183,15 +184,36 @@ class TicketManagement(QMainWindow):
             if item_widget:
                 labels = item_widget.findChildren(QLabel)
                 if labels and "Fixing" in labels[1].text():
-                    current_fixing_incidents.append((item, item_widget))
-        
+                    current_fixing_incidents.append((item.text(), labels[0].text(), labels[1].text()))
+
         self.global_incidence_list.clear()
-        for item, item_widget in current_fixing_incidents:
-            new_item = QListWidgetItem()
-            new_item.setSizeHint(item.sizeHint())
-            self.global_incidence_list.addItem(new_item)
-            self.global_incidence_list.setItemWidget(new_item, item_widget)
-        
+        for incidence_text, fixing_label_text, label_text in current_fixing_incidents:
+            list_item = QListWidgetItem(incidence_text)
+            item_widget = QWidget()
+            item_layout = QVBoxLayout(item_widget)
+            label_layout = QHBoxLayout()
+            label_layout.addWidget(QLabel(label_text))
+            item_layout.addLayout(label_layout)
+            fixing_label = QLabel(fixing_label_text)
+            fixing_label.setStyleSheet("color: red; font-weight: bold; font-size: 14px;")
+            correct_button = QPushButton("Correct")
+            correct_button.setStyleSheet("background-color: green; color: white; font-weight: bold; font-size: 14px;")
+            correct_button.setFixedSize(100, 30)
+            details_button = QPushButton("Añadir Detalles")
+            details_button.setStyleSheet("background-color: blue; color: white; font-weight: bold; font-size: 14px;")
+            details_button.setFixedSize(150, 30)
+            buttons_layout = QHBoxLayout()
+            buttons_layout.addStretch()
+            buttons_layout.addWidget(fixing_label)
+            buttons_layout.addWidget(correct_button)
+            buttons_layout.addWidget(details_button)
+            item_layout.addLayout(buttons_layout)
+            list_item.setSizeHint(item_widget.sizeHint())
+            self.global_incidence_list.addItem(list_item)
+            self.global_incidence_list.setItemWidget(list_item, item_widget)
+            correct_button.clicked.connect(lambda: self.mark_incidence_as_fixed(self.user.blocks[0], incidence_text, fixing_label, correct_button, details_button))
+            details_button.clicked.connect(lambda: self.add_incidence_details(self.user.blocks[0], incidence_text))
+
         self.load_incidence_state()
 
     def get_filtered_incidents(self, start_dt, end_dt, selected_block):
