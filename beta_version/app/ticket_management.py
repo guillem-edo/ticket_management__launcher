@@ -19,7 +19,7 @@ class TicketManagement(QMainWindow):
         self.user = user
         self.excel_file = None
         self.incidencias = {
-            "WC47 NACP": ["Etiquetadora","Fallo en elevador", "No atornilla tapa", "Fallo tolva",
+            "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva",
                         "Fallo en paletizador", "No coge placa", "Palet atascado en la curva",
                         "Ascensor no sube", "No pone tornillo", "Fallo tornillo", "AOI no detecta pieza",
                         "No atornilla clips", "Fallo fijador tapa", "Secuencia atornillador",
@@ -187,8 +187,10 @@ class TicketManagement(QMainWindow):
         
         self.global_incidence_list.clear()
         for item, item_widget in current_fixing_incidents:
-            self.global_incidence_list.addItem(item)
-            self.global_incidence_list.setItemWidget(item, item_widget)
+            new_item = QListWidgetItem()
+            new_item.setSizeHint(item.sizeHint())
+            self.global_incidence_list.addItem(new_item)
+            self.global_incidence_list.setItemWidget(new_item, item_widget)
         
         self.load_incidence_state()
 
