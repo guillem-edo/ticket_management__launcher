@@ -1,17 +1,4 @@
 {
-    "user": "pideu4",
-    "incidences": [
-        {
-            "text": "WV50 FILTER: Fallo atornillador a las 11:52:21 del 2024-05-17",
-            "status": "Reparada"
-        },
-        {
-            "text": "WV50 FILTER: Robot no coloca bien filter en palet a las 11:52:24 del 2024-05-17",
-            "status": "Reparada"
-        },
-        {
-            "text": "WV50 FILTER: Fallo atornillador a las 11:52:37 del 2024-05-17",
-            "status": "Reparada"
-        }
-    ]
+    "user": "pideu2",
+    "incidences": []
 }

@@ -1,5 +1,4 @@
 # app/ticket_management.py
-# app/ticket_management.py
 import json
 import os
 from datetime import datetime
@@ -9,6 +8,7 @@ from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPus
 from PyQt5.QtCore import QTimer, Qt, QRect
 from PyQt5.QtGui import QFont, QColor
 from app.dialogs import AdvancedFilterDialog, TopIncidentsDialog, GraphDialog
+from app.admin_dialog import AdminDialog
 
 class TicketManagement(QMainWindow):
     def __init__(self, user):
@@ -100,6 +100,12 @@ class TicketManagement(QMainWindow):
         self.graph_button.clicked.connect(self.open_graph_dialog)
         right_layout.addWidget(self.graph_button)
 
+        if self.user.is_admin:
+            admin_button = QPushButton("Administrar Incidencias")
+            admin_button.setStyleSheet("background-color: #f0ad4e; color: white; padding: 10px 20px; font-size: 16px;")
+            admin_button.clicked.connect(self.open_admin_dialog)
+            right_layout.addWidget(admin_button)
+
         right_layout.addStretch()
 
         right_widget = QWidget()
@@ -141,6 +147,10 @@ class TicketManagement(QMainWindow):
     def open_graph_dialog(self):
         self.graph_dialog = GraphDialog(self, data=self.filtered_incidents_data)
         self.graph_dialog.exec_()
+
+    def open_admin_dialog(self):
+        self.admin_dialog = AdminDialog(self, incidencias=self.incidencias)
+        self.admin_dialog.exec_()
 
     def toggle_excel_view(self):
         if self.excel_view_mode == "completo":

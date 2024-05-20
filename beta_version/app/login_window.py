@@ -20,7 +20,8 @@ class LoginWindow(QWidget):
             User("pideu2", "1111", ["WC48 P5F"]),
             User("pideu3", "1111", ["WC49 P5H"]),
             User("pideu4", "1111", ["WV50 FILTER"]),
-            User("pideu5", "1111", ["SPL"])
+            User("pideu5", "1111", ["SPL"]),
+            User("admin", "admin", [], is_admin=True)  # Usuario administrador
         ]
 
         layout = QVBoxLayout()
