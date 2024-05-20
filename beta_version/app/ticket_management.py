@@ -4,7 +4,10 @@ import os
 from datetime import datetime
 from collections import Counter, defaultdict
 from openpyxl import Workbook, load_workbook
-from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QLineEdit, QFileDialog, QTableWidget, QTableWidgetItem, QListWidget, QLabel, QTabWidget, QStatusBar, QInputDialog, QMessageBox, QAbstractItemView, QListWidgetItem, QApplication
+from PyQt5.QtWidgets import (
+    QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QLineEdit, QFileDialog, QTableWidget, QTableWidgetItem,
+    QListWidget, QLabel, QTabWidget, QStatusBar, QInputDialog, QMessageBox, QAbstractItemView, QApplication, QListWidgetItem
+)
 from PyQt5.QtCore import QTimer, Qt, QRect
 from PyQt5.QtGui import QFont, QColor
 from app.dialogs import AdvancedFilterDialog, TopIncidentsDialog, GraphDialog
@@ -76,6 +79,11 @@ class TicketManagement(QMainWindow):
         self.toggle_excel_view_button.clicked.connect(self.toggle_excel_view)
         right_layout.addWidget(self.toggle_excel_view_button)
         self.excel_view_mode = "completo"
+
+        self.refresh_button = QPushButton("Refrescar", self)
+        self.refresh_button.setStyleSheet("background-color: #4CAF50; color: white; padding: 10px 20px; font-size: 16px;")
+        self.refresh_button.clicked.connect(self.update_all)
+        right_layout.addWidget(self.refresh_button)
 
         self.table_widget = QTableWidget(self)
         right_layout.addWidget(self.table_widget)
@@ -160,6 +168,15 @@ class TicketManagement(QMainWindow):
             self.excel_view_mode = "completo"
             self.toggle_excel_view_button.setText("Ver Excel Filtrado")
         self.update_excel_table()
+
+    def update_all(self):
+        self.update_excel_table()
+        self.update_top_incidents()
+        self.update_global_incidence_list()
+
+    def update_global_incidence_list(self):
+        self.global_incidence_list.clear()
+        self.load_incidence_state()
 
     def get_filtered_incidents(self, start_dt, end_dt, selected_block):
         if not self.excel_file or not os.path.exists(self.excel_file):
@@ -560,3 +577,7 @@ class TicketManagement(QMainWindow):
                         details_button.clicked.connect(lambda: self.add_incidence_details(self.user.blocks[0], incidence_text, date_str, time_str))
                         if status == "Fixing" or status == "Pendiente":
                             QTimer.singleShot(60000, lambda: self.remind_user_to_fix(self.user.blocks[0], incidence_text, fixing_label, correct_button, details_button, date_str, time_str))
+
+    def closeEvent(self, event):
+        self.save_incidence_state()
+        event.accept()
