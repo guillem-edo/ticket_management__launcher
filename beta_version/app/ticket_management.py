@@ -6,7 +6,7 @@ from collections import Counter, defaultdict
 from openpyxl import Workbook, load_workbook
 from PyQt5.QtWidgets import (
     QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QLineEdit, QFileDialog, QTableWidget, QTableWidgetItem,
-    QListWidget, QLabel, QTabWidget, QStatusBar, QInputDialog, QMessageBox, QAbstractItemView, QApplication, QListWidgetItem
+    QListWidget, QLabel, QTabWidget, QStatusBar, QInputDialog, QMessageBox, QAbstractItemView, QListWidgetItem, QApplication
 )
 from PyQt5.QtCore import QTimer, Qt, QRect
 from PyQt5.QtGui import QFont, QColor
@@ -19,7 +19,7 @@ class TicketManagement(QMainWindow):
         self.user = user
         self.excel_file = None
         self.incidencias = {
-            "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva",
+            "WC47 NACP": ["Etiquetadora","Fallo en elevador", "No atornilla tapa", "Fallo tolva",
                         "Fallo en paletizador", "No coge placa", "Palet atascado en la curva",
                         "Ascensor no sube", "No pone tornillo", "Fallo tornillo", "AOI no detecta pieza",
                         "No atornilla clips", "Fallo fijador tapa", "Secuencia atornillador",
@@ -158,6 +158,7 @@ class TicketManagement(QMainWindow):
 
     def open_admin_dialog(self):
         self.admin_dialog = AdminDialog(self, incidencias=self.incidencias)
+        self.admin_dialog.incidences_modified.connect(self.update_all)
         self.admin_dialog.exec_()
 
     def toggle_excel_view(self):
@@ -175,7 +176,20 @@ class TicketManagement(QMainWindow):
         self.update_global_incidence_list()
 
     def update_global_incidence_list(self):
+        current_fixing_incidents = []
+        for i in range(self.global_incidence_list.count()):
+            item = self.global_incidence_list.item(i)
+            item_widget = self.global_incidence_list.itemWidget(item)
+            if item_widget:
+                labels = item_widget.findChildren(QLabel)
+                if labels and "Fixing" in labels[1].text():
+                    current_fixing_incidents.append((item, item_widget))
+        
         self.global_incidence_list.clear()
+        for item, item_widget in current_fixing_incidents:
+            self.global_incidence_list.addItem(item)
+            self.global_incidence_list.setItemWidget(item, item_widget)
+        
         self.load_incidence_state()
 
     def get_filtered_incidents(self, start_dt, end_dt, selected_block):

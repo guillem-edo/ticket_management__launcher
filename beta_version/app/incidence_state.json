@@ -1,4 +1,9 @@
 {
-    "user": "pideu1",
-    "incidences": []
+    "user": "admin",
+    "incidences": [
+        {
+            "text": "WC47 NACP: Test a las 12:18:27 del 2024-05-20",
+            "status": "Fixing"
+        }
+    ]
 }

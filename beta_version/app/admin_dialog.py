@@ -1,68 +1,75 @@
 # app/admin_dialog.py
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, QPushButton, QInputDialog, QMessageBox
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QListWidget, QComboBox, QInputDialog
+from PyQt5.QtCore import pyqtSignal
 
 class AdminDialog(QDialog):
+    incidences_modified = pyqtSignal()
+
     def __init__(self, parent=None, incidencias=None):
         super().__init__(parent)
         self.setWindowTitle("Administrar Incidencias")
-        self.setGeometry(300, 300, 600, 400)
+        self.setGeometry(300, 300, 500, 400)
         self.incidencias = incidencias
+        self.initUI()
 
+    def initUI(self):
         layout = QVBoxLayout()
 
-        self.block_selector = QListWidget()
-        for block in self.incidencias.keys():
-            self.block_selector.addItem(block)
-        self.block_selector.currentItemChanged.connect(self.load_incidents)
+        self.block_selector = QComboBox()
+        self.block_selector.addItems(self.incidencias.keys())
+        self.block_selector.currentIndexChanged.connect(self.populate_incidences_list)
         layout.addWidget(self.block_selector)
 
-        self.incident_list = QListWidget()
-        layout.addWidget(self.incident_list)
+        self.incidences_list = QListWidget()
+        self.populate_incidences_list()
+        layout.addWidget(self.incidences_list)
 
         button_layout = QHBoxLayout()
-        add_button = QPushButton("Añadir Incidencia")
-        add_button.clicked.connect(self.add_incident)
-        button_layout.addWidget(add_button)
+        self.add_button = QPushButton("Añadir Incidencia")
+        self.add_button.clicked.connect(self.add_incidence)
+        button_layout.addWidget(self.add_button)
 
-        edit_button = QPushButton("Editar Incidencia")
-        edit_button.clicked.connect(self.edit_incident)
-        button_layout.addWidget(edit_button)
+        self.edit_button = QPushButton("Editar Incidencia")
+        self.edit_button.clicked.connect(self.edit_incidence)
+        button_layout.addWidget(self.edit_button)
 
-        delete_button = QPushButton("Eliminar Incidencia")
-        delete_button.clicked.connect(self.delete_incident)
-        button_layout.addWidget(delete_button)
+        self.delete_button = QPushButton("Eliminar Incidencia")
+        self.delete_button.clicked.connect(self.delete_incidence)
+        button_layout.addWidget(self.delete_button)
 
         layout.addLayout(button_layout)
-
         self.setLayout(layout)
 
-    def load_incidents(self):
-        current_block = self.block_selector.currentItem().text()
-        self.incident_list.clear()
-        for incident in self.incidencias[current_block]:
-            self.incident_list.addItem(incident)
+    def populate_incidences_list(self):
+        self.incidences_list.clear()
+        selected_block = self.block_selector.currentText()
+        for incidence in self.incidencias[selected_block]:
+            self.incidences_list.addItem(incidence)
 
-    def add_incident(self):
-        current_block = self.block_selector.currentItem().text()
-        incident, ok = QInputDialog.getText(self, "Añadir Incidencia", "Nombre de la Incidencia:")
-        if ok and incident:
-            self.incidencias[current_block].append(incident)
-            self.load_incidents()
+    def add_incidence(self):
+        text, ok = QInputDialog.getText(self, "Añadir Incidencia", "Nombre de la nueva incidencia:")
+        if ok and text:
+            selected_block = self.block_selector.currentText()
+            self.incidencias[selected_block].append(text)
+            self.populate_incidences_list()
+            self.incidences_modified.emit()
 
-    def edit_incident(self):
-        current_block = self.block_selector.currentItem().text()
-        current_item = self.incident_list.currentItem()
-        if current_item:
-            incident, ok = QInputDialog.getText(self, "Editar Incidencia", "Nombre de la Incidencia:", text=current_item.text())
-            if ok and incident:
-                self.incidencias[current_block][self.incident_list.currentRow()] = incident
-                self.load_incidents()
+    def edit_incidence(self):
+        selected_item = self.incidences_list.currentItem()
+        if selected_item:
+            incidence_text = selected_item.text()
+            new_text, ok = QInputDialog.getText(self, "Editar Incidencia", "Nuevo nombre de la incidencia:", QLineEdit.Normal, incidence_text)
+            if ok and new_text:
+                selected_block = self.block_selector.currentText()
+                self.incidencias[selected_block][self.incidencias[selected_block].index(incidence_text)] = new_text
+                self.populate_incidences_list()
+                self.incidences_modified.emit()
 
-    def delete_incident(self):
-        current_block = self.block_selector.currentItem().text()
-        current_item = self.incident_list.currentItem()
-        if current_item:
-            reply = QMessageBox.question(self, "Eliminar Incidencia", f"¿Estás seguro de eliminar '{current_item.text()}'?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if reply == QMessageBox.Yes:
-                del self.incidencias[current_block][self.incident_list.currentRow()]
-                self.load_incidents()
+    def delete_incidence(self):
+        selected_item = self.incidences_list.currentItem()
+        if selected_item:
+            incidence_text = selected_item.text()
+            selected_block = self.block_selector.currentText()
+            self.incidencias[selected_block].remove(incidence_text)
+            self.populate_incidences_list()
+            self.incidences_modified.emit()
