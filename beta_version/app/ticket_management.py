@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QLineEdit, QFileDialog, QTableWidget, QTableWidgetItem,
     QListWidget, QLabel, QTabWidget, QStatusBar, QInputDialog, QMessageBox, QAbstractItemView, QListWidgetItem, QApplication
 )
-from PyQt5.QtCore import QTimer, Qt, QRect
+from PyQt5.QtCore import QTimer, Qt, QRect, pyqtSlot
 from PyQt5.QtGui import QFont, QColor
 from app.dialogs import AdvancedFilterDialog, TopIncidentsDialog, GraphDialog
 from app.admin_dialog import AdminDialog
@@ -21,17 +21,17 @@ class TicketManagement(QMainWindow):
         self.excel_file = None
         self.incidencias = {
             "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva",
-                          "Fallo en paletizador", "No coge placa", "Palet atascado en la curva",
-                          "Ascensor no sube", "No pone tornillo", "Fallo tornillo", "AOI no detecta pieza",
-                          "No atornilla clips", "Fallo fijador tapa", "Secuencia atornillador",
-                          "Fallo atornillador", "Fallo cámara visión"],
+                        "Fallo en paletizador", "No coge placa", "Palet atascado en la curva",
+                        "Ascensor no sube", "No pone tornillo", "Fallo tornillo", "AOI no detecta pieza",
+                        "No atornilla clips", "Fallo fijador tapa", "Secuencia atornillador",
+                        "Fallo atornillador", "Fallo cámara visión"],
             "WC48 P5F": ["Etiquetadora", "AOI (fallo etiqueta)", "AOI (malla)", "Cámara no detecta Pcb", "Cámara no detecta skeleton",
-                         "Cámara no detecta foams", "Cámara no detecta busbar", "Cámara no detecta foam derecho", "No detecta presencia power CP",
-                         "Tornillo atascado en tolva", "Cámara no detecta Power CP", "Cámara no detecta Top cover", "Detección de sealling mal puesto",
-                         "Robot no coge busbar", "Fallo etiqueta", "Power atascado en prensa, cuesta sacar", "No coloca bien el sealling"],
+                        "Cámara no detecta foams", "Cámara no detecta busbar", "Cámara no detecta foam derecho", "No detecta presencia power CP",
+                        "Tornillo atascado en tolva", "Cámara no detecta Power CP", "Cámara no detecta Top cover", "Detección de sealling mal puesto",
+                        "Robot no coge busbar", "Fallo etiqueta", "Power atascado en prensa, cuesta sacar", "No coloca bien el sealling"],
             "WC49 P5H": ["La cámara no detecta Busbar", "La cámara no detecta Top Cover", "Screw K30 no lo detecta puesto", "Atasco tuerca",
-                         "Tornillo atascado", "Etiquetadora", "Detección de sealling mal puesto", "No coloca bien el sealling", "Power atascado en prensa, cuesta sacar",
-                         "No lee QR"],
+                        "Tornillo atascado", "Etiquetadora", "Detección de sealling mal puesto", "No coloca bien el sealling", "Power atascado en prensa, cuesta sacar",
+                        "No lee QR"],
             "WV50 FILTER": ["Fallo cámara ferrite", "NOK Soldadura Plástico", "NOK Soldadura metal", "Traza", "NOK Soldad. Plástico+Metal", "Robot no coloca bien filter en palet",
                             "No coloca bien la pcb", "QR desplazado", "Core enganchado", "Robot no coge PCB", "Fallo atornillador", "Pieza enganchada en HV Test", "Cover atascado",
                             "Robot no coloca bien ferrita", "No coloca bien el core", "Fallo Funcional", "Fallo visión core", "Fallo cámara cover", "Repeat funcional", "Fallo cámara QR",
@@ -184,15 +184,21 @@ class TicketManagement(QMainWindow):
             if item_widget:
                 labels = item_widget.findChildren(QLabel)
                 if labels and "Fixing" in labels[1].text():
-                    current_fixing_incidents.append((item.text(), labels[0].text(), labels[1].text()))
+                    current_fixing_incidents.append((labels[0].text(), labels[1].text()))
 
         self.global_incidence_list.clear()
-        for incidence_text, fixing_label_text, label_text in current_fixing_incidents:
+        for incidence_text, fixing_label_text in current_fixing_incidents:
+            # Extraer date_str y time_str del texto de la incidencia
+            text_parts = incidence_text.split(" ")
+            date_str = text_parts[-3]
+            time_str = text_parts[-2]
+            block_name = " ".join(text_parts[:-5])
+
             list_item = QListWidgetItem(incidence_text)
             item_widget = QWidget()
             item_layout = QVBoxLayout(item_widget)
             label_layout = QHBoxLayout()
-            label_layout.addWidget(QLabel(label_text))
+            label_layout.addWidget(QLabel(incidence_text))
             item_layout.addLayout(label_layout)
             fixing_label = QLabel(fixing_label_text)
             fixing_label.setStyleSheet("color: red; font-weight: bold; font-size: 14px;")
@@ -211,10 +217,16 @@ class TicketManagement(QMainWindow):
             list_item.setSizeHint(item_widget.sizeHint())
             self.global_incidence_list.addItem(list_item)
             self.global_incidence_list.setItemWidget(list_item, item_widget)
-            correct_button.clicked.connect(lambda: self.mark_incidence_as_fixed(self.user.blocks[0], incidence_text, fixing_label, correct_button, details_button))
-            details_button.clicked.connect(lambda: self.add_incidence_details(self.user.blocks[0], incidence_text))
+            correct_button.clicked.connect(self.create_mark_incidence_as_fixed_handler(block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str))
+            details_button.clicked.connect(self.create_add_incidence_details_handler(block_name, incidence_text, date_str, time_str))
 
         self.load_incidence_state()
+
+    def create_mark_incidence_as_fixed_handler(self, block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str):
+        return lambda: self.mark_incidence_as_fixed(block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str)
+
+    def create_add_incidence_details_handler(self, block_name, incidence_text, date_str, time_str):
+        return lambda: self.add_incidence_details(block_name, incidence_text, date_str, time_str)
 
     def get_filtered_incidents(self, start_dt, end_dt, selected_block):
         if not self.excel_file or not os.path.exists(self.excel_file):
@@ -343,8 +355,8 @@ class TicketManagement(QMainWindow):
             self.global_incidence_list.addItem(list_item)
             self.global_incidence_list.setItemWidget(list_item, item_widget)
 
-            correct_button.clicked.connect(lambda: self.mark_incidence_as_fixed(block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str))
-            details_button.clicked.connect(lambda: self.add_incidence_details(block_name, incidence_text, date_str, time_str))
+            correct_button.clicked.connect(self.create_mark_incidence_as_fixed_handler(block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str))
+            details_button.clicked.connect(self.create_add_incidence_details_handler(block_name, incidence_text, date_str, time_str))
 
             QTimer.singleShot(60000, lambda: self.remind_user_to_fix(block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str))
 
@@ -580,8 +592,12 @@ class TicketManagement(QMainWindow):
 
                         # Extraer date_str y time_str del texto de la incidencia
                         text_parts = incidence_text.split(" ")
+                        if len(text_parts) < 5:
+                            continue
+
                         date_str = text_parts[-3]
                         time_str = text_parts[-2]
+                        block_name = " ".join(text_parts[:-5])
 
                         fixing_label = QLabel(status)
                         if status == "Fixing":
@@ -611,10 +627,10 @@ class TicketManagement(QMainWindow):
                         list_item.setSizeHint(item_widget.sizeHint())
                         self.global_incidence_list.addItem(list_item)
                         self.global_incidence_list.setItemWidget(list_item, item_widget)
-                        correct_button.clicked.connect(lambda: self.mark_incidence_as_fixed(self.user.blocks[0], incidence_text, fixing_label, correct_button, details_button, date_str, time_str))
-                        details_button.clicked.connect(lambda: self.add_incidence_details(self.user.blocks[0], incidence_text, date_str, time_str))
+                        correct_button.clicked.connect(self.create_mark_incidence_as_fixed_handler(block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str))
+                        details_button.clicked.connect(self.create_add_incidence_details_handler(block_name, incidence_text, date_str, time_str))
                         if status == "Fixing" or status == "Pendiente":
-                            QTimer.singleShot(60000, lambda: self.remind_user_to_fix(self.user.blocks[0], incidence_text, fixing_label, correct_button, details_button, date_str, time_str))
+                            QTimer.singleShot(60000, lambda: self.remind_user_to_fix(block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str))
 
     def closeEvent(self, event):
         self.save_incidence_state()

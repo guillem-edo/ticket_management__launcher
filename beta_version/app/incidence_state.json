@@ -2,6 +2,18 @@
     "user": "admin",
     "incidences": [
         {
+            "text": "WC47 NACP: Ascensor no sube a las 14:24:33 del 2024-05-20",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC47 NACP: Test a las 12:18:27 del 2024-05-20",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC47 NACP: Test a las 12:18:27 del 2024-05-20",
+            "status": "Fixing"
+        },
+        {
             "text": "WC47 NACP: Test a las 12:18:27 del 2024-05-20",
             "status": "Fixing"
         }
