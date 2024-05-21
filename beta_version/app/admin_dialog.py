@@ -1,6 +1,9 @@
 # app/admin_dialog.py
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QListWidget, QComboBox, QInputDialog
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import (
+    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QListWidget, QComboBox, QInputDialog, QMessageBox
+)
+from PyQt5.QtCore import pyqtSignal, Qt
+from PyQt5.QtGui import QFont
 
 class AdminDialog(QDialog):
     incidences_modified = pyqtSignal()
@@ -8,12 +11,17 @@ class AdminDialog(QDialog):
     def __init__(self, parent=None, incidencias=None):
         super().__init__(parent)
         self.setWindowTitle("Administrar Incidencias")
-        self.setGeometry(300, 300, 500, 400)
+        self.setGeometry(300, 300, 600, 500)
         self.incidencias = incidencias
         self.initUI()
 
     def initUI(self):
         layout = QVBoxLayout()
+
+        title_label = QLabel("Administrador de Incidencias")
+        title_label.setFont(QFont("Arial", 16, QFont.Bold))
+        title_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title_label)
 
         self.block_selector = QComboBox()
         self.block_selector.addItems(self.incidencias.keys())
@@ -27,14 +35,17 @@ class AdminDialog(QDialog):
         button_layout = QHBoxLayout()
         self.add_button = QPushButton("Añadir Incidencia")
         self.add_button.clicked.connect(self.add_incidence)
+        self.add_button.setStyleSheet("background-color: #4CAF50; color: white; font-size: 14px;")
         button_layout.addWidget(self.add_button)
 
         self.edit_button = QPushButton("Editar Incidencia")
         self.edit_button.clicked.connect(self.edit_incidence)
+        self.edit_button.setStyleSheet("background-color: #f0ad4e; color: white; font-size: 14px;")
         button_layout.addWidget(self.edit_button)
 
         self.delete_button = QPushButton("Eliminar Incidencia")
         self.delete_button.clicked.connect(self.delete_incidence)
+        self.delete_button.setStyleSheet("background-color: #d9534f; color: white; font-size: 14px;")
         button_layout.addWidget(self.delete_button)
 
         layout.addLayout(button_layout)
@@ -50,9 +61,12 @@ class AdminDialog(QDialog):
         text, ok = QInputDialog.getText(self, "Añadir Incidencia", "Nombre de la nueva incidencia:")
         if ok and text:
             selected_block = self.block_selector.currentText()
-            self.incidencias[selected_block].append(text)
-            self.populate_incidences_list()
-            self.incidences_modified.emit()
+            if text in self.incidencias[selected_block]:
+                QMessageBox.warning(self, "Incidencia Duplicada", "La incidencia ya existe en el bloque seleccionado.")
+            else:
+                self.incidencias[selected_block].append(text)
+                self.populate_incidences_list()
+                self.incidences_modified.emit()
 
     def edit_incidence(self):
         selected_item = self.incidences_list.currentItem()
@@ -61,9 +75,12 @@ class AdminDialog(QDialog):
             new_text, ok = QInputDialog.getText(self, "Editar Incidencia", "Nuevo nombre de la incidencia:", QLineEdit.Normal, incidence_text)
             if ok and new_text:
                 selected_block = self.block_selector.currentText()
-                self.incidencias[selected_block][self.incidencias[selected_block].index(incidence_text)] = new_text
-                self.populate_incidences_list()
-                self.incidences_modified.emit()
+                if new_text in self.incidencias[selected_block]:
+                    QMessageBox.warning(self, "Incidencia Duplicada", "La incidencia ya existe en el bloque seleccionado.")
+                else:
+                    self.incidencias[selected_block][self.incidencias[selected_block].index(incidence_text)] = new_text
+                    self.populate_incidences_list()
+                    self.incidences_modified.emit()
 
     def delete_incidence(self):
         selected_item = self.incidences_list.currentItem()
