@@ -1,3 +1,4 @@
+# app/ticket_management.py
 import json
 import os
 from datetime import datetime
@@ -45,7 +46,6 @@ class TicketManagement(QMainWindow):
         self.pending_incidents = []
         self.filtered_incidents_data = {}
         self.incident_details = {}
-        self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.txt")
         self.state_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidence_state.json")
         self.is_fullscreen = False
         self.initUI()
