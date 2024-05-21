@@ -176,7 +176,9 @@ class TicketManagement(QMainWindow):
         self.update_global_incidence_list()
 
     def update_global_incidence_list(self):
+        self.global_incidence_list.clear()
         current_fixing_incidents = []
+
         for i in range(self.global_incidence_list.count()):
             item = self.global_incidence_list.item(i)
             item_widget = self.global_incidence_list.itemWidget(item)
@@ -185,7 +187,6 @@ class TicketManagement(QMainWindow):
                 if labels and "Fixing" in labels[1].text():
                     current_fixing_incidents.append((labels[0].text(), labels[1].text()))
 
-        self.global_incidence_list.clear()
         for incidence_text, fixing_label_text in current_fixing_incidents:
             text_parts = incidence_text.split(" ")
             if len(text_parts) >= 5:
@@ -349,14 +350,14 @@ class TicketManagement(QMainWindow):
             correct_button.clicked.connect(partial(self.mark_incidence_as_fixed, block_name, incidence_text, date_str, time_str))
             details_button.clicked.connect(partial(self.add_incidence_details, block_name, incidence_text, date_str, time_str))
 
-            QTimer.singleShot(60000, partial(self.remind_user_to_fix, block_name, incidence_text, date_str, time_str))
+            QTimer.singleShot(60000, partial(self.remind_user_to_fix, block_name, incidence_text, date_str, time_str, correct_button, details_button))
 
             self.update_excel_table()
             self.update_top_incidents()
         else:
             QMessageBox.warning(self, "Ninguna Incidencia Seleccionada", "Selecciona una incidencia para confirmar.")
 
-    def remind_user_to_fix(self, block_name, incidence_text, date_str, time_str):
+    def remind_user_to_fix(self, block_name, incidence_text, date_str, time_str, correct_button, details_button):
         for i in range(self.global_incidence_list.count()):
             item = self.global_incidence_list.item(i)
             item_widget = self.global_incidence_list.itemWidget(item)
@@ -380,7 +381,7 @@ class TicketManagement(QMainWindow):
                         self.pending_incidents.append((block_name, incidence_text, date_str, time_str))
                         self.redirect_to_pending_incidence(block_name, incidence_text, labels[1], correct_button, details_button, date_str, time_str)
                     else:
-                        QTimer.singleShot(60000, partial(self.remind_user_to_fix, block_name, incidence_text, date_str, time_str))
+                        QTimer.singleShot(60000, partial(self.remind_user_to_fix, block_name, incidence_text, date_str, time_str, correct_button, details_button))
                     break
 
     def redirect_to_pending_incidence(self, block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str):
@@ -635,7 +636,7 @@ class TicketManagement(QMainWindow):
                         correct_button.clicked.connect(partial(self.mark_incidence_as_fixed, block_name, incidence_text, date_str, time_str))
                         details_button.clicked.connect(partial(self.add_incidence_details, block_name, incidence_text, date_str, time_str))
                         if status == "Fixing" or status == "Pendiente":
-                            QTimer.singleShot(60000, partial(self.remind_user_to_fix, block_name, incidence_text, date_str, time_str))
+                            QTimer.singleShot(60000, partial(self.remind_user_to_fix, block_name, incidence_text, date_str, time_str, correct_button, details_button))
 
     def closeEvent(self, event):
         self.save_incidence_state()

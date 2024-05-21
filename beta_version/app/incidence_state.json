@@ -1,13 +1,4 @@
 {
-    "user": "pideu1",
-    "incidences": [
-        {
-            "text": "WC47 NACP: Fallo en paletizador a las 11:09:15 del 2024-05-21",
-            "status": "Reparada"
-        },
-        {
-            "text": "WC47 NACP: Fallo fijador tapa a las 11:10:39 del 2024-05-21",
-            "status": "Reparada"
-        }
-    ]
+    "user": "admin",
+    "incidences": []
 }
