@@ -1,4 +1,3 @@
-# app/admin_dialog.py
 import json
 import os
 from PyQt5.QtWidgets import (
@@ -105,5 +104,8 @@ class AdminDialog(QDialog):
     def load_incidencias(config_file="incidencias_config.json"):
         if os.path.exists(config_file):
             with open(config_file, "r") as file:
-                return json.load(file)
-        return None
+                try:
+                    return json.load(file)
+                except json.JSONDecodeError:
+                    return {}
+        return {}

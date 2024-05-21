@@ -1,18 +1,18 @@
-# app/ticket_management.py
 import json
 import os
 from datetime import datetime
 from collections import Counter, defaultdict
 from openpyxl import Workbook, load_workbook
+from functools import partial
 from PyQt5.QtWidgets import (
     QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QLineEdit, QFileDialog, QTableWidget, QTableWidgetItem,
     QListWidget, QLabel, QTabWidget, QStatusBar, QInputDialog, QMessageBox, QAbstractItemView, QListWidgetItem, QApplication, QSplitter
 )
-from PyQt5.QtCore import QTimer, Qt, QRect, pyqtSlot
+from PyQt5.QtCore import QTimer, Qt, QRect
 from PyQt5.QtGui import QFont, QColor
+import csv
 from app.dialogs import AdvancedFilterDialog, TopIncidentsDialog, GraphDialog
 from app.admin_dialog import AdminDialog
-from functools import partial
 
 class TicketManagement(QMainWindow):
     def __init__(self, user):
@@ -92,16 +92,20 @@ class TicketManagement(QMainWindow):
         self.fullscreen_button.clicked.connect(self.toggle_fullscreen)
         right_layout.addWidget(self.fullscreen_button)
 
+        self.export_csv_button = QPushButton("Exportar a CSV", self)
+        self.export_csv_button.clicked.connect(self.export_to_csv)
+        right_layout.addWidget(self.export_csv_button)
+
         self.refresh_button = QPushButton("Refrescar", self)
         self.refresh_button.setStyleSheet("background-color: #4CAF50; color: white; padding: 10px 20px; font-size: 16px;")
         self.refresh_button.clicked.connect(self.update_all)
         right_layout.addWidget(self.refresh_button)
 
         self.table_widget = QTableWidget(self)
+        self.table_widget.setStyleSheet("QTableWidget { font-size: 14px; }")
         right_layout.addWidget(self.table_widget)
 
         self.global_incidence_list = QListWidget(self)
-        self.global_incidence_list.setFixedSize(600, 300)
         self.global_incidence_list.setStyleSheet("QListWidget { background-color: #f0f0f0; border: 1px solid #ccc; }")
         right_layout.addWidget(self.global_incidence_list)
 
@@ -110,6 +114,7 @@ class TicketManagement(QMainWindow):
         right_layout.addWidget(filter_button)
 
         self.top_incidents_label = QLabel("Incidencias Más Relevantes")
+        self.top_incidents_label.setFont(QFont("Arial", 14, QFont.Bold))
         right_layout.addWidget(self.top_incidents_label)
 
         self.view_details_button = QPushButton("Ver Detalles")
@@ -566,16 +571,24 @@ class TicketManagement(QMainWindow):
                 QMessageBox.critical(self, "Error", f"Error al actualizar la tabla: {e}")
 
     def style_excel_table(self):
-        for row in range(self.table_widget.rowCount()):
-            for col in range(self.table_widget.columnCount()):
-                item = self.table_widget.item(row, col)
-                if item:
-                    item.setFont(QFont("Arial", 10))
-                    if row % 2 == 0:
-                        item.setBackground(QColor(240, 240, 240))
-                    else:
-                        item.setBackground(QColor(255, 255, 255))
-                    item.setTextAlignment(Qt.AlignCenter)
+        self.table_widget.setAlternatingRowColors(True)
+        self.table_widget.setStyleSheet("""
+            QTableWidget {
+                background-color: #f9f9f9;
+                alternate-background-color: #e0e0e0;
+                border: 1px solid #ccc;
+                padding: 5px;
+            }
+            QHeaderView::section {
+                background-color: #4CAF50;
+                color: white;
+                font-weight: bold;
+                padding: 5px;
+                border: 1px solid #ddd;
+            }
+        """)
+        self.table_widget.horizontalHeader().setStretchLastSection(True)
+        self.table_widget.resizeColumnsToContents()
 
     def update_top_incidents(self):
         self.incidences_count = {block: 0 for block in self.incidencias.keys()}
@@ -679,3 +692,19 @@ class TicketManagement(QMainWindow):
     def closeEvent(self, event):
         self.save_incidence_state()
         event.accept()
+
+    def export_to_csv(self):
+        if self.excel_file and os.path.exists(self.excel_file):
+            file_dialog = QFileDialog()
+            csv_path, _ = file_dialog.getSaveFileName(self, "Guardar archivo CSV", "", "CSV Files (*.csv)")
+            if csv_path:
+                try:
+                    workbook = load_workbook(self.excel_file)
+                    sheet = workbook.active
+                    with open(csv_path, mode='w', newline='') as file:
+                        writer = csv.writer(file)
+                        for row in sheet.iter_rows(values_only=True):
+                            writer.writerow(row)
+                    QMessageBox.information(self, "Exportación Completa", "Los datos han sido exportados correctamente a CSV.")
+                except Exception as e:
+                    QMessageBox.critical(self, "Error", f"Error al exportar a CSV: {e}")
