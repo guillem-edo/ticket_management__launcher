@@ -174,6 +174,22 @@ class TicketManagement(QMainWindow):
         self.update_excel_table()
         self.update_top_incidents()
         self.update_global_incidence_list()
+        self.update_tabs_incidences()
+    
+    def update_tabs_incidences(self):
+        for name in self.blocks:
+            self.update_tab(name)
+    
+    def update_tab(self, block_name):
+        for i in range(self.tabWidget.count()):
+            tab = self.tabWidget.widget(i)
+            if tab and self.tabWidget.tabText(i) == block_name:
+                layout = tab.layout()
+                list_widget = layout.itemAt(2).widget()
+                list_widget.clear()
+                for incidence in self.incidencias[block_name]:
+                    item = QListWidgetItem(incidence)
+                    list_widget.addItem(item)
 
     def update_global_incidence_list(self):
         current_fixing_incidents = []
