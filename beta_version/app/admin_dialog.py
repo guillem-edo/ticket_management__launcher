@@ -1,4 +1,6 @@
 # app/admin_dialog.py
+import json
+import os
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QListWidget, QComboBox, QInputDialog, QMessageBox
 )
@@ -8,11 +10,12 @@ from PyQt5.QtGui import QFont
 class AdminDialog(QDialog):
     incidences_modified = pyqtSignal()
 
-    def __init__(self, parent=None, incidencias=None):
+    def __init__(self, parent=None, incidencias=None, config_file="incidencias_config.json"):
         super().__init__(parent)
         self.setWindowTitle("Administrar Incidencias")
         self.setGeometry(300, 300, 600, 500)
         self.incidencias = incidencias
+        self.config_file = config_file
         self.initUI()
 
     def initUI(self):
@@ -66,6 +69,7 @@ class AdminDialog(QDialog):
             else:
                 self.incidencias[selected_block].append(text)
                 self.populate_incidences_list()
+                self.save_incidencias()
                 self.incidences_modified.emit()
 
     def edit_incidence(self):
@@ -80,6 +84,7 @@ class AdminDialog(QDialog):
                 else:
                     self.incidencias[selected_block][self.incidencias[selected_block].index(incidence_text)] = new_text
                     self.populate_incidences_list()
+                    self.save_incidencias()
                     self.incidences_modified.emit()
 
     def delete_incidence(self):
@@ -89,4 +94,16 @@ class AdminDialog(QDialog):
             selected_block = self.block_selector.currentText()
             self.incidencias[selected_block].remove(incidence_text)
             self.populate_incidences_list()
+            self.save_incidencias()
             self.incidences_modified.emit()
+
+    def save_incidencias(self):
+        with open(self.config_file, "w") as file:
+            json.dump(self.incidencias, file, indent=4)
+
+    @staticmethod
+    def load_incidencias(config_file="incidencias_config.json"):
+        if os.path.exists(config_file):
+            with open(config_file, "r") as file:
+                return json.load(file)
+        return None

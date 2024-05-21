@@ -5,7 +5,7 @@ from collections import Counter, defaultdict
 from openpyxl import Workbook, load_workbook
 from PyQt5.QtWidgets import (
     QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QLineEdit, QFileDialog, QTableWidget, QTableWidgetItem,
-    QListWidget, QLabel, QTabWidget, QStatusBar, QInputDialog, QMessageBox, QAbstractItemView, QListWidgetItem, QApplication
+    QListWidget, QLabel, QTabWidget, QStatusBar, QInputDialog, QMessageBox, QAbstractItemView, QListWidgetItem, QApplication, QSplitter
 )
 from PyQt5.QtCore import QTimer, Qt, QRect, pyqtSlot
 from PyQt5.QtGui import QFont, QColor
@@ -18,7 +18,8 @@ class TicketManagement(QMainWindow):
         super().__init__()
         self.user = user
         self.excel_file = None
-        self.incidencias = {
+        self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidencias_config.json")
+        self.incidencias = AdminDialog.load_incidencias(self.config_file) or {
             "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva",
                         "Fallo en paletizador", "No coge placa", "Palet atascado en la curva",
                         "Ascensor no sube", "No pone tornillo", "Fallo tornillo", "AOI no detecta pieza",
@@ -46,6 +47,7 @@ class TicketManagement(QMainWindow):
         self.incident_details = {}
         self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.txt")
         self.state_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidence_state.json")
+        self.is_fullscreen = False
         self.initUI()
         self.load_last_excel_file()
         self.load_incidence_state()
@@ -60,13 +62,19 @@ class TicketManagement(QMainWindow):
         central_widget.setLayout(main_layout)
         self.setCentralWidget(central_widget)
 
+        self.splitter = QSplitter(Qt.Horizontal)
+        main_layout.addWidget(self.splitter)
+
         self.tabWidget = QTabWidget(self)
-        main_layout.addWidget(self.tabWidget, 2)
+        self.splitter.addWidget(self.tabWidget)
 
         for name in self.blocks:
             self.create_tab(name, self.incidencias[name])
 
-        right_layout = QVBoxLayout()
+        right_widget = QWidget()
+        right_layout = QVBoxLayout(right_widget)
+        self.splitter.addWidget(right_widget)
+
         select_excel_button = QPushButton("Seleccionar Archivo Excel", self)
         select_excel_button.clicked.connect(self.select_excel_file)
         right_layout.addWidget(select_excel_button)
@@ -79,6 +87,10 @@ class TicketManagement(QMainWindow):
         self.toggle_excel_view_button.clicked.connect(self.toggle_excel_view)
         right_layout.addWidget(self.toggle_excel_view_button)
         self.excel_view_mode = "completo"
+
+        self.fullscreen_button = QPushButton("Pantalla Completa", self)
+        self.fullscreen_button.clicked.connect(self.toggle_fullscreen)
+        right_layout.addWidget(self.fullscreen_button)
 
         self.refresh_button = QPushButton("Refrescar", self)
         self.refresh_button.setStyleSheet("background-color: #4CAF50; color: white; padding: 10px 20px; font-size: 16px;")
@@ -116,10 +128,6 @@ class TicketManagement(QMainWindow):
 
         right_layout.addStretch()
 
-        right_widget = QWidget()
-        right_widget.setLayout(right_layout)
-        main_layout.addWidget(right_widget, 1)
-
         self.status_bar = QStatusBar(self)
         self.setStatusBar(self.status_bar)
 
@@ -144,6 +152,15 @@ class TicketManagement(QMainWindow):
         y = (screen_rect_app.height() - window_height) // 2
         self.setGeometry(QRect(x, y, window_width, window_height))
 
+    def toggle_fullscreen(self):
+        if self.is_fullscreen:
+            self.splitter.setSizes([600, 600])
+            self.fullscreen_button.setText("Pantalla Completa")
+        else:
+            self.splitter.setSizes([0, 1200])
+            self.fullscreen_button.setText("Minimizar")
+        self.is_fullscreen = not self.is_fullscreen
+
     def open_advanced_filter_dialog(self):
         self.filter_dialog = AdvancedFilterDialog(self)
         self.filter_dialog.exec_()
@@ -157,7 +174,7 @@ class TicketManagement(QMainWindow):
         self.graph_dialog.exec_()
 
     def open_admin_dialog(self):
-        self.admin_dialog = AdminDialog(self, incidencias=self.incidencias)
+        self.admin_dialog = AdminDialog(self, incidencias=self.incidencias, config_file=self.config_file)
         self.admin_dialog.incidences_modified.connect(self.update_all)
         self.admin_dialog.exec_()
 
@@ -175,11 +192,11 @@ class TicketManagement(QMainWindow):
         self.update_top_incidents()
         self.update_global_incidence_list()
         self.update_tabs_incidences()
-    
+
     def update_tabs_incidences(self):
         for name in self.blocks:
             self.update_tab(name)
-    
+
     def update_tab(self, block_name):
         for i in range(self.tabWidget.count()):
             tab = self.tabWidget.widget(i)
