@@ -176,49 +176,44 @@ class TicketManagement(QMainWindow):
         self.update_global_incidence_list()
 
     def update_global_incidence_list(self):
-        self.global_incidence_list.clear()
         current_fixing_incidents = []
-
         for i in range(self.global_incidence_list.count()):
             item = self.global_incidence_list.item(i)
             item_widget = self.global_incidence_list.itemWidget(item)
             if item_widget:
                 labels = item_widget.findChildren(QLabel)
-                if labels and "Fixing" in labels[1].text():
-                    current_fixing_incidents.append((labels[0].text(), labels[1].text()))
+                if labels and (labels[1].text() == "Fixing" or labels[1].text() == "Pendiente"):
+                    correct_button = item_widget.findChild(QPushButton, "correct_button")
+                    details_button = item_widget.findChild(QPushButton, "details_button")
+                    current_fixing_incidents.append((labels[0].text(), labels[1].text(), correct_button, details_button))
 
-        for incidence_text, fixing_label_text in current_fixing_incidents:
-            text_parts = incidence_text.split(" ")
-            if len(text_parts) >= 5:
-                date_str = text_parts[-3]
-                time_str = text_parts[-2]
-                block_name = " ".join(text_parts[:-5])
-
-                item_widget = QWidget()
-                item_layout = QVBoxLayout(item_widget)
-                label_layout = QHBoxLayout()
-                label_layout.addWidget(QLabel(incidence_text))
-                item_layout.addLayout(label_layout)
-                fixing_label = QLabel(fixing_label_text)
-                fixing_label.setStyleSheet("color: red; font-weight: bold; font-size: 14px;")
-                correct_button = QPushButton("Correct")
-                correct_button.setStyleSheet("background-color: green; color: white; font-weight: bold; font-size: 14px;")
-                correct_button.setFixedSize(100, 30)
-                details_button = QPushButton("Añadir Detalles")
-                details_button.setStyleSheet("background-color: blue; color: white; font-weight: bold; font-size: 14px;")
-                details_button.setFixedSize(150, 30)
-                buttons_layout = QHBoxLayout()
-                buttons_layout.addStretch()
-                buttons_layout.addWidget(fixing_label)
-                buttons_layout.addWidget(correct_button)
-                buttons_layout.addWidget(details_button)
-                item_layout.addLayout(buttons_layout)
-                list_item = QListWidgetItem()
-                list_item.setSizeHint(item_widget.sizeHint())
-                self.global_incidence_list.addItem(list_item)
-                self.global_incidence_list.setItemWidget(list_item, item_widget)
-                correct_button.clicked.connect(partial(self.mark_incidence_as_fixed, block_name, incidence_text, date_str, time_str))
-                details_button.clicked.connect(partial(self.add_incidence_details, block_name, incidence_text, date_str, time_str))
+        self.global_incidence_list.clear()
+        for incidence_text, fixing_label_text, correct_button, details_button in current_fixing_incidents:
+            item_widget = QWidget()
+            item_layout = QVBoxLayout(item_widget)
+            label_layout = QHBoxLayout()
+            label_layout.addWidget(QLabel(incidence_text))
+            item_layout.addLayout(label_layout)
+            fixing_label = QLabel(fixing_label_text)
+            fixing_label.setStyleSheet("color: red; font-weight: bold; font-size: 14px;" if fixing_label_text == "Fixing" else "color: orange; font-weight: bold; font-size: 14px;")
+            correct_button.setParent(item_widget)
+            correct_button.setStyleSheet("background-color: green; color: white; font-weight: bold; font-size: 14px;")
+            correct_button.setFixedSize(100, 30)
+            details_button.setParent(item_widget)
+            details_button.setStyleSheet("background-color: blue; color: white; font-weight: bold; font-size: 14px;")
+            details_button.setFixedSize(150, 30)
+            buttons_layout = QHBoxLayout()
+            buttons_layout.addStretch()
+            buttons_layout.addWidget(fixing_label)
+            buttons_layout.addWidget(correct_button)
+            buttons_layout.addWidget(details_button)
+            item_layout.addLayout(buttons_layout)
+            list_item = QListWidgetItem()
+            list_item.setSizeHint(item_widget.sizeHint())
+            self.global_incidence_list.addItem(list_item)
+            self.global_incidence_list.setItemWidget(list_item, item_widget)
+            correct_button.clicked.connect(partial(self.mark_incidence_as_fixed, incidence_text))
+            details_button.clicked.connect(partial(self.add_incidence_details, incidence_text))
 
     def get_filtered_incidents(self, start_dt, end_dt, selected_block):
         if not self.excel_file or not os.path.exists(self.excel_file):
@@ -322,9 +317,11 @@ class TicketManagement(QMainWindow):
             fixing_label = QLabel("Fixing")
             fixing_label.setStyleSheet("color: red; font-weight: bold; font-size: 14px;")
             correct_button = QPushButton("Correct")
+            correct_button.setObjectName("correct_button")
             correct_button.setStyleSheet("background-color: green; color: white; font-weight: bold; font-size: 14px;")
             correct_button.setFixedSize(100, 30)
             details_button = QPushButton("Añadir Detalles")
+            details_button.setObjectName("details_button")
             details_button.setStyleSheet("background-color: blue; color: white; font-weight: bold; font-size: 14px;")
             details_button.setFixedSize(150, 30)
 
@@ -613,9 +610,11 @@ class TicketManagement(QMainWindow):
                         elif status == "Reparada":
                             fixing_label.setStyleSheet("color: green; font-weight: bold; font-size: 14px;")
                         correct_button = QPushButton("Correct")
+                        correct_button.setObjectName("correct_button")
                         correct_button.setStyleSheet("background-color: green; color: white; font-weight: bold; font-size: 14px;")
                         correct_button.setFixedSize(100, 30)
                         details_button = QPushButton("Añadir Detalles")
+                        details_button.setObjectName("details_button")
                         details_button.setStyleSheet("background-color: blue; color: white; font-weight: bold; font-size: 14px;")
                         details_button.setFixedSize(150, 30)
                         item_widget = QWidget()
