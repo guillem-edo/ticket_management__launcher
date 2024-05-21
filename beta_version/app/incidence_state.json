@@ -1,21 +1,13 @@
 {
-    "user": "admin",
+    "user": "pideu1",
     "incidences": [
         {
-            "text": "WC47 NACP: Ascensor no sube a las 14:24:33 del 2024-05-20",
-            "status": "Fixing"
+            "text": "WC47 NACP: Fallo en paletizador a las 11:09:15 del 2024-05-21",
+            "status": "Reparada"
         },
         {
-            "text": "WC47 NACP: Test a las 12:18:27 del 2024-05-20",
-            "status": "Fixing"
-        },
-        {
-            "text": "WC47 NACP: Test a las 12:18:27 del 2024-05-20",
-            "status": "Fixing"
-        },
-        {
-            "text": "WC47 NACP: Test a las 12:18:27 del 2024-05-20",
-            "status": "Fixing"
+            "text": "WC47 NACP: Fallo fijador tapa a las 11:10:39 del 2024-05-21",
+            "status": "Reparada"
         }
     ]
 }
