@@ -60,9 +60,27 @@ poder añadirlas o personalizar el listado.
 
 
 
-
+Mejoras a implementar:
 
 
 - Cuando se confirma una incidencia y esta en estado "fixing" y se cierra la app, cuando se vuelve a logear el 
 usuario, aparece la misma incidencia pero no se puede correjir. Hay que arreglarlo.
-- 
+
+- MTTR y MTBF, contador general de todas las incidencias y en especifico de cada una por linia, que lo cuente en minutos 
+y que se resetee cada 24 horas.
+
+El significado de MTBF es Mean Time Between Failures (tiempo medio entre fallos), 
+y representa durante cuánto tiempo funciona en promedio un activo entre una avería y otra. 
+
+
+- Grafico diario o por turnos (cada 6h), que muestre todas las incidencias y la cantidad de cada una en ese dia
+o turno.
+
+- Eliminar el boton de "fixing" y "correct" pero si ver las incidencias que se van confirmando. También mejorar 
+esteticamente este apartado y el boton de añadir detalles, lo dejamos puesto por si el usuario 
+quiere adjuntar algun comentario.
+
+- Mejorar el filtro avanzado porque no funciona.
+
+- Mejorar los mensajes detallados porque se ven pequeños y no se be muy bien esteticamente, tambien no se quedan
+guardados para siempre, hay que correjirlo para que sea cuando sea, se vea el mensaje detallado.

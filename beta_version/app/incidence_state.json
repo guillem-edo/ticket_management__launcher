@@ -2,8 +2,12 @@
     "user": "pideu1",
     "incidences": [
         {
-            "text": "WC47 NACP: Fallo en elevador a las 12:07:59 del 2024-05-22",
-            "status": "Fixing"
+            "text": "WC47 NACP: Fallo en elevador a las 12:18:13 del 2024-05-22",
+            "status": "Reparada"
+        },
+        {
+            "text": "WC47 NACP: Ascensor no sube a las 12:43:29 del 2024-05-22",
+            "status": "Reparada"
         }
     ]
 }

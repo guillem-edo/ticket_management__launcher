@@ -13,7 +13,7 @@ class AdminDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Administrar Incidencias")
         self.setGeometry(300, 300, 600, 500)
-        self.incidencias = incidencias
+        self.incidencias = incidencias if incidencias else self.load_incidencias(config_file)
         self.config_file = config_file
         self.initUI()
 
