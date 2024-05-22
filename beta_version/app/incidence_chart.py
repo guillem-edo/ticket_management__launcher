@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtWidgets import QWidget, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QSizePolicy
 from datetime import datetime, timedelta
 
 class IncidenceChart(QWidget):
@@ -10,7 +10,7 @@ class IncidenceChart(QWidget):
 
         self.figure = plt.Figure()
         self.canvas = FigureCanvas(self.figure)
-        self.canvas.setSizePolicy(QWidget.Expanding, QWidget.Expanding)
+        self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.canvas.updateGeometry()
 
         layout = QVBoxLayout()
@@ -30,10 +30,13 @@ class IncidenceChart(QWidget):
             counts = [0] * 24
             for incident, count in incidents.items():
                 try:
-                    incident_time = datetime.strptime(incident.split()[-2], "%H:%M:%S")
-                    incident_hour = incident_time.hour
-                    counts[23 - (now.hour - incident_hour)] += count
-                except ValueError:
+                    date_str = incident.split()[-3]
+                    incident_date = datetime.strptime(date_str, "%Y-%m-%d")
+                    if (now - incident_date).days <= 1:  # Solo considerar las incidencias de las últimas 24 horas
+                        incident_time = datetime.strptime(incident.split()[-2], "%H:%M:%S")
+                        incident_hour = incident_time.hour
+                        counts[23 - (now.hour - incident_hour)] += count
+                except (ValueError, IndexError):
                     continue
 
             ax.plot([time.strftime("%H:%M") for time in times], counts, label=block)
@@ -41,7 +44,8 @@ class IncidenceChart(QWidget):
         ax.set_title("Incidencias por Bloque en las Últimas 24 Horas")
         ax.set_xlabel("Hora")
         ax.set_ylabel("Número de Incidencias")
-        ax.legend()
+        if ax.get_legend().get_texts():
+            ax.legend()
         self.canvas.draw()
 
     def set_incident_details(self, incident_details):

@@ -11,10 +11,10 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import QTimer, Qt, QRect
 from PyQt5.QtGui import QFont
-from app.dialogs import AdvancedFilterDialog, TopIncidentsDialog, GraphDialog
-from app.admin_dialog import AdminDialog
-from app.excel_window import ExcelWindow
-from app.incidence_chart import IncidenceChart
+from .dialogs import AdvancedFilterDialog, TopIncidentsDialog, GraphDialog
+from .admin_dialog import AdminDialog
+from .excel_window import ExcelWindow
+from .incidence_chart import IncidenceChart
 
 class TicketManagement(QMainWindow):
     def __init__(self, user):
@@ -89,7 +89,7 @@ class TicketManagement(QMainWindow):
         self.refresh_button.clicked.connect(self.update_all)
         right_layout.addWidget(self.refresh_button)
 
-        self.incidence_chart = IncidenceChart(self.incident_details)  # Usamos la nueva clase
+        self.incidence_chart = IncidenceChart(self.incident_details)
         right_layout.addWidget(self.incidence_chart)
 
         self.global_incidence_list = QListWidget(self)
@@ -107,10 +107,6 @@ class TicketManagement(QMainWindow):
         self.view_details_button = QPushButton("Ver Detalles")
         self.view_details_button.clicked.connect(self.open_top_incidents_dialog)
         right_layout.addWidget(self.view_details_button)
-
-        self.graph_button = QPushButton("Ver Gráficos")
-        self.graph_button.clicked.connect(self.open_graph_dialog)
-        right_layout.addWidget(self.graph_button)
 
         if self.user.is_admin:
             admin_button = QPushButton("Administrar Incidencias")
@@ -152,10 +148,6 @@ class TicketManagement(QMainWindow):
     def open_top_incidents_dialog(self):
         self.top_incidents_dialog = TopIncidentsDialog(self, incident_details=self.incident_details)
         self.top_incidents_dialog.exec_()
-
-    def open_graph_dialog(self):
-        self.graph_dialog = GraphDialog(self, data=self.filtered_incidents_data)
-        self.graph_dialog.exec_()
 
     def open_admin_dialog(self):
         self.admin_dialog = AdminDialog(self, incidencias=self.incidencias, config_file=self.config_file)
