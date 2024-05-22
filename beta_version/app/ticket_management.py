@@ -84,6 +84,10 @@ class TicketManagement(QMainWindow):
         self.excel_path_display.setReadOnly(True)
         right_layout.addWidget(self.excel_path_display)
 
+        self.view_excel_button = QPushButton("Ver Excel", self)
+        self.view_excel_button.clicked.connect(self.open_excel_window)
+        right_layout.addWidget(self.view_excel_button)
+
         self.refresh_button = QPushButton("Refrescar", self)
         self.refresh_button.setStyleSheet("background-color: #4CAF50; color: white; padding: 10px 20px; font-size: 16px;")
         self.refresh_button.clicked.connect(self.update_all)
@@ -153,6 +157,11 @@ class TicketManagement(QMainWindow):
         self.admin_dialog = AdminDialog(self, incidencias=self.incidencias, config_file=self.config_file)
         self.admin_dialog.incidences_modified.connect(self.update_all)
         self.admin_dialog.exec_()
+
+    def open_excel_window(self):
+        if self.excel_file:
+            self.excel_window = ExcelWindow(self.excel_file)
+            self.excel_window.show()
 
     def update_all(self):
         self.update_top_incidents()

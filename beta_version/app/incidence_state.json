@@ -1,4 +1,9 @@
 {
-    "user": "pideu5",
-    "incidences": []
+    "user": "pideu1",
+    "incidences": [
+        {
+            "text": "WC47 NACP: Fallo en elevador_3 a las 11:25:42 del 2024-05-22",
+            "status": "Reparada"
+        }
+    ]
 }

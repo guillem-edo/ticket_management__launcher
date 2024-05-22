@@ -44,7 +44,8 @@ class IncidenceChart(QWidget):
         ax.set_title("Incidencias por Bloque en las Últimas 24 Horas")
         ax.set_xlabel("Hora")
         ax.set_ylabel("Número de Incidencias")
-        if ax.get_legend().get_texts():
+        legend = ax.get_legend()
+        if legend and legend.get_texts():
             ax.legend()
         self.canvas.draw()
 
