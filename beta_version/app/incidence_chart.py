@@ -1,13 +1,13 @@
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QSizePolicy
-from datetime import datetime, timedelta
-import numpy as np
+from collections import defaultdict
 
 class IncidenceChart(QWidget):
     def __init__(self, incident_details, parent=None):
         super().__init__(parent)
         self.incident_details = incident_details
+        self.block_counts = defaultdict(int)  # Diccionario para contar incidencias por bloque
 
         self.figure = plt.Figure()
         self.canvas = FigureCanvas(self.figure)
@@ -24,39 +24,40 @@ class IncidenceChart(QWidget):
         self.figure.clear()
         ax = self.figure.add_subplot(111)
 
-        now = datetime.now()
-        times = [now - timedelta(hours=i) for i in range(24)][::-1]  # Últimas 24 horas
+        # Contar incidencias por bloque
+        self.block_counts = defaultdict(int)
+        total_incidents = 0
+        for block, incidents in self.incident_details.items():
+            count = sum(incidents.values())
+            self.block_counts[block] = count
+            total_incidents += count
 
-        color_map = plt.get_cmap("tab10")  # Utilizamos una paleta de colores distinta
+        blocks = list(self.block_counts.keys())
+        counts = list(self.block_counts.values())
 
-        bar_width = 0.35
-        x = np.arange(len(times))
+        bars = ax.bar(blocks, counts, color=plt.get_cmap("tab10").colors)
 
-        for idx, (block, incidents) in enumerate(self.incident_details.items()):
-            counts = [0] * 24
-            for incident, count in incidents.items():
-                try:
-                    date_str = incident.split()[-3]
-                    incident_date = datetime.strptime(date_str, "%Y-%m-%d")
-                    if (now - incident_date).days <= 1:  # Solo considerar las incidencias de las últimas 24 horas
-                        incident_time = datetime.strptime(incident.split()[-2], "%H:%M:%S")
-                        incident_hour = incident_time.hour
-                        counts[23 - (now.hour - incident_hour)] += count
-                except (ValueError, IndexError):
-                    continue
-
-            ax.bar(x + idx * bar_width, counts, bar_width, label=block, color=color_map(idx))
-
-        ax.set_title("Incidencias por Bloque en las Últimas 24 Horas")
-        ax.set_xlabel("Hora")
-        ax.set_ylabel("Número de Incidencias")
-        ax.set_xticks(x + bar_width / 2)
-        ax.set_xticklabels([time.strftime("%H:%M") for time in times], rotation=45)
-        ax.legend()
+        ax.set_title("Incidencias Acumuladas")
+        ax.set_xlabel("")
+        ax.set_ylabel("Cantidad")
         ax.grid(True)
+
+        # Añadir porcentajes encima de las barras
+        for bar in bars:
+            height = bar.get_height()
+            percentage = (height / total_incidents) * 100 if total_incidents > 0 else 0
+            ax.annotate(f'{height}\n({percentage:.1f}%)',
+                        xy=(bar.get_x() + bar.get_width() / 2, height),
+                        xytext=(0, 3),  # 3 points vertical offset
+                        textcoords="offset points",
+                        ha='center', va='bottom')
 
         self.canvas.draw()
 
     def set_incident_details(self, incident_details):
         self.incident_details = incident_details
+        self.update_chart()
+
+    def add_incident(self, block_name):
+        self.block_counts[block_name] += 1
         self.update_chart()
