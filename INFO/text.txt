@@ -73,8 +73,10 @@ El significado de MTBF es Mean Time Between Failures (tiempo medio entre fallos)
 y representa durante cuánto tiempo funciona en promedio un activo entre una avería y otra. 
 
 
-- Grafico diario o por turnos (cada 6h), que muestre todas las incidencias y la cantidad de cada una en ese dia
-o turno.
+- Grafico diario o por turnos (cada 6h), que muestre todas las incidencias que se han ido confirmando
+y la cantidad de cada una en ese dia o turno. Añadir porcentajes y cantidad en cada barra. Si se solapan,
+se puede cambiar el formato de toda la app haciendola mas pequeña para que se vea mejor el grafico en cuestión.
+También le daremos un aspecto mas profesional 
 
 - Eliminar el boton de "fixing" y "correct" pero si ver las incidencias que se van confirmando. También mejorar 
 esteticamente este apartado y el boton de añadir detalles, lo dejamos puesto por si el usuario 
