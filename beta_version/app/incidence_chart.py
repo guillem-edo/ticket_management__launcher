@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QSizePolicy
 from datetime import datetime, timedelta
+import numpy as np
 
 class IncidenceChart(QWidget):
     def __init__(self, incident_details, parent=None):
@@ -26,7 +27,12 @@ class IncidenceChart(QWidget):
         now = datetime.now()
         times = [now - timedelta(hours=i) for i in range(24)][::-1]  # Últimas 24 horas
 
-        for block, incidents in self.incident_details.items():
+        color_map = plt.get_cmap("tab10")  # Utilizamos una paleta de colores distinta
+
+        bar_width = 0.35
+        x = np.arange(len(times))
+
+        for idx, (block, incidents) in enumerate(self.incident_details.items()):
             counts = [0] * 24
             for incident, count in incidents.items():
                 try:
@@ -39,14 +45,16 @@ class IncidenceChart(QWidget):
                 except (ValueError, IndexError):
                     continue
 
-            ax.plot([time.strftime("%H:%M") for time in times], counts, label=block)
+            ax.bar(x + idx * bar_width, counts, bar_width, label=block, color=color_map(idx))
 
         ax.set_title("Incidencias por Bloque en las Últimas 24 Horas")
         ax.set_xlabel("Hora")
         ax.set_ylabel("Número de Incidencias")
-        legend = ax.get_legend()
-        if legend and legend.get_texts():
-            ax.legend()
+        ax.set_xticks(x + bar_width / 2)
+        ax.set_xticklabels([time.strftime("%H:%M") for time in times], rotation=45)
+        ax.legend()
+        ax.grid(True)
+
         self.canvas.draw()
 
     def set_incident_details(self, incident_details):
