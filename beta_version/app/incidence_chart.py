@@ -30,12 +30,19 @@ class TurnChart(QWidget):
         incident_data = []
         for block, incidents in self.incident_details.items():
             for incident, count in incidents.items():
-                for _ in range(count):
-                    incident_data.append({
-                        'block': block,
-                        'incident': incident,
-                        'timestamp': datetime.strptime(incident.split()[-2], '%H:%M:%S')
-                    })
+                # Extraer la fecha y hora del formato de texto de la incidencia
+                parts = incident.split()
+                if len(parts) >= 3:
+                    try:
+                        incident_time = datetime.strptime(parts[-2], '%H:%M:%S')
+                        for _ in range(count):
+                            incident_data.append({
+                                'block': block,
+                                'incident': " ".join(parts[:-3]),  # Excluyendo la fecha y la hora
+                                'timestamp': incident_time
+                            })
+                    except ValueError:
+                        continue
 
         if not incident_data:
             return

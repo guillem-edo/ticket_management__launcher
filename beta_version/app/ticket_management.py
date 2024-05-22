@@ -14,7 +14,7 @@ from PyQt5.QtGui import QFont
 from .dialogs import AdvancedFilterDialog, TopIncidentsDialog, GraphDialog
 from .admin_dialog import AdminDialog
 from .excel_window import ExcelWindow
-from .incidence_chart import IncidenceChart
+from .incidence_chart import TurnChart
 
 class TicketManagement(QMainWindow):
     def __init__(self, user):
@@ -93,8 +93,8 @@ class TicketManagement(QMainWindow):
         self.refresh_button.clicked.connect(self.update_all)
         right_layout.addWidget(self.refresh_button)
 
-        self.incidence_chart = IncidenceChart(self.incident_details)
-        right_layout.addWidget(self.incidence_chart)
+        self.turn_chart = TurnChart()  # Usamos la nueva clase para el gráfico por turnos
+        right_layout.addWidget(self.turn_chart)
 
         self.global_incidence_list = QListWidget(self)
         self.global_incidence_list.setStyleSheet("QListWidget { background-color: #f0f0f0; border: 1px solid #ccc; }")
@@ -135,7 +135,7 @@ class TicketManagement(QMainWindow):
         timer.start(1000)
 
         self.apply_styles()
-        self.update_incidence_chart()
+        self.update_turn_chart()  # Actualizamos el gráfico por turnos
 
     def center_window_app(self):
         screen_rect_app = QApplication.desktop().availableGeometry()
@@ -167,7 +167,7 @@ class TicketManagement(QMainWindow):
         self.update_top_incidents()
         self.update_global_incidence_list()
         self.update_tabs_incidences()
-        self.update_incidence_chart()
+        self.update_turn_chart()  # Actualizamos el gráfico por turnos
 
     def update_tabs_incidences(self):
         for name in self.blocks:
@@ -365,7 +365,7 @@ class TicketManagement(QMainWindow):
             QTimer.singleShot(60000, partial(self.remind_user_to_fix, block_name, incidence_text, date_str, time_str, correct_button, details_button))
 
             self.update_top_incidents()
-            self.update_incidence_chart()
+            self.update_turn_chart()  # Actualizamos el gráfico por turnos
         else:
             QMessageBox.warning(self, "Ninguna Incidencia Seleccionada", "Selecciona una incidencia para confirmar.")
 
@@ -424,7 +424,7 @@ class TicketManagement(QMainWindow):
                     repair_time_str = datetime.now().strftime("%H:%M:%S")
                     self.log_repair_time_to_excel(block_name, date_str, time_str, repair_time_str)
                     self.update_top_incidents()
-                    self.update_incidence_chart()
+                    self.update_turn_chart()  # Actualizamos el gráfico por turnos
                     break
 
     def add_incidence_details(self, block_name, incidence_text, date_str, time_str):
@@ -524,8 +524,8 @@ class TicketManagement(QMainWindow):
                             self.incidences_count[block] += 1
                             self.incident_details[block][row[i]] += 1
 
-    def update_incidence_chart(self):
-        self.incidence_chart.set_incident_details(self.incident_details)
+    def update_turn_chart(self):
+        self.turn_chart.set_incident_details(self.incident_details)
 
     def apply_styles(self):
         title_font = QFont("Arial", 14, QFont.Bold)
