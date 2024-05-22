@@ -55,3 +55,14 @@ u otro, que cambie de color mediante un logo o algo distintivo para identificar 
 //WORKING// - Crear un usuario general que tenga permisos para poder añadir, eliminar o modificar los diferentes
 bloques de incidencias, el listado de ellas para tener mejor flexibilidad el dia de mañana si surgen nuevas incidencias
 poder añadirlas o personalizar el listado.
+
+
+
+
+
+
+
+
+- Cuando se confirma una incidencia y esta en estado "fixing" y se cierra la app, cuando se vuelve a logear el 
+usuario, aparece la misma incidencia pero no se puede correjir. Hay que arreglarlo.
+- 
