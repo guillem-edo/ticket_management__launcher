@@ -4,15 +4,19 @@ from datetime import datetime
 from collections import Counter, defaultdict
 from openpyxl import Workbook, load_workbook
 from functools import partial
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5.QtWidgets import (
-    QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QLineEdit, QFileDialog, QTableWidget, QTableWidgetItem,
-    QListWidget, QLabel, QTabWidget, QStatusBar, QInputDialog, QMessageBox, QAbstractItemView, QListWidgetItem, QApplication, QSplitter
+    QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QLineEdit, QFileDialog,
+    QTableWidget, QTableWidgetItem, QListWidget, QLabel, QTabWidget, QStatusBar, QInputDialog,
+    QMessageBox, QAbstractItemView, QListWidgetItem, QApplication, QSplitter
 )
 from PyQt5.QtCore import QTimer, Qt, QRect
 from PyQt5.QtGui import QFont, QColor
 import csv
 from app.dialogs import AdvancedFilterDialog, TopIncidentsDialog, GraphDialog
 from app.admin_dialog import AdminDialog
+from app.excel_window import ExcelWindow
 
 class TicketManagement(QMainWindow):
     def __init__(self, user):
@@ -47,7 +51,7 @@ class TicketManagement(QMainWindow):
         self.filtered_incidents_data = {}
         self.incident_details = {}
         self.state_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidence_state.json")
-        self.is_fullscreen = False
+        self.excel_view_mode = "completo"
         self.initUI()
         self.load_last_excel_file()
         self.load_incidence_state()
@@ -83,27 +87,17 @@ class TicketManagement(QMainWindow):
         self.excel_path_display.setReadOnly(True)
         right_layout.addWidget(self.excel_path_display)
 
-        self.toggle_excel_view_button = QPushButton("Ver Excel Completo", self)
-        self.toggle_excel_view_button.clicked.connect(self.toggle_excel_view)
-        right_layout.addWidget(self.toggle_excel_view_button)
-        self.excel_view_mode = "completo"
-
-        self.fullscreen_button = QPushButton("Pantalla Completa", self)
-        self.fullscreen_button.clicked.connect(self.toggle_fullscreen)
-        right_layout.addWidget(self.fullscreen_button)
-
-        self.export_csv_button = QPushButton("Exportar a CSV", self)
-        self.export_csv_button.clicked.connect(self.export_to_csv)
-        right_layout.addWidget(self.export_csv_button)
+        self.open_excel_window_button = QPushButton("Abrir Visualización de Excel", self)
+        self.open_excel_window_button.clicked.connect(self.open_excel_window)
+        right_layout.addWidget(self.open_excel_window_button)
 
         self.refresh_button = QPushButton("Refrescar", self)
         self.refresh_button.setStyleSheet("background-color: #4CAF50; color: white; padding: 10px 20px; font-size: 16px;")
         self.refresh_button.clicked.connect(self.update_all)
         right_layout.addWidget(self.refresh_button)
 
-        self.table_widget = QTableWidget(self)
-        self.table_widget.setStyleSheet("QTableWidget { font-size: 14px; }")
-        right_layout.addWidget(self.table_widget)
+        self.incidence_chart = FigureCanvas(plt.Figure())
+        right_layout.addWidget(self.incidence_chart)
 
         self.global_incidence_list = QListWidget(self)
         self.global_incidence_list.setStyleSheet("QListWidget { background-color: #f0f0f0; border: 1px solid #ccc; }")
@@ -148,6 +142,7 @@ class TicketManagement(QMainWindow):
         timer.start(1000)
 
         self.apply_styles()
+        self.update_incidence_chart()
 
     def center_window_app(self):
         screen_rect_app = QApplication.desktop().availableGeometry()
@@ -157,14 +152,12 @@ class TicketManagement(QMainWindow):
         y = (screen_rect_app.height() - window_height) // 2
         self.setGeometry(QRect(x, y, window_width, window_height))
 
-    def toggle_fullscreen(self):
-        if self.is_fullscreen:
-            self.splitter.setSizes([600, 600])
-            self.fullscreen_button.setText("Pantalla Completa")
+    def open_excel_window(self):
+        if self.excel_file:
+            self.excel_window = ExcelWindow(self.excel_file)
+            self.excel_window.show()
         else:
-            self.splitter.setSizes([0, 1200])
-            self.fullscreen_button.setText("Minimizar")
-        self.is_fullscreen = not self.is_fullscreen
+            QMessageBox.warning(self, "Archivo Excel no Seleccionado", "Por favor, selecciona un archivo Excel primero.")
 
     def open_advanced_filter_dialog(self):
         self.filter_dialog = AdvancedFilterDialog(self)
@@ -183,20 +176,12 @@ class TicketManagement(QMainWindow):
         self.admin_dialog.incidences_modified.connect(self.update_all)
         self.admin_dialog.exec_()
 
-    def toggle_excel_view(self):
-        if self.excel_view_mode == "completo":
-            self.excel_view_mode = "filtrado"
-            self.toggle_excel_view_button.setText("Ver Excel Completo")
-        else:
-            self.excel_view_mode = "completo"
-            self.toggle_excel_view_button.setText("Ver Excel Filtrado")
-        self.update_excel_table()
-
     def update_all(self):
         self.update_excel_table()
         self.update_top_incidents()
         self.update_global_incidence_list()
         self.update_tabs_incidences()
+        self.update_incidence_chart()
 
     def update_tabs_incidences(self):
         for name in self.blocks:
@@ -604,6 +589,23 @@ class TicketManagement(QMainWindow):
                             self.incidences_count[block] += 1
                             self.incident_details[block][row[i]] += 1
 
+    def update_incidence_chart(self):
+        self.incidence_chart.figure.clear()
+        ax = self.incidence_chart.figure.add_subplot(111)
+
+        for block in self.blocks:
+            incidents = self.incident_details.get(block, {})
+            if incidents:
+                dates = [datetime.strptime(date, "%Y-%m-%d") for date in incidents.keys()]
+                counts = list(incidents.values())
+                ax.plot(dates, counts, label=block)
+
+        ax.set_title("Incidencias por Bloque")
+        ax.set_xlabel("Fecha")
+        ax.set_ylabel("Número de Incidencias")
+        ax.legend()
+        self.incidence_chart.draw()
+
     def apply_styles(self):
         title_font = QFont("Arial", 14, QFont.Bold)
         normal_font = QFont("Arial", 12)
@@ -692,19 +694,3 @@ class TicketManagement(QMainWindow):
     def closeEvent(self, event):
         self.save_incidence_state()
         event.accept()
-
-    def export_to_csv(self):
-        if self.excel_file and os.path.exists(self.excel_file):
-            file_dialog = QFileDialog()
-            csv_path, _ = file_dialog.getSaveFileName(self, "Guardar archivo CSV", "", "CSV Files (*.csv)")
-            if csv_path:
-                try:
-                    workbook = load_workbook(self.excel_file)
-                    sheet = workbook.active
-                    with open(csv_path, mode='w', newline='') as file:
-                        writer = csv.writer(file)
-                        for row in sheet.iter_rows(values_only=True):
-                            writer.writerow(row)
-                    QMessageBox.information(self, "Exportación Completa", "Los datos han sido exportados correctamente a CSV.")
-                except Exception as e:
-                    QMessageBox.critical(self, "Error", f"Error al exportar a CSV: {e}")
