@@ -1,11 +1,9 @@
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from collections import Counter, defaultdict
 from openpyxl import Workbook, load_workbook
 from functools import partial
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5.QtWidgets import (
     QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QLineEdit, QFileDialog,
     QListWidget, QLabel, QTabWidget, QStatusBar, QInputDialog, QMessageBox,
@@ -16,6 +14,7 @@ from PyQt5.QtGui import QFont
 from app.dialogs import AdvancedFilterDialog, TopIncidentsDialog, GraphDialog
 from app.admin_dialog import AdminDialog
 from app.excel_window import ExcelWindow
+from app.incidence_chart import IncidenceChart
 
 class TicketManagement(QMainWindow):
     def __init__(self, user):
@@ -85,16 +84,12 @@ class TicketManagement(QMainWindow):
         self.excel_path_display.setReadOnly(True)
         right_layout.addWidget(self.excel_path_display)
 
-        self.open_excel_window_button = QPushButton("Abrir Visualización de Excel", self)
-        self.open_excel_window_button.clicked.connect(self.open_excel_window)
-        right_layout.addWidget(self.open_excel_window_button)
-
         self.refresh_button = QPushButton("Refrescar", self)
         self.refresh_button.setStyleSheet("background-color: #4CAF50; color: white; padding: 10px 20px; font-size: 16px;")
         self.refresh_button.clicked.connect(self.update_all)
         right_layout.addWidget(self.refresh_button)
 
-        self.incidence_chart = FigureCanvas(plt.Figure())
+        self.incidence_chart = IncidenceChart(self.incident_details)  # Usamos la nueva clase
         right_layout.addWidget(self.incidence_chart)
 
         self.global_incidence_list = QListWidget(self)
@@ -149,13 +144,6 @@ class TicketManagement(QMainWindow):
         x = (screen_rect_app.width() - window_width) // 2
         y = (screen_rect_app.height() - window_height) // 2
         self.setGeometry(QRect(x, y, window_width, window_height))
-
-    def open_excel_window(self):
-        if self.excel_file:
-            self.excel_window = ExcelWindow(self.excel_file)
-            self.excel_window.show()
-        else:
-            QMessageBox.warning(self, "Archivo Excel no Seleccionado", "Por favor, selecciona un archivo Excel primero.")
 
     def open_advanced_filter_dialog(self):
         self.filter_dialog = AdvancedFilterDialog(self)
@@ -376,6 +364,7 @@ class TicketManagement(QMainWindow):
             QTimer.singleShot(60000, partial(self.remind_user_to_fix, block_name, incidence_text, date_str, time_str, correct_button, details_button))
 
             self.update_top_incidents()
+            self.update_incidence_chart()
         else:
             QMessageBox.warning(self, "Ninguna Incidencia Seleccionada", "Selecciona una incidencia para confirmar.")
 
@@ -434,6 +423,7 @@ class TicketManagement(QMainWindow):
                     repair_time_str = datetime.now().strftime("%H:%M:%S")
                     self.log_repair_time_to_excel(block_name, date_str, time_str, repair_time_str)
                     self.update_top_incidents()
+                    self.update_incidence_chart()
                     break
 
     def add_incidence_details(self, block_name, incidence_text, date_str, time_str):
@@ -534,22 +524,7 @@ class TicketManagement(QMainWindow):
                             self.incident_details[block][row[i]] += 1
 
     def update_incidence_chart(self):
-        self.incidence_chart.figure.clear()
-        ax = self.incidence_chart.figure.add_subplot(111)
-
-        for block in self.blocks:
-            incidents = self.incident_details.get(block, {})
-            if incidents:
-                dates = [datetime.strptime(incident.split()[-3], "%Y-%m-%d") for incident in incidents.keys() if len(incident.split()) >= 3]
-                counts = list(incidents.values())
-                if dates and counts:
-                    ax.plot(dates, counts, label=block)
-
-        ax.set_title("Incidencias por Bloque")
-        ax.set_xlabel("Fecha")
-        ax.set_ylabel("Número de Incidencias")
-        ax.legend()
-        self.incidence_chart.draw()
+        self.incidence_chart.set_incident_details(self.incident_details)
 
     def apply_styles(self):
         title_font = QFont("Arial", 14, QFont.Bold)
