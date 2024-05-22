@@ -8,12 +8,11 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5.QtWidgets import (
     QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QLineEdit, QFileDialog,
-    QTableWidget, QTableWidgetItem, QListWidget, QLabel, QTabWidget, QStatusBar, QInputDialog,
-    QMessageBox, QAbstractItemView, QListWidgetItem, QApplication, QSplitter
+    QListWidget, QLabel, QTabWidget, QStatusBar, QInputDialog, QMessageBox,
+    QAbstractItemView, QListWidgetItem, QApplication, QSplitter
 )
 from PyQt5.QtCore import QTimer, Qt, QRect
-from PyQt5.QtGui import QFont, QColor
-import csv
+from PyQt5.QtGui import QFont
 from app.dialogs import AdvancedFilterDialog, TopIncidentsDialog, GraphDialog
 from app.admin_dialog import AdminDialog
 from app.excel_window import ExcelWindow
@@ -51,7 +50,6 @@ class TicketManagement(QMainWindow):
         self.filtered_incidents_data = {}
         self.incident_details = {}
         self.state_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidence_state.json")
-        self.excel_view_mode = "completo"
         self.initUI()
         self.load_last_excel_file()
         self.load_incidence_state()
@@ -177,7 +175,6 @@ class TicketManagement(QMainWindow):
         self.admin_dialog.exec_()
 
     def update_all(self):
-        self.update_excel_table()
         self.update_top_incidents()
         self.update_global_incidence_list()
         self.update_tabs_incidences()
@@ -378,7 +375,6 @@ class TicketManagement(QMainWindow):
 
             QTimer.singleShot(60000, partial(self.remind_user_to_fix, block_name, incidence_text, date_str, time_str, correct_button, details_button))
 
-            self.update_excel_table()
             self.update_top_incidents()
         else:
             QMessageBox.warning(self, "Ninguna Incidencia Seleccionada", "Selecciona una incidencia para confirmar.")
@@ -437,7 +433,7 @@ class TicketManagement(QMainWindow):
 
                     repair_time_str = datetime.now().strftime("%H:%M:%S")
                     self.log_repair_time_to_excel(block_name, date_str, time_str, repair_time_str)
-                    self.update_excel_table()
+                    self.update_top_incidents()
                     break
 
     def add_incidence_details(self, block_name, incidence_text, date_str, time_str):
@@ -477,7 +473,6 @@ class TicketManagement(QMainWindow):
             self.excel_path_display.setText(self.excel_file)
             with open(self.config_file, "w") as config:
                 config.write(self.excel_file)
-            self.update_excel_table()
             self.update_top_incidents()
 
     def create_excel_if_not_exists(self, file_path):
@@ -522,58 +517,7 @@ class TicketManagement(QMainWindow):
                 if os.path.exists(file_path):
                     self.excel_file = file_path
                     self.excel_path_display.setText(file_path)
-                    self.update_excel_table()
                     self.update_top_incidents()
-
-    def update_excel_table(self):
-        if self.excel_file and os.path.exists(self.excel_file):
-            try:
-                workbook = load_workbook(self.excel_file)
-                sheet = workbook.active
-                rows_to_display = []
-
-                if self.excel_view_mode == "completo":
-                    rows_to_display = list(sheet.iter_rows(min_row=2, values_only=True))
-                else:
-                    for row in sheet.iter_rows(min_row=2, values_only=True):
-                        if row[list(self.incidencias.keys()).index(self.blocks[0]) + 2] != "-":
-                            rows_to_display.append(row)
-
-                self.table_widget.setRowCount(len(rows_to_display))
-                self.table_widget.setColumnCount(sheet.max_column)
-
-                headers = [cell.value for cell in sheet[1]]
-                self.table_widget.setHorizontalHeaderLabels(headers)
-
-                for row_idx, row in enumerate(rows_to_display):
-                    for col_idx, cell_value in enumerate(row):
-                        item = QTableWidgetItem(str(cell_value) if cell_value is not None else "")
-                        self.table_widget.setItem(row_idx, col_idx, item)
-
-                self.style_excel_table()
-
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"Error al actualizar la tabla: {e}")
-
-    def style_excel_table(self):
-        self.table_widget.setAlternatingRowColors(True)
-        self.table_widget.setStyleSheet("""
-            QTableWidget {
-                background-color: #f9f9f9;
-                alternate-background-color: #e0e0e0;
-                border: 1px solid #ccc;
-                padding: 5px;
-            }
-            QHeaderView::section {
-                background-color: #4CAF50;
-                color: white;
-                font-weight: bold;
-                padding: 5px;
-                border: 1px solid #ddd;
-            }
-        """)
-        self.table_widget.horizontalHeader().setStretchLastSection(True)
-        self.table_widget.resizeColumnsToContents()
 
     def update_top_incidents(self):
         self.incidences_count = {block: 0 for block in self.incidencias.keys()}
@@ -596,9 +540,10 @@ class TicketManagement(QMainWindow):
         for block in self.blocks:
             incidents = self.incident_details.get(block, {})
             if incidents:
-                dates = [datetime.strptime(date, "%Y-%m-%d") for date in incidents.keys()]
+                dates = [datetime.strptime(incident.split()[-3], "%Y-%m-%d") for incident in incidents.keys() if len(incident.split()) >= 3]
                 counts = list(incidents.values())
-                ax.plot(dates, counts, label=block)
+                if dates and counts:
+                    ax.plot(dates, counts, label=block)
 
         ax.set_title("Incidencias por Bloque")
         ax.set_xlabel("Fecha")
