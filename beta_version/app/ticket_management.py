@@ -70,43 +70,50 @@ class TicketManagement(QMainWindow):
         self.splitter.addWidget(right_widget)
 
         select_excel_button = QPushButton("Seleccionar Archivo Excel", self)
+        select_excel_button.setStyleSheet(self.get_button_style())
         select_excel_button.clicked.connect(self.select_excel_file)
         right_layout.addWidget(select_excel_button)
 
         self.excel_path_display = QLineEdit(self)
         self.excel_path_display.setReadOnly(True)
+        self.excel_path_display.setStyleSheet("background-color: #ffffff; border: 1px solid #cccccc; padding: 5px;")
         right_layout.addWidget(self.excel_path_display)
 
         self.view_excel_button = QPushButton("Ver Excel", self)
+        self.view_excel_button.setStyleSheet(self.get_button_style())
         self.view_excel_button.clicked.connect(self.open_excel_window)
         right_layout.addWidget(self.view_excel_button)
 
         self.refresh_button = QPushButton("Refrescar", self)
-        self.refresh_button.setStyleSheet("background-color: #4CAF50; color: white; padding: 10px 20px; font-size: 16px;")
+        self.refresh_button.setStyleSheet(self.get_refresh_button_style())
         self.refresh_button.clicked.connect(self.update_all)
         right_layout.addWidget(self.refresh_button)
 
         self.turn_chart = TurnChart()  # Usamos la nueva clase para el gráfico por turnos
 
         self.daily_chart_button = QPushButton("Ver Gráfico Diario", self)
+        self.daily_chart_button.setStyleSheet(self.get_button_style())
         self.daily_chart_button.clicked.connect(self.show_daily_chart)
         right_layout.addWidget(self.daily_chart_button)
 
         self.shift_chart_button = QPushButton("Ver Gráfico por Turno", self)
+        self.shift_chart_button.setStyleSheet(self.get_button_style())
         self.shift_chart_button.clicked.connect(self.show_shift_chart)
         right_layout.addWidget(self.shift_chart_button)
 
         self.general_chart_button = QPushButton("Ver Gráfico General", self)
+        self.general_chart_button.setStyleSheet(self.get_button_style())
         self.general_chart_button.clicked.connect(self.show_general_chart)
         right_layout.addWidget(self.general_chart_button)
 
         mtbf_layout = QHBoxLayout()
-        self.general_mtbf_label.setStyleSheet("font-size: 14px; font-weight: bold; color: #4CAF50;")
+        self.general_mtbf_label.setStyleSheet("font-size: 16px; font-weight: bold; color: #4CAF50; background-color: #f0f0f0; padding: 5px; border-radius: 5px;")
         mtbf_layout.addWidget(self.general_mtbf_label)
 
         info_button = QPushButton()
-        info_button.setIcon(QIcon("info_icon.png"))  # Cambia esto a la ruta correcta del icono de información
+        info_button.setIcon(QIcon("question_icon.png"))  # Cambia esto a la ruta correcta del icono de interrogante
         info_button.setToolTip("Haz clic para obtener más información sobre MTBF.")
+        info_button.setStyleSheet("background-color: #f0f0f0; border: none; padding: 5px;")
         info_button.setFixedSize(24, 24)
         info_button.clicked.connect(self.show_mtbf_info)
         mtbf_layout.addWidget(info_button)
@@ -114,28 +121,31 @@ class TicketManagement(QMainWindow):
         right_layout.addLayout(mtbf_layout)
 
         for block in self.user.blocks:
-            self.mtbf_labels[block].setStyleSheet("font-size: 12px; font-weight: bold; color: #4CAF50;")
+            self.mtbf_labels[block].setStyleSheet("font-size: 14px; font-weight: bold; color: #4CAF50; background-color: #f0f0f0; padding: 5px; border-radius: 5px;")
             right_layout.addWidget(self.mtbf_labels[block])
 
         self.global_incidence_list = QListWidget(self)
-        self.global_incidence_list.setStyleSheet("QListWidget { background-color: #f0f0f0; border: 1px solid #ccc; }")
+        self.global_incidence_list.setStyleSheet("QListWidget { background-color: #f0f0f0; border: 1px solid #ccc; padding: 5px; }")
         right_layout.addWidget(self.global_incidence_list)
 
         filter_button = QPushButton("Filtro Avanzado", self)
+        filter_button.setStyleSheet(self.get_button_style())
         filter_button.clicked.connect(self.open_advanced_filter_dialog)
         right_layout.addWidget(filter_button)
 
         self.top_incidents_label = QLabel("Incidencias Más Relevantes")
         self.top_incidents_label.setFont(QFont("Arial", 14, QFont.Bold))
+        self.top_incidents_label.setStyleSheet("color: #333333; margin: 10px 0;")
         right_layout.addWidget(self.top_incidents_label)
 
         self.view_details_button = QPushButton("Ver Detalles")
+        self.view_details_button.setStyleSheet(self.get_button_style())
         self.view_details_button.clicked.connect(self.open_top_incidents_dialog)
         right_layout.addWidget(self.view_details_button)
 
         if self.user.is_admin:
             admin_button = QPushButton("Administrar Incidencias")
-            admin_button.setStyleSheet("background-color: #f0ad4e; color: white; padding: 10px 20px; font-size: 16px;")
+            admin_button.setStyleSheet(self.get_admin_button_style())
             admin_button.clicked.connect(self.open_admin_dialog)
             right_layout.addWidget(admin_button)
 
@@ -148,7 +158,7 @@ class TicketManagement(QMainWindow):
         self.detailed_messages_layout = QVBoxLayout(self.detailed_messages_tab)
         self.tabWidget.addTab(self.detailed_messages_tab, "Mensajes detallados")
         self.detailed_messages_list = QListWidget()
-        self.detailed_messages_list.setStyleSheet("QListWidget { background-color: #f0f0f0; border: 1px solid #ccc; }")
+        self.detailed_messages_list.setStyleSheet("QListWidget { background-color: #f0f0f0; border: 1px solid #ccc; padding: 5px; }")
         self.detailed_messages_layout.addWidget(self.detailed_messages_list)
 
         timer = QTimer(self)
@@ -181,6 +191,7 @@ class TicketManagement(QMainWindow):
         )
         layout.addWidget(text_edit)
         close_button = QPushButton("Cerrar")
+        close_button.setStyleSheet(self.get_button_style())
         close_button.clicked.connect(dialog.accept)
         layout.addWidget(close_button)
         dialog.setLayout(layout)
@@ -253,10 +264,10 @@ class TicketManagement(QMainWindow):
                 fixing_label = QLabel(fixing_label_text)
                 fixing_label.setStyleSheet("color: red; font-weight: bold; font-size: 14px;" if fixing_label_text == "Fixing" else "color: orange; font-weight: bold; font-size: 14px;")
                 correct_button.setParent(item_widget)
-                correct_button.setStyleSheet("background-color: green; color: white; font-weight: bold; font-size: 14px;")
+                correct_button.setStyleSheet(self.get_button_style())
                 correct_button.setFixedSize(100, 30)
                 details_button.setParent(item_widget)
-                details_button.setStyleSheet("background-color: blue; color: white; font-weight: bold; font-size: 14px;")
+                details_button.setStyleSheet(self.get_button_style())
                 details_button.setFixedSize(150, 30)
                 buttons_layout = QHBoxLayout()
                 buttons_layout.addStretch()
@@ -335,10 +346,12 @@ class TicketManagement(QMainWindow):
 
         title = QLabel(name)
         title.setFont(QFont("Arial", 14, QFont.Bold))
+        title.setStyleSheet("color: #333333; margin: 10px 0;")
         layout.addWidget(title)
 
         last_incidence_label = QLabel("Última incidencia: Ninguna")
         last_incidence_label.setFont(QFont("Arial", 12))
+        last_incidence_label.setStyleSheet("color: #666666; margin-bottom: 10px;")
         layout.addWidget(last_incidence_label)
         self.last_incidence_labels[name] = last_incidence_label
 
@@ -369,7 +382,7 @@ class TicketManagement(QMainWindow):
         confirm_button = QPushButton("Confirmar Incidencia")
         confirm_button.setFont(QFont("Arial", 12))
         confirm_button.setFixedSize(500, 40)
-        confirm_button.setStyleSheet("background-color: #4CAF50; color: white;")
+        confirm_button.setStyleSheet(self.get_button_style())
         confirm_button.clicked.connect(lambda: self.confirm_incidence(name, list_widget))
         layout.addWidget(confirm_button)
 
@@ -391,11 +404,11 @@ class TicketManagement(QMainWindow):
             fixing_label.setStyleSheet("color: red; font-weight: bold; font-size: 14px;")
             correct_button = QPushButton("Correct")
             correct_button.setObjectName("correct_button")
-            correct_button.setStyleSheet("background-color: green; color: white; font-weight: bold; font-size: 14px;")
+            correct_button.setStyleSheet(self.get_button_style())
             correct_button.setFixedSize(100, 30)
             details_button = QPushButton("Añadir Detalles")
             details_button.setObjectName("details_button")
-            details_button.setStyleSheet("background-color: blue; color: white; font-weight: bold; font-size: 14px;")
+            details_button.setStyleSheet(self.get_button_style())
             details_button.setFixedSize(150, 30)
 
             item_widget = QWidget()
@@ -657,11 +670,11 @@ class TicketManagement(QMainWindow):
                             fixing_label.setStyleSheet("color: green; font-weight: bold; font-size: 14px;")
                         correct_button = QPushButton("Correct")
                         correct_button.setObjectName("correct_button")
-                        correct_button.setStyleSheet("background-color: green; color: white; font-weight: bold; font-size: 14px;")
+                        correct_button.setStyleSheet(self.get_button_style())
                         correct_button.setFixedSize(100, 30)
                         details_button = QPushButton("Añadir Detalles")
                         details_button.setObjectName("details_button")
-                        details_button.setStyleSheet("background-color: blue; color: white; font-weight: bold; font-size: 14px;")
+                        details_button.setStyleSheet(self.get_button_style())
                         details_button.setFixedSize(150, 30)
                         item_widget = QWidget()
                         item_layout = QVBoxLayout(item_widget)
@@ -725,3 +738,48 @@ class TicketManagement(QMainWindow):
         for block in self.mtbf_data.keys():
             self.mtbf_data[block] = {"last_time": None, "total_time": 0, "incident_count": 0}
         self.update_mtbf_display()
+
+    def get_button_style(self):
+        return """
+            QPushButton {
+                background-color: #4CAF50;
+                color: white;
+                padding: 10px 20px;
+                font-size: 16px;
+                border: none;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #45a049;
+            }
+        """
+
+    def get_refresh_button_style(self):
+        return """
+            QPushButton {
+                background-color: #f0ad4e;
+                color: white;
+                padding: 10px 20px;
+                font-size: 16px;
+                border: none;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #ec971f;
+            }
+        """
+
+    def get_admin_button_style(self):
+        return """
+            QPushButton {
+                background-color: #d9534f;
+                color: white;
+                padding: 10px 20px;
+                font-size: 16px;
+                border: none;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #c9302c;
+            }
+        """
