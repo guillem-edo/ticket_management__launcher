@@ -1,68 +1,57 @@
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QSizePolicy
-import pandas as pd
-from datetime import datetime, timedelta
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel
+from PyQt5.QtGui import QFont
+from collections import Counter
 
 class TurnChart(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.incident_details = None
-        self.figure = plt.Figure()
-        self.canvas = FigureCanvas(self.figure)
-        self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.canvas.updateGeometry()
+        self.incident_details = {}
+        self.initUI()
 
-        layout = QVBoxLayout()
-        layout.addWidget(self.canvas)
-        self.setLayout(layout)
+    def initUI(self):
+        self.setLayout(QVBoxLayout())
+        self.chart_label = QLabel("Gráfico de Incidencias", self)
+        self.chart_label.setFont(QFont("Arial", 14, QFont.Bold))
+        self.layout().addWidget(self.chart_label)
 
     def set_incident_details(self, incident_details):
         self.incident_details = incident_details
-        self.update_chart()
+        self.update_charts()
 
-    def update_chart(self):
-        if not self.incident_details:
-            print("No incident details to display in chart.")
-            return
+    def update_charts(self, daily_incidents=None, shift_incidents=None):
+        if daily_incidents:
+            self.plot_chart(daily_incidents, "Incidencias Diarias")
+        if shift_incidents:
+            self.plot_chart(shift_incidents, "Incidencias por Turnos")
 
-        print("Updating chart with incident details:", self.incident_details)
+    def plot_chart(self, incidents, title):
+        counts = Counter()
+        for block, data in incidents.items():
+            counts.update(data['incidences'])
 
-        # Procesar los datos para contar incidencias por turnos (cada 6 horas)
-        incident_data = []
-        for block, incidents in self.incident_details.items():
-            for incident, count in incidents.items():
-                incident_data.append({'block': block, 'incident': incident, 'count': count})
+        if not counts:
+            return  # Si no hay incidencias, no se genera ningún gráfico
 
-        if not incident_data:
-            print("No incident data to plot.")
-            return
+        labels, values = zip(*counts.items())
+        total = sum(values)
+        percentages = [f'{(value / total) * 100:.2f}%' for value in values]
 
-        df = pd.DataFrame(incident_data)
-        if df.empty:
-            print("DataFrame is empty after parsing incident data.")
-            return
+        fig, ax = plt.subplots()
+        bars = ax.bar(labels, values, color='skyblue')
 
-        # Agrupar y contar las incidencias por bloques
-        df_grouped = df.groupby('block')['count'].sum().reset_index()
+        ax.set_title(title, fontsize=14, fontweight='bold')
+        ax.set_xlabel('Incidencia', fontsize=12)
+        ax.set_ylabel('Cantidad', fontsize=12)
 
-        self.figure.clear()
-        ax = self.figure.add_subplot(111)
-        bars = ax.bar(df_grouped['block'], df_grouped['count'], color=plt.get_cmap("tab10").colors)
-
-        ax.set_title("Número de Incidencias por Bloque")
-        ax.set_xlabel("Bloque")
-        ax.set_ylabel("Número de Incidencias")
-        ax.grid(True)
-
-        total_incidents = df_grouped['count'].sum()
-        for bar in bars:
+        for bar, value, percentage in zip(bars, values, percentages):
             height = bar.get_height()
-            percentage = (height / total_incidents) * 100 if total_incidents > 0 else 0
-            ax.annotate(f'{height}\n({percentage:.1f}%)',
+            ax.annotate(f'{value} ({percentage})',
                         xy=(bar.get_x() + bar.get_width() / 2, height),
-                        xytext=(0, 3),  # 3 puntos de offset vertical
+                        xytext=(0, 3),  # 3 points vertical offset
                         textcoords="offset points",
                         ha='center', va='bottom')
 
-        self.canvas.draw()
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        plt.show()

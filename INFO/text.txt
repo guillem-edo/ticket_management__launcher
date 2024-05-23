@@ -74,7 +74,7 @@ y representa durante cuánto tiempo funciona en promedio un activo entre una ave
 
 
 - Grafico diario o por turnos (cada 6h), que muestre todas las incidencias que se han ido confirmando
-y la cantidad de cada una en ese dia o turno. Añadir porcentajes y cantidad en cada barra. Si se solapan,
+y la cantidad de cada una en ese dia o turno. Añadir porcentajes y cantidad de cada incidencia. Si se solapan,
 se puede cambiar el formato de toda la app haciendola mas pequeña para que se vea mejor el grafico en cuestión.
 También le daremos un aspecto mas profesional 
 

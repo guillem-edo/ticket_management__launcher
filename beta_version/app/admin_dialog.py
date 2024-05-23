@@ -35,17 +35,17 @@ class AdminDialog(QDialog):
         layout.addWidget(self.incidences_list)
 
         button_layout = QHBoxLayout()
-        self.add_button = QPushButton("Añadir Incidencia")
+        self.add_button = QPushButton("Añadir")
         self.add_button.clicked.connect(self.add_incidence)
         self.add_button.setStyleSheet("background-color: #4CAF50; color: white; font-size: 14px;")
         button_layout.addWidget(self.add_button)
 
-        self.edit_button = QPushButton("Editar Incidencia")
+        self.edit_button = QPushButton("Editar")
         self.edit_button.clicked.connect(self.edit_incidence)
         self.edit_button.setStyleSheet("background-color: #f0ad4e; color: white; font-size: 14px;")
         button_layout.addWidget(self.edit_button)
 
-        self.delete_button = QPushButton("Eliminar Incidencia")
+        self.delete_button = QPushButton("Eliminar")
         self.delete_button.clicked.connect(self.delete_incidence)
         self.delete_button.setStyleSheet("background-color: #d9534f; color: white; font-size: 14px;")
         button_layout.addWidget(self.delete_button)

@@ -1,22 +1,19 @@
-import json
 import os
-from datetime import datetime
+import json
+from datetime import datetime, timedelta, time
 from collections import Counter, defaultdict
 from openpyxl import Workbook, load_workbook
-from functools import partial
 from PyQt5.QtWidgets import (
-    QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QLineEdit, QFileDialog,
-    QListWidget, QLabel, QTabWidget, QStatusBar, QInputDialog, QMessageBox,
-    QAbstractItemView, QListWidgetItem, QApplication, QSplitter
+    QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QLineEdit, QFileDialog, QTableWidget, QTableWidgetItem, QMessageBox,
+    QTabWidget, QLabel, QListWidget, QStatusBar, QSplitter, QAbstractItemView, QListWidgetItem, QInputDialog, QApplication
 )
-from PyQt5.QtCore import QTimer, Qt, QRect
+from PyQt5.QtCore import QTimer, Qt, QRect, pyqtSlot
 from PyQt5.QtGui import QFont
-from app.dialogs import AdvancedFilterDialog, TopIncidentsDialog, GraphDialog
-from app.admin_dialog import AdminDialog
-from app.excel_window import ExcelWindow
-from app.incidence_chart import TurnChart
-
-# Incluye todos los imports y definiciones necesarias
+from functools import partial
+from .dialogs import AdvancedFilterDialog, TopIncidentsDialog
+from .incidence_chart import TurnChart
+from .admin_dialog import AdminDialog
+from .excel_window import ExcelWindow
 
 class TicketManagement(QMainWindow):
     def __init__(self, user):
@@ -24,36 +21,26 @@ class TicketManagement(QMainWindow):
         self.user = user
         self.excel_file = None
         self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidencias_config.json")
-        self.incidencias = AdminDialog.load_incidencias(self.config_file) or {
-            "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva",
-                        "Fallo en paletizador", "No coge placa", "Palet atascado en la curva",
-                        "Ascensor no sube", "No pone tornillo", "Fallo tornillo", "AOI no detecta pieza",
-                        "No atornilla clips", "Fallo fijador tapa", "Secuencia atornillador",
-                        "Fallo atornillador", "Fallo cámara visión"],
-            "WC48 P5F": ["Etiquetadora", "AOI (fallo etiqueta)", "AOI (malla)", "Cámara no detecta Pcb", "Cámara no detecta skeleton",
-                        "Cámara no detecta foams", "Cámara no detecta busbar", "Cámara no detecta foam derecho", "No detecta presencia power CP",
-                        "Tornillo atascado en tolva", "Cámara no detecta Power CP", "Cámara no detecta Top cover", "Detección de sealling mal puesto",
-                        "Robot no coge busbar", "Fallo etiqueta", "Power atascado en prensa, cuesta sacar", "No coloca bien el sealling"],
-            "WC49 P5H": ["La cámara no detecta Busbar", "La cámara no detecta Top Cover", "Screw K30 no lo detecta puesto", "Atasco tuerca",
-                        "Tornillo atascado", "Etiquetadora", "Detección de sealling mal puesto", "No coloca bien el sealling", "Power atascado en prensa, cuesta sacar",
-                        "No lee QR"],
-            "WV50 FILTER": ["Fallo cámara ferrite", "NOK Soldadura Plástico", "NOK Soldadura metal", "Traza", "NOK Soldad. Plástico+Metal", "Robot no coloca bien filter en palet",
-                            "No coloca bien la pcb", "QR desplazado", "Core enganchado", "Robot no coge PCB", "Fallo atornillador", "Pieza enganchada en HV Test", "Cover atascado",
-                            "Robot no coloca bien ferrita", "No coloca bien el core", "Fallo Funcional", "Fallo visión core", "Fallo cámara cover", "Repeat funcional", "Fallo cámara QR",
-                            "No coloca bien foam"],
-            "SPL": ["Sensor de PCB detecta que hay placa cuando no la hay", "No detecta marcas Power", "Colisión placas", "Fallo dispensación glue", "Marco atascado en parte inferior",
-                    "Soldadura defectuosa", "Error en sensor de salida"]
-        }
+        self.incidencias = AdminDialog.load_incidencias(self.config_file) or self.default_incidences()
         self.blocks = user.blocks if not user.is_admin else list(self.incidencias.keys())
         self.last_incidence_labels = {}
         self.incidences_count = {block: 0 for block in self.incidencias.keys()}
         self.pending_incidents = []
         self.filtered_incidents_data = {}
-        self.incident_details = {}
+        self.incident_details = {block: Counter() for block in self.incidencias.keys()}
         self.state_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidence_state.json")
         self.initUI()
         self.load_last_excel_file()
         self.load_incidence_state()
+
+    def default_incidences(self):
+        return {
+            "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva", "Fallo en paletizador", "No coge placa", "Palet atascado en la curva", "Ascensor no sube", "No pone tornillo", "Fallo tornillo", "AOI no detecta pieza", "No atornilla clips", "Fallo fijador tapa", "Secuencia atornillador", "Fallo atornillador", "Fallo cámara visión"],
+            "WC48 P5F": ["Etiquetadora", "AOI (fallo etiqueta)", "AOI (malla)", "Cámara no detecta Pcb", "Cámara no detecta skeleton", "Cámara no detecta foams", "Cámara no detecta busbar", "Cámara no detecta foam derecho", "No detecta presencia power CP", "Tornillo atascado en tolva", "Cámara no detecta Power CP", "Cámara no detecta Top cover", "Detección de sealling mal puesto", "Robot no coge busbar", "Fallo etiqueta", "Power atascado en prensa, cuesta sacar", "No coloca bien el sealling"],
+            "WC49 P5H": ["La cámara no detecta Busbar", "La cámara no detecta Top Cover", "Screw K30 no lo detecta puesto", "Atasco tuerca", "Tornillo atascado", "Etiquetadora", "Detección de sealling mal puesto", "No coloca bien el sealling", "Power atascado en prensa, cuesta sacar", "No lee QR"],
+            "WV50 FILTER": ["Fallo cámara ferrite", "NOK Soldadura Plástico", "NOK Soldadura metal", "Traza", "NOK Soldad. Plástico+Metal", "Robot no coloca bien filter en palet", "No coloca bien la pcb", "QR desplazado", "Core enganchado", "Robot no coge PCB", "Fallo atornillador", "Pieza enganchada en HV Test", "Cover atascado", "Robot no coloca bien ferrita", "No coloca bien el core", "Fallo Funcional", "Fallo visión core", "Fallo cámara cover", "Repeat funcional", "Fallo cámara QR", "No coloca bien foam"],
+            "SPL": ["Sensor de PCB detecta que hay placa cuando no la hay", "No detecta marcas Power", "Colisión placas", "Fallo dispensación glue", "Marco atascado en parte inferior", "Soldadura defectuosa", "Error en sensor de salida"]
+        }
 
     def initUI(self):
         self.setWindowTitle(f"Ticket Management - {self.user.username}")
@@ -96,7 +83,14 @@ class TicketManagement(QMainWindow):
         right_layout.addWidget(self.refresh_button)
 
         self.turn_chart = TurnChart()  # Usamos la nueva clase para el gráfico por turnos
-        right_layout.addWidget(self.turn_chart)
+
+        self.daily_chart_button = QPushButton("Ver Gráfico Diario", self)
+        self.daily_chart_button.clicked.connect(self.show_daily_chart)
+        right_layout.addWidget(self.daily_chart_button)
+
+        self.shift_chart_button = QPushButton("Ver Gráfico por Turno", self)
+        self.shift_chart_button.clicked.connect(self.show_shift_chart)
+        right_layout.addWidget(self.shift_chart_button)
 
         self.global_incidence_list = QListWidget(self)
         self.global_incidence_list.setStyleSheet("QListWidget { background-color: #f0f0f0; border: 1px solid #ccc; }")
@@ -251,11 +245,13 @@ class TicketManagement(QMainWindow):
                         hour_str = row_datetime.strftime("%Y-%m-%d %H:00:00")
                         for i, incidence in enumerate(incidences):
                             if incidence != "-":
-                                block = list(self.incidencias.keys())[i]
-                                if selected_block == "Todos" or selected_block == block:
-                                    filtered_counts[block]['count'] += 1
-                                    filtered_counts[block]['incidences'].append(incidence)
-                                    trends[block][hour_str] += 1
+                                block_list = list(self.incidencias.keys())
+                                if i < len(block_list):  # Verificar que i esté dentro del rango
+                                    block = block_list[i]
+                                    if selected_block == "Todos" or selected_block == block:
+                                        filtered_counts[block]['count'] += 1
+                                        filtered_counts[block]['incidences'].append(incidence)
+                                        trends[block][hour_str] += 1
                 except ValueError:
                     continue
 
@@ -273,6 +269,16 @@ class TicketManagement(QMainWindow):
             trends = {selected_block: trends[selected_block]}
 
         return filtered_counts, trends
+
+    def get_filtered_incidents_by_date(self, date):
+        start_dt = datetime.combine(date, time.min)
+        end_dt = datetime.combine(date, time.max)
+        return self.get_filtered_incidents(start_dt, end_dt, "Todos")
+
+    def get_filtered_incidents_by_shift(self, date, shift_start, shift_end):
+        start_dt = datetime.combine(date, shift_start)
+        end_dt = datetime.combine(date, shift_end)
+        return self.get_filtered_incidents(start_dt, end_dt, "Todos")
 
     def create_tab(self, name, incidences):
         tab = QWidget()
@@ -527,8 +533,24 @@ class TicketManagement(QMainWindow):
                             self.incident_details[block][row[i]] += 1
 
     def update_turn_chart(self):
-        print("Updating turn chart with details:", self.incident_details)
-        self.turn_chart.set_incident_details(self.incident_details)
+        today = datetime.today().date()
+        shift_start = time(6, 0)
+        shift_end = time(18, 0)
+        incidents_daily, _ = self.get_filtered_incidents_by_date(today)
+        incidents_shift, _ = self.get_filtered_incidents_by_shift(today, shift_start, shift_end)
+        self.turn_chart.update_charts(incidents_daily, incidents_shift)
+
+    def show_daily_chart(self):
+        today = datetime.today().date()
+        incidents_daily, _ = self.get_filtered_incidents_by_date(today)
+        self.turn_chart.plot_chart(incidents_daily, "Incidencias Diarias")
+
+    def show_shift_chart(self):
+        today = datetime.today().date()
+        shift_start = time(6, 0)
+        shift_end = time(18, 0)
+        incidents_shift, _ = self.get_filtered_incidents_by_shift(today, shift_start, shift_end)
+        self.turn_chart.plot_chart(incidents_shift, "Incidencias por Turno")
 
     def apply_styles(self):
         title_font = QFont("Arial", 14, QFont.Bold)
