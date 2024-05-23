@@ -87,3 +87,9 @@ quiere adjuntar algun comentario.
 
 - Mejorar los mensajes detallados porque se ven pequeños y no se be muy bien esteticamente, tambien no se quedan
 guardados para siempre, hay que correjirlo para que sea cuando sea, se vea el mensaje detallado.
+
+
+
+
+- Cambiar el grafico de barras apiladas por un grafico de barras horizontales porque asi se podrá observar
+mejor las incidencias por cada bloque de forma general. (obviamente hacer este cambio en el grafico general)

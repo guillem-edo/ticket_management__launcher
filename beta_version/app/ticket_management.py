@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QTabWidget, QLabel, QListWidget, QStatusBar, QSplitter, QAbstractItemView, QListWidgetItem, QInputDialog, QApplication
 )
 from PyQt5.QtCore import QTimer, Qt, QRect, pyqtSlot
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QIcon
 from functools import partial
 from .dialogs import AdvancedFilterDialog, TopIncidentsDialog
 from .incidence_chart import TurnChart
@@ -30,7 +30,8 @@ class TicketManagement(QMainWindow):
         self.incident_details = {block: Counter() for block in self.incidencias.keys()}
         self.mtbf_data = {block: {"last_time": None, "total_time": 0, "incident_count": 0} for block in self.incidencias.keys()}
         self.state_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidence_state.json")
-        self.mtbf_label = QLabel("MTBF General: N/A", self)
+        self.mtbf_labels = {block: QLabel(f"MTBF {block}: N/A", self) for block in self.blocks}
+        self.general_mtbf_label = QLabel("MTBF General: N/A", self)
         self.initUI()
         self.load_last_excel_file()
         self.load_incidence_state()
@@ -99,7 +100,19 @@ class TicketManagement(QMainWindow):
         self.general_chart_button.clicked.connect(self.show_general_chart)
         right_layout.addWidget(self.general_chart_button)
 
-        right_layout.addWidget(self.mtbf_label)
+        mtbf_layout = QHBoxLayout()
+        mtbf_layout.addWidget(self.general_mtbf_label)
+
+        info_button = QPushButton()
+        info_button.setIcon(QIcon("info_icon.png"))  # Cambia esto a la ruta correcta del icono de información
+        info_button.setToolTip("MTBF (Mean Time Between Failures) indica el tiempo promedio entre fallas. Se calcula en minutos y se actualiza cada vez que se registra una incidencia.")
+        info_button.setFixedSize(24, 24)
+        mtbf_layout.addWidget(info_button)
+
+        right_layout.addLayout(mtbf_layout)
+
+        for block in self.user.blocks:
+            right_layout.addWidget(self.mtbf_labels[block])
 
         self.global_incidence_list = QListWidget(self)
         self.global_incidence_list.setStyleSheet("QListWidget { background-color: #f0f0f0; border: 1px solid #ccc; }")
@@ -666,15 +679,17 @@ class TicketManagement(QMainWindow):
         for block, data in self.mtbf_data.items():
             if data["incident_count"] > 0:
                 mtbf = data["total_time"] / data["incident_count"]
-                print(f"MTBF for {block}: {mtbf:.2f} minutes")
+                self.mtbf_labels[block].setText(f"MTBF {block}: {mtbf:.2f} minutos")
+            else:
+                self.mtbf_labels[block].setText(f"MTBF {block}: N/A")
             general_total_time += data["total_time"]
             general_incident_count += data["incident_count"]
         
         if general_incident_count > 0:
             general_mtbf = general_total_time / general_incident_count
-            self.mtbf_label.setText(f"MTBF General: {general_mtbf:.2f} minutos")
+            self.general_mtbf_label.setText(f"MTBF General: {general_mtbf:.2f} minutos")
         else:
-            self.mtbf_label.setText("MTBF General: N/A")
+            self.general_mtbf_label.setText("MTBF General: N/A")
 
     def reset_mtbf_timer(self):
         timer = QTimer(self)
