@@ -28,10 +28,13 @@ class TicketManagement(QMainWindow):
         self.pending_incidents = []
         self.filtered_incidents_data = {}
         self.incident_details = {block: Counter() for block in self.incidencias.keys()}
+        self.mtbf_data = {block: {"last_time": None, "total_time": 0, "incident_count": 0} for block in self.incidencias.keys()}
         self.state_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidence_state.json")
+        self.mtbf_label = QLabel("MTBF General: N/A", self)
         self.initUI()
         self.load_last_excel_file()
         self.load_incidence_state()
+        self.reset_mtbf_timer()
 
     def default_incidences(self):
         return {
@@ -95,6 +98,8 @@ class TicketManagement(QMainWindow):
         self.general_chart_button = QPushButton("Ver Gráfico General", self)
         self.general_chart_button.clicked.connect(self.show_general_chart)
         right_layout.addWidget(self.general_chart_button)
+
+        right_layout.addWidget(self.mtbf_label)
 
         self.global_incidence_list = QListWidget(self)
         self.global_incidence_list.setStyleSheet("QListWidget { background-color: #f0f0f0; border: 1px solid #ccc; }")
@@ -167,6 +172,7 @@ class TicketManagement(QMainWindow):
         self.update_top_incidents()
         self.update_global_incidence_list()
         self.update_tabs_incidences()
+        self.update_mtbf_display()
 
     def update_tabs_incidences(self):
         for name in self.blocks:
@@ -340,6 +346,8 @@ class TicketManagement(QMainWindow):
             time_str = timestamp.strftime("%H:%M:%S")
             self.last_incidence_labels[block_name].setText(f"Incidencia confirmada: {incidence_text} a las {time_str}")
             self.log_incidence_to_excel(block_name, date_str, time_str, incidence_text)
+
+            self.update_mtbf(block_name, timestamp)
 
             QMessageBox.information(self, "Confirmación", "Incidencia confirmada.")
 
@@ -554,7 +562,6 @@ class TicketManagement(QMainWindow):
         incidents_general, _ = self.get_general_filtered_incidents(start_dt, end_dt)
         self.turn_chart.plot_general_chart(incidents_general, "Incidencias Generales")
 
-
     def apply_styles(self):
         title_font = QFont("Arial", 14, QFont.Bold)
         normal_font = QFont("Arial", 12)
@@ -643,3 +650,38 @@ class TicketManagement(QMainWindow):
     def closeEvent(self, event):
         self.save_incidence_state()
         event.accept()
+
+    def update_mtbf(self, block_name, timestamp):
+        mtbf_info = self.mtbf_data[block_name]
+        if mtbf_info["last_time"] is not None:
+            time_diff = (timestamp - mtbf_info["last_time"]).total_seconds() / 60.0  # Convertir a minutos
+            mtbf_info["total_time"] += time_diff
+            mtbf_info["incident_count"] += 1
+        mtbf_info["last_time"] = timestamp
+        self.update_mtbf_display()
+
+    def update_mtbf_display(self):
+        general_total_time = 0
+        general_incident_count = 0
+        for block, data in self.mtbf_data.items():
+            if data["incident_count"] > 0:
+                mtbf = data["total_time"] / data["incident_count"]
+                print(f"MTBF for {block}: {mtbf:.2f} minutes")
+            general_total_time += data["total_time"]
+            general_incident_count += data["incident_count"]
+        
+        if general_incident_count > 0:
+            general_mtbf = general_total_time / general_incident_count
+            self.mtbf_label.setText(f"MTBF General: {general_mtbf:.2f} minutos")
+        else:
+            self.mtbf_label.setText("MTBF General: N/A")
+
+    def reset_mtbf_timer(self):
+        timer = QTimer(self)
+        timer.timeout.connect(self.reset_mtbf_data)
+        timer.start(24 * 60 * 60 * 1000)  # 24 horas en milisegundos
+
+    def reset_mtbf_data(self):
+        for block in self.mtbf_data.keys():
+            self.mtbf_data[block] = {"last_time": None, "total_time": 0, "incident_count": 0}
+        self.update_mtbf_display()

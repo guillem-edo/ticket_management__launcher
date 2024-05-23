@@ -1,13 +1,25 @@
 {
-    "user": "pideu1",
+    "user": "pideu3",
     "incidences": [
         {
-            "text": "WC47 NACP: Fallo en elevador a las 12:11:48 del 2024-05-23",
-            "status": "Reparada"
+            "text": "WC49 P5H: Detecci\u00f3n de sealling mal puesto a las 12:23:32 del 2024-05-23",
+            "status": "Fixing"
         },
         {
-            "text": "WC47 NACP: Fallo tornillo a las 12:14:05 del 2024-05-23",
-            "status": "Reparada"
+            "text": "WC49 P5H: La c\u00e1mara no detecta Top Cover a las 12:23:35 del 2024-05-23",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC49 P5H: La c\u00e1mara no detecta Busbar a las 12:23:37 del 2024-05-23",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC49 P5H: La c\u00e1mara no detecta Busbar a las 12:23:41 del 2024-05-23",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC49 P5H: La c\u00e1mara no detecta Busbar a las 12:23:43 del 2024-05-23",
+            "status": "Fixing"
         }
     ]
 }

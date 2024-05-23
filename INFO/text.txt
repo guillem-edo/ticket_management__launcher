@@ -68,6 +68,7 @@ usuario, aparece la misma incidencia pero no se puede correjir. Hay que arreglar
 
 - MTTR y MTBF, contador general de todas las incidencias y en especifico de cada una por linia, que lo cuente en minutos 
 y que se resetee cada 24 horas.
+- Preguntar si el MTBF tiene que ser de una misma incidencia o de forma general, de todas las incidencias.
 
 El significado de MTBF es Mean Time Between Failures (tiempo medio entre fallos), 
 y representa durante cuánto tiempo funciona en promedio un activo entre una avería y otra. 
