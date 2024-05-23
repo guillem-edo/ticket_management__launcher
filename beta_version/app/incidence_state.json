@@ -1,4 +1,17 @@
 {
-    "user": "pideu2",
-    "incidences": []
+    "user": "pideu4",
+    "incidences": [
+        {
+            "text": "WV50 FILTER: Robot no coloca bien filter en palet a las 09:42:46 del 2024-05-23",
+            "status": "Reparada"
+        },
+        {
+            "text": "WV50 FILTER: NOK Soldadura Pl\u00e1stico a las 09:42:50 del 2024-05-23",
+            "status": "Reparada"
+        },
+        {
+            "text": "WV50 FILTER: Pieza enganchada en HV Test a las 09:42:53 del 2024-05-23",
+            "status": "Fixing"
+        }
+    ]
 }

@@ -11,10 +11,12 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import QTimer, Qt, QRect
 from PyQt5.QtGui import QFont
-from .dialogs import AdvancedFilterDialog, TopIncidentsDialog, GraphDialog
-from .admin_dialog import AdminDialog
-from .excel_window import ExcelWindow
-from .incidence_chart import TurnChart
+from app.dialogs import AdvancedFilterDialog, TopIncidentsDialog, GraphDialog
+from app.admin_dialog import AdminDialog
+from app.excel_window import ExcelWindow
+from app.incidence_chart import TurnChart
+
+# Incluye todos los imports y definiciones necesarias
 
 class TicketManagement(QMainWindow):
     def __init__(self, user):
@@ -525,6 +527,7 @@ class TicketManagement(QMainWindow):
                             self.incident_details[block][row[i]] += 1
 
     def update_turn_chart(self):
+        print("Updating turn chart with details:", self.incident_details)
         self.turn_chart.set_incident_details(self.incident_details)
 
     def apply_styles(self):
