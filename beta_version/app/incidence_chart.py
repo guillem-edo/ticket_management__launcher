@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel
 from PyQt5.QtGui import QFont
-from collections import Counter
+from collections import Counter, defaultdict
 
 class TurnChart(QWidget):
     def __init__(self, parent=None):
@@ -51,6 +51,42 @@ class TurnChart(QWidget):
                         xytext=(0, 3),  # 3 points vertical offset
                         textcoords="offset points",
                         ha='center', va='bottom')
+
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        plt.show()
+
+    def plot_general_chart(self, incidents, title):
+        counts = defaultdict(Counter)
+        for block, data in incidents.items():
+            counts[block].update(data['incidences'])
+
+        if not counts:
+            return  # Si no hay incidencias, no se genera ningún gráfico
+
+        fig, ax = plt.subplots()
+        colors = plt.cm.tab20.colors  # Usamos un colormap con suficientes colores
+
+        all_labels = sorted({label for counter in counts.values() for label in counter})
+        bottom = [0] * len(all_labels)
+
+        for idx, (block, counter) in enumerate(counts.items()):
+            values = [counter[label] for label in all_labels]
+            bars = ax.bar(all_labels, values, bottom=bottom, color=colors[idx % len(colors)], label=block)
+            bottom = [i + j for i, j in zip(bottom, values)]
+            for bar, value in zip(bars, values):
+                if value > 0:
+                    height = bar.get_height()
+                    ax.annotate(f'{value}',
+                                xy=(bar.get_x() + bar.get_width() / 2, height),
+                                xytext=(0, 3),  # 3 points vertical offset
+                                textcoords="offset points",
+                                ha='center', va='bottom')
+
+        ax.set_title(title, fontsize=14, fontweight='bold')
+        ax.set_xlabel('Incidencia', fontsize=12)
+        ax.set_ylabel('Cantidad', fontsize=12)
+        ax.legend(title="Bloques")
 
         plt.xticks(rotation=45, ha='right')
         plt.tight_layout()

@@ -92,6 +92,10 @@ class TicketManagement(QMainWindow):
         self.shift_chart_button.clicked.connect(self.show_shift_chart)
         right_layout.addWidget(self.shift_chart_button)
 
+        self.general_chart_button = QPushButton("Ver Gráfico General", self)
+        self.general_chart_button.clicked.connect(self.show_general_chart)
+        right_layout.addWidget(self.general_chart_button)
+
         self.global_incidence_list = QListWidget(self)
         self.global_incidence_list.setStyleSheet("QListWidget { background-color: #f0f0f0; border: 1px solid #ccc; }")
         right_layout.addWidget(self.global_incidence_list)
@@ -131,7 +135,7 @@ class TicketManagement(QMainWindow):
         timer.start(1000)
 
         self.apply_styles()
-        self.update_turn_chart()  # Actualizamos el gráfico por turnos
+        self.update_top_incidents()
 
     def center_window_app(self):
         screen_rect_app = QApplication.desktop().availableGeometry()
@@ -163,7 +167,6 @@ class TicketManagement(QMainWindow):
         self.update_top_incidents()
         self.update_global_incidence_list()
         self.update_tabs_incidences()
-        self.update_turn_chart()  # Actualizamos el gráfico por turnos
 
     def update_tabs_incidences(self):
         for name in self.blocks:
@@ -273,11 +276,14 @@ class TicketManagement(QMainWindow):
     def get_filtered_incidents_by_date(self, date):
         start_dt = datetime.combine(date, time.min)
         end_dt = datetime.combine(date, time.max)
-        return self.get_filtered_incidents(start_dt, end_dt, "Todos")
+        return self.get_filtered_incidents(start_dt, end_dt, self.user.blocks[0])
 
     def get_filtered_incidents_by_shift(self, date, shift_start, shift_end):
         start_dt = datetime.combine(date, shift_start)
         end_dt = datetime.combine(date, shift_end)
+        return self.get_filtered_incidents(start_dt, end_dt, self.user.blocks[0])
+
+    def get_general_filtered_incidents(self, start_dt, end_dt):
         return self.get_filtered_incidents(start_dt, end_dt, "Todos")
 
     def create_tab(self, name, incidences):
@@ -373,7 +379,6 @@ class TicketManagement(QMainWindow):
             QTimer.singleShot(60000, partial(self.remind_user_to_fix, block_name, incidence_text, date_str, time_str, correct_button, details_button))
 
             self.update_top_incidents()
-            self.update_turn_chart()  # Actualizamos el gráfico por turnos
         else:
             QMessageBox.warning(self, "Ninguna Incidencia Seleccionada", "Selecciona una incidencia para confirmar.")
 
@@ -432,7 +437,6 @@ class TicketManagement(QMainWindow):
                     repair_time_str = datetime.now().strftime("%H:%M:%S")
                     self.log_repair_time_to_excel(block_name, date_str, time_str, repair_time_str)
                     self.update_top_incidents()
-                    self.update_turn_chart()  # Actualizamos el gráfico por turnos
                     break
 
     def add_incidence_details(self, block_name, incidence_text, date_str, time_str):
@@ -532,14 +536,6 @@ class TicketManagement(QMainWindow):
                             self.incidences_count[block] += 1
                             self.incident_details[block][row[i]] += 1
 
-    def update_turn_chart(self):
-        today = datetime.today().date()
-        shift_start = time(6, 0)
-        shift_end = time(18, 0)
-        incidents_daily, _ = self.get_filtered_incidents_by_date(today)
-        incidents_shift, _ = self.get_filtered_incidents_by_shift(today, shift_start, shift_end)
-        self.turn_chart.update_charts(incidents_daily, incidents_shift)
-
     def show_daily_chart(self):
         today = datetime.today().date()
         incidents_daily, _ = self.get_filtered_incidents_by_date(today)
@@ -551,6 +547,13 @@ class TicketManagement(QMainWindow):
         shift_end = time(18, 0)
         incidents_shift, _ = self.get_filtered_incidents_by_shift(today, shift_start, shift_end)
         self.turn_chart.plot_chart(incidents_shift, "Incidencias por Turno")
+
+    def show_general_chart(self):
+        start_dt = datetime.combine(datetime.today(), time.min)
+        end_dt = datetime.combine(datetime.today(), time.max)
+        incidents_general, _ = self.get_general_filtered_incidents(start_dt, end_dt)
+        self.turn_chart.plot_general_chart(incidents_general, "Incidencias Generales")
+
 
     def apply_styles(self):
         title_font = QFont("Arial", 14, QFont.Bold)
