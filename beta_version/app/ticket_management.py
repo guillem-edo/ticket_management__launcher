@@ -665,25 +665,27 @@ class TicketManagement(QMainWindow):
         event.accept()
 
     def update_mtbf(self, block_name, timestamp):
-        mtbf_info = self.mtbf_data[block_name]
-        if mtbf_info["last_time"] is not None:
-            time_diff = (timestamp - mtbf_info["last_time"]).total_seconds() / 60.0  # Convertir a minutos
-            mtbf_info["total_time"] += time_diff
-            mtbf_info["incident_count"] += 1
-        mtbf_info["last_time"] = timestamp
-        self.update_mtbf_display()
+        if block_name in self.mtbf_data:
+            mtbf_info = self.mtbf_data[block_name]
+            if mtbf_info["last_time"] is not None:
+                time_diff = (timestamp - mtbf_info["last_time"]).total_seconds() / 60.0  # Convertir a minutos
+                mtbf_info["total_time"] += time_diff
+                mtbf_info["incident_count"] += 1
+            mtbf_info["last_time"] = timestamp
+            self.update_mtbf_display()
 
     def update_mtbf_display(self):
         general_total_time = 0
         general_incident_count = 0
         for block, data in self.mtbf_data.items():
-            if data["incident_count"] > 0:
-                mtbf = data["total_time"] / data["incident_count"]
-                self.mtbf_labels[block].setText(f"MTBF {block}: {mtbf:.2f} minutos")
-            else:
-                self.mtbf_labels[block].setText(f"MTBF {block}: N/A")
-            general_total_time += data["total_time"]
-            general_incident_count += data["incident_count"]
+            if block in self.mtbf_labels:
+                if data["incident_count"] > 0:
+                    mtbf = data["total_time"] / data["incident_count"]
+                    self.mtbf_labels[block].setText(f"MTBF {block}: {mtbf:.2f} minutos")
+                else:
+                    self.mtbf_labels[block].setText(f"MTBF {block}: N/A")
+                general_total_time += data["total_time"]
+                general_incident_count += data["incident_count"]
         
         if general_incident_count > 0:
             general_mtbf = general_total_time / general_incident_count
