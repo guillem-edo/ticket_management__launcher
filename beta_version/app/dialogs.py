@@ -1,7 +1,7 @@
 # app/dialogs.py
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea, QWidget, QInputDialog, QMessageBox
+from PyQt5.QtWidgets import QDialog, QFrame, QHeaderView, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea, QWidget, QInputDialog, QMessageBox, QLineEdit
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont, QPixmap
+from PyQt5.QtGui import QFont, QPixmap, QIcon
 from collections import Counter
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -14,6 +14,39 @@ class AdvancedFilterDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Filtro Avanzado")
         self.setGeometry(300, 300, 800, 600)
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #f0f0f0;
+            }
+            QLabel {
+                font-size: 14px;
+            }
+            QComboBox, QPushButton, QTableWidget {
+                font-size: 14px;
+            }
+            QPushButton {
+                background-color: #4CAF50;
+                color: white;
+                padding: 10px;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #45a049;
+            }
+            QTableWidget {
+                background-color: white;
+                border: 1px solid #ddd;
+                gridline-color: #ccc;
+                font-size: 12px;
+            }
+            QTableWidget::item {
+                padding: 5px;
+            }
+            QTableWidget::item:selected {
+                background-color: #4CAF50;
+                color: white;
+            }
+        """)
 
         layout = QVBoxLayout()
 
@@ -58,14 +91,32 @@ class AdvancedFilterDialog(QDialog):
         filter_button.clicked.connect(self.apply_filter)
         layout.addWidget(filter_button)
 
+        search_results_layout = QVBoxLayout()
+        search_results_layout.addWidget(QLabel("Buscar en Resultados:"))
+        self.search_results_line_edit = QLineEdit()
+        self.search_results_line_edit.textChanged.connect(self.filter_results_table)
+        search_results_layout.addWidget(self.search_results_line_edit)
+        layout.addLayout(search_results_layout)
+
         self.results_table = QTableWidget()
         self.results_table.setColumnCount(3)
         self.results_table.setHorizontalHeaderLabels(["Bloque", "Número de Incidencias", "Incidencia más frecuente"])
+        self.results_table.horizontalHeader().setStretchLastSection(True)
+        self.results_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         layout.addWidget(self.results_table)
+
+        search_incidents_layout = QVBoxLayout()
+        search_incidents_layout.addWidget(QLabel("Buscar en Incidencias:"))
+        self.search_incidents_line_edit = QLineEdit()
+        self.search_incidents_line_edit.textChanged.connect(self.filter_incidents_table)
+        search_incidents_layout.addWidget(self.search_incidents_line_edit)
+        layout.addLayout(search_incidents_layout)
 
         self.incidents_table = QTableWidget()
         self.incidents_table.setColumnCount(2)
         self.incidents_table.setHorizontalHeaderLabels(["Incidencia", "Número de Incidencias"])
+        self.incidents_table.horizontalHeader().setStretchLastSection(True)
+        self.incidents_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         layout.addWidget(self.incidents_table)
 
         self.setLayout(layout)
@@ -121,42 +172,74 @@ class AdvancedFilterDialog(QDialog):
             self.incidents_table.setItem(row, 0, QTableWidgetItem(incident))
             self.incidents_table.setItem(row, 1, QTableWidgetItem(str(count)))
 
+    def filter_results_table(self):
+        filter_text = self.search_results_line_edit.text().lower()
+        for row in range(self.results_table.rowCount()):
+            match = False
+            for column in range(self.results_table.columnCount()):
+                item = self.results_table.item(row, column)
+                if item and filter_text in item.text().lower():
+                    match = True
+                    break
+            self.results_table.setRowHidden(row, not match)
+
+    def filter_incidents_table(self):
+        filter_text = self.search_incidents_line_edit.text().lower()
+        for row in range(self.incidents_table.rowCount()):
+            match = False
+            for column in range(self.incidents_table.columnCount()):
+                item = self.incidents_table.item(row, column)
+                if item and filter_text in item.text().lower():
+                    match = True
+                    break
+            self.incidents_table.setRowHidden(row, not match)
 
 class TopIncidentsDialog(QDialog):
     def __init__(self, parent=None, incident_details=None):
         super().__init__(parent)
         self.setWindowTitle("Detalles de Incidencias Más Relevantes")
-        self.setGeometry(300, 300, 600, 400)
+        self.setGeometry(300, 300, 800, 600)
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #f0f0f0;
+            }
+            QLabel {
+                font-size: 14px;
+            }
+            QPushButton {
+                background-color: #4CAF50;
+                color: white;
+                padding: 10px;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #45a049;
+            }
+            QTableWidget {
+                background-color: white;
+                border: 1px solid #ddd;
+                gridline-color: #ccc;
+                font-size: 12px;
+            }
+            QTableWidget::item {
+                padding: 5px;
+            }
+            QTableWidget::item:selected {
+                background-color: #4CAF50;
+                color: white;
+            }
+        """)
 
         layout = QVBoxLayout()
 
-        scroll_area = QScrollArea()
-        scroll_widget = QWidget()
-        scroll_layout = QVBoxLayout(scroll_widget)
+        self.incidents_table = QTableWidget()
+        self.incidents_table.setColumnCount(3)
+        self.incidents_table.setHorizontalHeaderLabels(["Bloque", "Incidencia", "Número de Incidencias"])
+        self.incidents_table.horizontalHeader().setStretchLastSection(True)
+        self.incidents_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-        arrow_up_pixmap = QPixmap("app/arrow_up.png").scaled(20, 20, Qt.KeepAspectRatio)
-
-        for block, details in incident_details.items():
-            block_label = QLabel(block)
-            block_label.setFont(QFont("Arial", 14, QFont.Bold))
-            scroll_layout.addWidget(block_label)
-
-            top_incidents = details.most_common(5)
-            max_count = top_incidents[0][1] if top_incidents else 0
-            for incident, count in top_incidents:
-                incident_layout = QHBoxLayout()
-                incident_label = QLabel(f"{incident}: {count}")
-                incident_label.setFont(QFont("Arial", 12))
-                incident_layout.addWidget(incident_label)
-                if count == max_count:
-                    arrow_label = QLabel()
-                    arrow_label.setPixmap(arrow_up_pixmap)
-                    incident_layout.addWidget(arrow_label)
-                scroll_layout.addLayout(incident_layout)
-
-        scroll_area.setWidget(scroll_widget)
-        scroll_area.setWidgetResizable(True)
-        layout.addWidget(scroll_area)
+        self.populate_table(incident_details)
+        layout.addWidget(self.incidents_table)
 
         close_button = QPushButton("Cerrar")
         close_button.clicked.connect(self.close)
@@ -164,12 +247,36 @@ class TopIncidentsDialog(QDialog):
 
         self.setLayout(layout)
 
+    def populate_table(self, incident_details):
+        row = 0
+        for block, details in incident_details.items():
+            top_incidents = details.most_common(5)
+            for incident, count in top_incidents:
+                self.incidents_table.insertRow(row)
+                self.incidents_table.setItem(row, 0, QTableWidgetItem(block))
+                self.incidents_table.setItem(row, 1, QTableWidgetItem(incident))
+                self.incidents_table.setItem(row, 2, QTableWidgetItem(str(count)))
+                row += 1
 
 class GraphDialog(QDialog):
     def __init__(self, parent=None, data=None):
         super().__init__(parent)
         self.setWindowTitle("Gráfico de Incidencias")
         self.setGeometry(300, 300, 800, 600)
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #f0f0f0;
+            }
+            QPushButton {
+                background-color: #4CAF50;
+                color: white;
+                padding: 10px;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #45a049;
+            }
+        """)
 
         self.data = data
 

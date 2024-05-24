@@ -31,7 +31,6 @@ class TicketManagement(QMainWindow):
         self.mtbf_data = {block: {"last_time": None, "total_time": 0, "incident_count": 0} for block in self.incidencias.keys()}
         self.state_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidence_state.json")
         self.mtbf_labels = {block: QLabel(f"MTBF {block}: N/A", self) for block in self.blocks}
-        self.general_mtbf_label = QLabel("MTBF General: N/A", self)
         self.initUI()
         self.load_last_excel_file()
         self.load_incidence_state()
@@ -106,23 +105,20 @@ class TicketManagement(QMainWindow):
         self.general_chart_button.clicked.connect(self.show_general_chart)
         right_layout.addWidget(self.general_chart_button)
 
-        mtbf_layout = QHBoxLayout()
-        self.general_mtbf_label.setStyleSheet("font-size: 16px; font-weight: bold; color: #4CAF50; background-color: #f0f0f0; padding: 5px; border-radius: 5px;")
-        mtbf_layout.addWidget(self.general_mtbf_label)
-
-        info_button = QPushButton()
-        info_button.setIcon(QIcon("question_icon.png"))  # Cambia esto a la ruta correcta del icono de interrogante
-        info_button.setToolTip("Haz clic para obtener más información sobre MTBF.")
-        info_button.setStyleSheet("background-color: #f0f0f0; border: none; padding: 5px;")
-        info_button.setFixedSize(24, 24)
-        info_button.clicked.connect(self.show_mtbf_info)
-        mtbf_layout.addWidget(info_button)
-
-        right_layout.addLayout(mtbf_layout)
-
         for block in self.user.blocks:
-            self.mtbf_labels[block].setStyleSheet("font-size: 14px; font-weight: bold; color: #4CAF50; background-color: #f0f0f0; padding: 5px; border-radius: 5px;")
-            right_layout.addWidget(self.mtbf_labels[block])
+            mtbf_layout = QHBoxLayout()
+            self.mtbf_labels[block].setStyleSheet("font-size: 16px; font-weight: bold; color: #4CAF50; background-color: #f0f0f0; padding: 5px; border-radius: 5px;")
+            mtbf_layout.addWidget(self.mtbf_labels[block])
+
+            info_button = QPushButton()
+            info_button.setIcon(QIcon(os.path.join(os.path.dirname(__file__), "question_icon.png")))  # Asegúrate de que esta ruta sea correcta
+            info_button.setToolTip("Haz clic para obtener más información sobre MTBF.")
+            info_button.setStyleSheet("background-color: transparent; border: none; padding: 0px;")
+            info_button.setFixedSize(24, 24)
+            info_button.clicked.connect(self.show_mtbf_info)
+            mtbf_layout.addWidget(info_button)
+
+            right_layout.addLayout(mtbf_layout)
 
         self.global_incidence_list = QListWidget(self)
         self.global_incidence_list.setStyleSheet("QListWidget { background-color: #f0f0f0; border: 1px solid #ccc; padding: 5px; }")
@@ -711,8 +707,6 @@ class TicketManagement(QMainWindow):
             self.update_mtbf_display()
 
     def update_mtbf_display(self):
-        general_total_time = 0
-        general_incident_count = 0
         for block, data in self.mtbf_data.items():
             if block in self.mtbf_labels:
                 if data["incident_count"] > 0:
@@ -720,14 +714,6 @@ class TicketManagement(QMainWindow):
                     self.mtbf_labels[block].setText(f"MTBF {block}: {mtbf:.2f} minutos")
                 else:
                     self.mtbf_labels[block].setText(f"MTBF {block}: N/A")
-                general_total_time += data["total_time"]
-                general_incident_count += data["incident_count"]
-        
-        if general_incident_count > 0:
-            general_mtbf = general_total_time / general_incident_count
-            self.general_mtbf_label.setText(f"MTBF General: {general_mtbf:.2f} minutos")
-        else:
-            self.general_mtbf_label.setText("MTBF General: N/A")
 
     def reset_mtbf_timer(self):
         timer = QTimer(self)
@@ -742,7 +728,7 @@ class TicketManagement(QMainWindow):
     def get_button_style(self):
         return """
             QPushButton {
-                background-color: #4CAF50;
+                background-color: #5C85FF;
                 color: white;
                 padding: 10px 20px;
                 font-size: 16px;
@@ -750,14 +736,14 @@ class TicketManagement(QMainWindow):
                 border-radius: 5px;
             }
             QPushButton:hover {
-                background-color: #45a049;
+                background-color: #466BB7;
             }
         """
 
     def get_refresh_button_style(self):
         return """
             QPushButton {
-                background-color: #f0ad4e;
+                background-color: #FF8C42;
                 color: white;
                 padding: 10px 20px;
                 font-size: 16px;
@@ -765,14 +751,14 @@ class TicketManagement(QMainWindow):
                 border-radius: 5px;
             }
             QPushButton:hover {
-                background-color: #ec971f;
+                background-color: #CC7033;
             }
         """
 
     def get_admin_button_style(self):
         return """
             QPushButton {
-                background-color: #d9534f;
+                background-color: #FF5C5C;
                 color: white;
                 padding: 10px 20px;
                 font-size: 16px;
@@ -780,6 +766,6 @@ class TicketManagement(QMainWindow):
                 border-radius: 5px;
             }
             QPushButton:hover {
-                background-color: #c9302c;
+                background-color: #CC4A4A;
             }
         """
