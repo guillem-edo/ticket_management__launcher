@@ -1,4 +1,13 @@
 {
-    "user": "pideu2",
-    "incidences": []
+    "user": "pideu1",
+    "incidences": [
+        {
+            "text": "WC47 NACP: Palet atascado en la curva a las 12:46:31 del 2024-05-24",
+            "status": "Reparada"
+        },
+        {
+            "text": "WC47 NACP: No atornilla tapa a las 12:46:36 del 2024-05-24",
+            "status": "Reparada"
+        }
+    ]
 }

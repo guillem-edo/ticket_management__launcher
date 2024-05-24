@@ -445,12 +445,12 @@ class TicketManagement(QMainWindow):
                     msg_box = QMessageBox(self)
                     msg_box.setIcon(QMessageBox.Warning)
                     msg_box.setText(f'La incidencia "{incidence_text}" sigue en estado "Fixing".')
-                    msg_box.setInformativeText("¿Deseas marcarla como 'Pendiente' o continuar?")
+                    msg_box.setInformativeText("¿Deseas marcarla como 'Pendiente'?")
                     msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
                     yes_button = msg_box.button(QMessageBox.Yes)
                     yes_button.setText("Pendiente")
                     no_button = msg_box.button(QMessageBox.No)
-                    no_button.setText("Continuar")
+                    no_button.setText("Fixing")
                     msg_box.exec_()
 
                     if msg_box.clickedButton() == yes_button:
