@@ -21,6 +21,7 @@ class TicketManagement(QMainWindow):
         self.user = user
         self.excel_file = None
         self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidencias_config.json")
+        self.mtbf_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mtbf_data.json")
         self.incidencias = AdminDialog.load_incidencias(self.config_file) or self.default_incidences()
         self.blocks = user.blocks if not user.is_admin else list(self.incidencias.keys())
         self.last_incidence_labels = {}
@@ -28,7 +29,7 @@ class TicketManagement(QMainWindow):
         self.pending_incidents = []
         self.filtered_incidents_data = {}
         self.incident_details = {block: Counter() for block in self.incidencias.keys()}
-        self.mtbf_data = {block: {"last_time": None, "total_time": 0, "incident_count": 0} for block in self.incidencias.keys()}
+        self.mtbf_data = self.load_mtbf_data()
         self.state_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidence_state.json")
         self.mtbf_labels = {block: QLabel(f"MTBF {block}: N/A", self) for block in self.blocks}
         self.initUI()
@@ -592,14 +593,14 @@ class TicketManagement(QMainWindow):
     def show_daily_chart(self):
         today = datetime.today().date()
         incidents_daily, _ = self.get_filtered_incidents_by_date(today)
-        self.turn_chart.plot_chart(incidents_daily, "Incidencias Diarias")
+        self.turn_chart.plot_daily_chart(incidents_daily, "Incidencias Diarias")
 
     def show_shift_chart(self):
         today = datetime.today().date()
         shift_start = time(6, 0)
         shift_end = time(18, 0)
         incidents_shift, _ = self.get_filtered_incidents_by_shift(today, shift_start, shift_end)
-        self.turn_chart.plot_chart(incidents_shift, "Incidencias por Turno")
+        self.turn_chart.plot_shift_chart(incidents_shift, "Incidencias por Turno")
 
     def show_general_chart(self):
         start_dt = datetime.combine(datetime.today(), time.min)
@@ -694,6 +695,7 @@ class TicketManagement(QMainWindow):
 
     def closeEvent(self, event):
         self.save_incidence_state()
+        self.save_mtbf_data()
         event.accept()
 
     def update_mtbf(self, block_name, timestamp):
@@ -724,6 +726,28 @@ class TicketManagement(QMainWindow):
         for block in self.mtbf_data.keys():
             self.mtbf_data[block] = {"last_time": None, "total_time": 0, "incident_count": 0}
         self.update_mtbf_display()
+
+    def load_mtbf_data(self):
+        if os.path.exists(self.mtbf_file):
+            try:
+                with open(self.mtbf_file, "r") as file:
+                    data = json.load(file)
+                    for block, mtbf_info in data.items():
+                        if mtbf_info["last_time"] is not None:
+                            mtbf_info["last_time"] = datetime.strptime(mtbf_info["last_time"], "%Y-%m-%d %H:%M:%S")
+                    return data
+            except json.JSONDecodeError:
+                pass
+        return {block: {"last_time": None, "total_time": 0, "incident_count": 0} for block in self.incidencias.keys()}
+
+    def save_mtbf_data(self):
+        with open(self.mtbf_file, "w") as file:
+            data = {}
+            for block, mtbf_info in self.mtbf_data.items():
+                data[block] = mtbf_info.copy()
+                if mtbf_info["last_time"] is not None:
+                    data[block]["last_time"] = mtbf_info["last_time"].strftime("%Y-%m-%d %H:%M:%S")
+            json.dump(data, file, indent=4)
 
     def get_button_style(self):
         return """

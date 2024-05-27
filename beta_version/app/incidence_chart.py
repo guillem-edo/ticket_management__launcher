@@ -21,11 +21,11 @@ class TurnChart(QWidget):
 
     def update_charts(self, daily_incidents=None, shift_incidents=None):
         if daily_incidents:
-            self.plot_chart(daily_incidents, "Incidencias Diarias")
+            self.plot_daily_chart(daily_incidents, "Incidencias Diarias")
         if shift_incidents:
-            self.plot_chart(shift_incidents, "Incidencias por Turnos")
+            self.plot_shift_chart(shift_incidents, "Incidencias por Turno")
 
-    def plot_chart(self, incidents, title):
+    def plot_daily_chart(self, incidents, title):
         counts = Counter()
         for block, data in incidents.items():
             counts.update(data['incidences'])
@@ -39,6 +39,37 @@ class TurnChart(QWidget):
 
         fig, ax = plt.subplots()
         bars = ax.bar(labels, values, color='skyblue')
+
+        ax.set_title(title, fontsize=14, fontweight='bold')
+        ax.set_xlabel('Incidencia', fontsize=12)
+        ax.set_ylabel('Cantidad', fontsize=12)
+
+        for bar, value, percentage in zip(bars, values, percentages):
+            height = bar.get_height()
+            ax.annotate(f'{value} ({percentage})',
+                        xy=(bar.get_x() + bar.get_width() / 2, height),
+                        xytext=(0, 3),  # 3 points vertical offset
+                        textcoords="offset points",
+                        ha='center', va='bottom')
+
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        plt.show()
+
+    def plot_shift_chart(self, incidents, title):
+        counts = Counter()
+        for block, data in incidents.items():
+            counts.update(data['incidences'])
+
+        if not counts:
+            return  # Si no hay incidencias, no se genera ningún gráfico
+
+        labels, values = zip(*counts.items())
+        total = sum(values)
+        percentages = [f'{(value / total) * 100:.2f}%' for value in values]
+
+        fig, ax = plt.subplots()
+        bars = ax.bar(labels, values, color='lightcoral')
 
         ax.set_title(title, fontsize=14, fontweight='bold')
         ax.set_xlabel('Incidencia', fontsize=12)
@@ -72,20 +103,20 @@ class TurnChart(QWidget):
 
         for idx, (block, counter) in enumerate(counts.items()):
             values = [counter[label] for label in all_labels]
-            bars = ax.bar(all_labels, values, bottom=bottom, color=colors[idx % len(colors)], label=block)
+            bars = ax.barh(all_labels, values, left=bottom, color=colors[idx % len(colors)], label=block)
             bottom = [i + j for i, j in zip(bottom, values)]
             for bar, value in zip(bars, values):
                 if value > 0:
-                    height = bar.get_height()
+                    width = bar.get_width()
                     ax.annotate(f'{value}',
-                                xy=(bar.get_x() + bar.get_width() / 2, height),
-                                xytext=(0, 3),  # 3 points vertical offset
+                                xy=(width, bar.get_y() + bar.get_height() / 2),
+                                xytext=(3, 0),  # 3 points horizontal offset
                                 textcoords="offset points",
-                                ha='center', va='bottom')
+                                ha='left', va='center')
 
         ax.set_title(title, fontsize=14, fontweight='bold')
-        ax.set_xlabel('Incidencia', fontsize=12)
-        ax.set_ylabel('Cantidad', fontsize=12)
+        ax.set_xlabel('Cantidad', fontsize=12)
+        ax.set_ylabel('Incidencia', fontsize=12)
         ax.legend(title="Bloques")
 
         plt.xticks(rotation=45, ha='right')

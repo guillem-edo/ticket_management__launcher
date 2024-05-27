@@ -1,0 +1,27 @@
+{
+    "WC47 NACP": {
+        "last_time": null,
+        "total_time": 0,
+        "incident_count": 0
+    },
+    "WC48 P5F": {
+        "last_time": null,
+        "total_time": 0,
+        "incident_count": 0
+    },
+    "WC49 P5H": {
+        "last_time": null,
+        "total_time": 0,
+        "incident_count": 0
+    },
+    "WV50 FILTER": {
+        "last_time": null,
+        "total_time": 0,
+        "incident_count": 0
+    },
+    "SPL": {
+        "last_time": null,
+        "total_time": 0,
+        "incident_count": 0
+    }
+}
