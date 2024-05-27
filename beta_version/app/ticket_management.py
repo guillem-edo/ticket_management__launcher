@@ -164,6 +164,7 @@ class TicketManagement(QMainWindow):
 
         self.apply_styles()
         self.update_top_incidents()
+        self.update_mtbf_display()  # Asegúrate de actualizar la visualización del MTBF al iniciar la aplicación
 
     def center_window_app(self):
         screen_rect_app = QApplication.desktop().availableGeometry()
