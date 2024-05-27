@@ -1,17 +1,4 @@
 {
-    "user": "pideu3",
-    "incidences": [
-        {
-            "text": "WC49 P5H: Atasco tuerca a las 11:41:47 del 2024-05-27",
-            "status": "Reparada"
-        },
-        {
-            "text": "WC49 P5H: No lee QR a las 11:41:50 del 2024-05-27",
-            "status": "Reparada"
-        },
-        {
-            "text": "WC49 P5H: La c\u00e1mara no detecta Busbar a las 11:41:53 del 2024-05-27",
-            "status": "Reparada"
-        }
-    ]
+    "user": "pideu2",
+    "incidences": []
 }

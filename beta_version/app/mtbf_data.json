@@ -5,9 +5,9 @@
         "incident_count": 0
     },
     "WC48 P5F": {
-        "last_time": null,
-        "total_time": 0,
-        "incident_count": 0
+        "last_time": "2024-05-27 12:46:28",
+        "total_time": 58.099027983333336,
+        "incident_count": 3
     },
     "WC49 P5H": {
         "last_time": "2024-05-27 11:41:53",
@@ -15,9 +15,9 @@
         "incident_count": 10
     },
     "WV50 FILTER": {
-        "last_time": null,
-        "total_time": 0,
-        "incident_count": 0
+        "last_time": "2024-05-27 12:14:33",
+        "total_time": 0.80190605,
+        "incident_count": 4
     },
     "SPL": {
         "last_time": null,
