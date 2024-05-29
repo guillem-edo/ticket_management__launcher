@@ -14,6 +14,10 @@ from .dialogs import AdvancedFilterDialog, TopIncidentsDialog
 from .incidence_chart import TurnChart
 from .admin_dialog import AdminDialog
 from .excel_window import ExcelWindow
+from .responsive_design import center_window, adjust_to_screen
+from .theme_manager import apply_dark_theme, apply_light_theme
+from .animations import fade_in
+from .notifications import NotificationManager
 
 class TicketManagement(QMainWindow):
     def __init__(self, user):
@@ -32,6 +36,7 @@ class TicketManagement(QMainWindow):
         self.mtbf_data = self.load_mtbf_data()
         self.state_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidence_state.json")
         self.mtbf_labels = {block: QLabel(f"MTBF {block}: N/A", self) for block in self.blocks}
+        self.notification_manager = NotificationManager()  # Añadido para notificaciones
         self.initUI()
         self.load_last_excel_file()
         self.load_incidence_state()
@@ -45,11 +50,11 @@ class TicketManagement(QMainWindow):
             "WV50 FILTER": ["Fallo cámara ferrite", "NOK Soldadura Plástico", "NOK Soldadura metal", "Traza", "NOK Soldad. Plástico+Metal", "Robot no coloca bien filter en palet", "No coloca bien la pcb", "QR desplazado", "Core enganchado", "Robot no coge PCB", "Fallo atornillador", "Pieza enganchada en HV Test", "Cover atascado", "Robot no coloca bien ferrita", "No coloca bien el core", "Fallo Funcional", "Fallo visión core", "Fallo cámara cover", "Repeat funcional", "Fallo cámara QR", "No coloca bien foam"],
             "SPL": ["Sensor de PCB detecta que hay placa cuando no la hay", "No detecta marcas Power", "Colisión placas", "Fallo dispensación glue", "Marco atascado en parte inferior", "Soldadura defectuosa", "Error en sensor de salida"]
         }
-
+    
     def initUI(self):
         self.setWindowTitle(f"Ticket Management - {self.user.username}")
         self.resize(1200, 800)
-        self.center_window_app()
+        adjust_to_screen(self) 
 
         main_layout = QHBoxLayout()
         central_widget = QWidget()
@@ -291,21 +296,21 @@ class TicketManagement(QMainWindow):
         trends = {block: defaultdict(int) for block in self.incidencias.keys()}
 
         for row in sheet.iter_rows(min_row=2, values_only=True):
-            date_str, time_str, *incidences = row
+            if len(row) < 6:
+                continue  # Saltar filas incompletas
+            block_name, incidence, date_str, time_str, turno, repair_time = row[:6]
+            time_diff = row[6] if len(row) > 6 else None
+            mtbf = row[7] if len(row) > 7 else None
+
             if date_str and time_str:
                 try:
                     row_datetime = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M:%S")
                     if start_dt <= row_datetime <= end_dt:
                         hour_str = row_datetime.strftime("%Y-%m-%d %H:00:00")
-                        for i, incidence in enumerate(incidences):
-                            if incidence != "-":
-                                block_list = list(self.incidencias.keys())
-                                if i < len(block_list):  # Verificar que i esté dentro del rango
-                                    block = block_list[i]
-                                    if selected_block == "Todos" or selected_block == block:
-                                        filtered_counts[block]['count'] += 1
-                                        filtered_counts[block]['incidences'].append(incidence)
-                                        trends[block][hour_str] += 1
+                        if selected_block == "Todos" or selected_block == block_name:
+                            filtered_counts[block_name]['count'] += 1
+                            filtered_counts[block_name]['incidences'].append(incidence)
+                            trends[block_name][hour_str] += 1
                 except ValueError:
                     continue
 
@@ -323,6 +328,7 @@ class TicketManagement(QMainWindow):
             trends = {selected_block: trends[selected_block]}
 
         return filtered_counts, trends
+
 
     def get_filtered_incidents_by_date(self, date):
         start_dt = datetime.combine(date, time.min)
@@ -507,15 +513,15 @@ class TicketManagement(QMainWindow):
                 workbook = load_workbook(self.excel_file)
                 sheet = workbook.active
 
-                for row in sheet.iter_rows(min_row=2):
+                for row in sheet.iter_rows(min_row=2, values_only=False):
                     if row[0].value == block_name and row[2].value == date_str and row[3].value == time_str:
-                        repair_time_cell = sheet.cell(row=row[0].row, column=5)
+                        repair_time_cell = row[5]
                         repair_time_cell.value = repair_time_str
 
                         start_time = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M:%S")
                         end_time = datetime.strptime(f"{date_str} {repair_time_str}", "%Y-%m-%d %H:%M:%S")
                         time_diff = end_time - start_time
-                        time_diff_cell = sheet.cell(row=row[0].row, column=6)
+                        time_diff_cell = row[6]
                         time_diff_cell.value = str(time_diff)
                         break
 
@@ -537,9 +543,10 @@ class TicketManagement(QMainWindow):
         if not os.path.exists(file_path):
             workbook = Workbook()
             sheet = workbook.active
-            headers = ["Bloque", "Incidencia", "Fecha", "Hora", "Hora de Reparación", "Tiempo de Reparación"]
+            headers = ["Bloque", "Incidencia", "Fecha", "Hora", "Turno", "Hora de Reparación", "Tiempo de Reparación", "MTBF"]
             sheet.append(headers)
             workbook.save(file_path)
+
 
 
     def log_incidence_to_excel(self, block_name, date_str, time_str, incidence_text):
@@ -548,21 +555,39 @@ class TicketManagement(QMainWindow):
                 workbook = load_workbook(self.excel_file)
                 sheet = workbook.active
 
+            # Verificar que las columnas están presentes
                 headers = [cell.value for cell in sheet[1]]
-                expected_headers = ["Bloque", "Incidencia", "Fecha", "Hora", "Hora de Reparación", "Tiempo de Reparación"]
+                expected_headers = ["Bloque", "Incidencia", "Fecha", "Hora", "Turno", "Hora de Reparación", "Tiempo de Reparación", "MTBF"]
                 if headers != expected_headers:
                     sheet.delete_rows(1, 1)
                     sheet.insert_rows(1)
                     for idx, header in enumerate(expected_headers):
                         sheet.cell(row=1, column=idx + 1, value=header)
 
-                new_row = [block_name, incidence_text, date_str, time_str, "", ""]
+            # Determinar el turno basado en la hora
+                time_obj = datetime.strptime(time_str, "%H:%M:%S").time()
+                if time(6, 0) <= time_obj < time(18, 0):
+                    turno = "Mañana"
+                else:
+                    turno = "Noche"
+
+            # Calcular el MTBF para el bloque
+                mtbf_value = self.calculate_mtbf(block_name)
+
+                new_row = [block_name, incidence_text, date_str, time_str, turno, "", "", mtbf_value]
                 sheet.append(new_row)
 
                 workbook.save(self.excel_file)
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Error al registrar la incidencia en Excel: {e}")
 
+    def calculate_mtbf(self, block_name):
+        if block_name in self.mtbf_data:
+            mtbf_info = self.mtbf_data[block_name]
+            if mtbf_info["incident_count"] > 0:
+                mtbf = mtbf_info["total_time"] / mtbf_info["incident_count"]
+                return f"{mtbf:.2f} minutos"
+        return "N/A"
 
     def update_status_bar(self):
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -586,10 +611,10 @@ class TicketManagement(QMainWindow):
             sheet = workbook.active
             for row in sheet.iter_rows(min_row=2, values_only=True):
                 if len(row) >= len(self.incidencias) + 4:
-                    for i, block in enumerate(list(self.incidencias.keys()), start=2):
-                        if row[i] and row[i] != "-":
-                            self.incidences_count[block] += 1
-                            self.incident_details[block][row[i]] += 1
+                    block_name, incidence, date_str, time_str, turno, repair_time, time_diff, mtbf = row
+                    if block_name in self.incidencias:
+                        self.incidences_count[block_name] += 1
+                        self.incident_details[block_name][incidence] += 1
 
     def show_daily_chart(self):
         today = datetime.today().date()
@@ -719,6 +744,7 @@ class TicketManagement(QMainWindow):
                     self.mtbf_labels[block].setText(f"MTBF {block}: N/A")
 
     def reset_mtbf_timer(self):
+        self.reset_mtbf_data()  # Reinicia al iniciar la aplicación
         timer = QTimer(self)
         timer.timeout.connect(self.reset_mtbf_data)
         timer.start(24 * 60 * 60 * 1000)  # 24 horas en milisegundos
@@ -794,3 +820,4 @@ class TicketManagement(QMainWindow):
                 background-color: #CC4A4A;
             }
         """
+

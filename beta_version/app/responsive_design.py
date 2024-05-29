@@ -1,15 +1,12 @@
-# responsive_design.py
-from PyQt5.QtWidgets import QApplication, QDesktopWidget
+from PyQt5.QtWidgets import QApplication
 
 def center_window(window):
-    screen_rect = QApplication.desktop().availableGeometry()
-    window_width = window.width()
-    window_height = window.height()
-    x = (screen_rect.width() - window_width) // 2
-    y = (screen_rect.height() - window_height) // 2
-    window.setGeometry(x, y, window_width, window_height)
+    screen_geometry = QApplication.desktop().screenGeometry()
+    x = (screen_geometry.width() - window.width()) // 2
+    y = (screen_geometry.height() - window.height()) // 2
+    window.move(x, y)
 
 def adjust_to_screen(window):
-    screen = QDesktopWidget().screenGeometry()
-    window.resize(screen.width() * 0.8, screen.height() * 0.8)
+    screen = QApplication.desktop().screenGeometry()
+    window.resize(int(screen.width() * 0.8), int(screen.height() * 0.8))
     center_window(window)

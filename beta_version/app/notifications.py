@@ -8,6 +8,3 @@ class NotificationManager:
 
     def show_notification(self, title, message):
         self.tray_icon.showMessage(title, message, QSystemTrayIcon.Information, 3000)
-
-# En ticket_management.py:
-from .notifications import NotificationManager

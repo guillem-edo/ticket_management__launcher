@@ -1,32 +1,35 @@
-# theme_manager.py
 from PyQt5.QtWidgets import QApplication
 
 def apply_dark_theme():
+    app = QApplication.instance()
     dark_stylesheet = """
     QMainWindow {
-        background-color: #2e2e2e;
+        background-color: #2b2b2b;
     }
-    QLabel, QLineEdit, QPushButton {
+    QLabel, QLineEdit, QListWidget, QTableWidget, QPushButton {
         color: #ffffff;
-    }
-    QPushButton {
         background-color: #444444;
         border: 1px solid #555555;
     }
+    QPushButton:hover {
+        background-color: #666666;
+    }
     """
-    QApplication.instance().setStyleSheet(dark_stylesheet)
+    app.setStyleSheet(dark_stylesheet)
 
 def apply_light_theme():
+    app = QApplication.instance()
     light_stylesheet = """
     QMainWindow {
-        background-color: #f5f5f5;
+        background-color: #f0f0f0;
     }
-    QLabel, QLineEdit, QPushButton {
+    QLabel, QLineEdit, QListWidget, QTableWidget, QPushButton {
         color: #000000;
-    }
-    QPushButton {
         background-color: #ffffff;
         border: 1px solid #cccccc;
     }
+    QPushButton:hover {
+        background-color: #dddddd;
+    }
     """
-    QApplication.instance().setStyleSheet(light_stylesheet)
+    app.setStyleSheet(light_stylesheet)
