@@ -95,17 +95,17 @@ class TicketManagement(QMainWindow):
 
         self.turn_chart = TurnChart()  # Usamos la nueva clase para el gráfico por turnos
 
-        self.daily_chart_button = QPushButton("Ver Gráfico Diario", self)
+        self.daily_chart_button = QPushButton("Gráfico Diario", self)
         self.daily_chart_button.setStyleSheet(self.get_button_style())
         self.daily_chart_button.clicked.connect(self.show_daily_chart)
         right_layout.addWidget(self.daily_chart_button)
 
-        self.shift_chart_button = QPushButton("Ver Gráfico por Turno", self)
+        self.shift_chart_button = QPushButton("Gráfico por Turno", self)
         self.shift_chart_button.setStyleSheet(self.get_button_style())
         self.shift_chart_button.clicked.connect(self.show_shift_chart)
         right_layout.addWidget(self.shift_chart_button)
 
-        self.general_chart_button = QPushButton("Ver Gráfico General", self)
+        self.general_chart_button = QPushButton("Gráfico General", self)
         self.general_chart_button.setStyleSheet(self.get_button_style())
         self.general_chart_button.clicked.connect(self.show_general_chart)
         right_layout.addWidget(self.general_chart_button)
@@ -398,8 +398,8 @@ class TicketManagement(QMainWindow):
             
             # Mostrar un mensaje de confirmación
             confirm_msg = QMessageBox.question(self, "Confirmar Incidencia", 
-                                               f"¿Estás seguro de confirmar la incidencia: '{incidence_text}'?", 
-                                               QMessageBox.Yes | QMessageBox.No)
+                                            f"¿Estás seguro de confirmar la incidencia: '{incidence_text}'?", 
+                                            QMessageBox.Yes | QMessageBox.No)
             
             if confirm_msg == QMessageBox.Yes:
                 self.last_incidence_labels[block_name].setText(f"Incidencia confirmada: {incidence_text} a las {time_str}")
@@ -548,7 +548,7 @@ class TicketManagement(QMainWindow):
         if not os.path.exists(file_path):
             workbook = Workbook()
             sheet = workbook.active
-            headers = ["Bloque", "Incidencia", "Fecha", "Hora", "Turno", "Hora de Reparación", "Tiempo de Reparación", "MTBF"]
+            headers = ["Línia", "Incidencia", "Fecha", "Hora", "Turno", "Fixed", "Tiempo Reparando", "MTBF"]
             sheet.append(headers)
             workbook.save(file_path)
 
