@@ -1,8 +1,8 @@
 {
     "WC47 NACP": {
-        "last_time": "2024-05-29 12:18:38",
-        "total_time": 1.2380776166666667,
-        "incident_count": 4
+        "last_time": null,
+        "total_time": 0,
+        "incident_count": 0
     },
     "WC48 P5F": {
         "last_time": null,
@@ -10,9 +10,9 @@
         "incident_count": 0
     },
     "WC49 P5H": {
-        "last_time": null,
-        "total_time": 0,
-        "incident_count": 0
+        "last_time": "2024-05-29 12:37:35",
+        "total_time": 0.5961485333333333,
+        "incident_count": 4
     },
     "WV50 FILTER": {
         "last_time": null,

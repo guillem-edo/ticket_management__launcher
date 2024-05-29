@@ -23,6 +23,7 @@ class TicketManagement(QMainWindow):
     def __init__(self, user):
         super().__init__()
         self.user = user
+        self.current_theme = "light"  # Inicializar el tema actual
         self.excel_file = None
         self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidencias_config.json")
         self.mtbf_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mtbf_data.json")
@@ -50,11 +51,11 @@ class TicketManagement(QMainWindow):
             "WV50 FILTER": ["Fallo cámara ferrite", "NOK Soldadura Plástico", "NOK Soldadura metal", "Traza", "NOK Soldad. Plástico+Metal", "Robot no coloca bien filter en palet", "No coloca bien la pcb", "QR desplazado", "Core enganchado", "Robot no coge PCB", "Fallo atornillador", "Pieza enganchada en HV Test", "Cover atascado", "Robot no coloca bien ferrita", "No coloca bien el core", "Fallo Funcional", "Fallo visión core", "Fallo cámara cover", "Repeat funcional", "Fallo cámara QR", "No coloca bien foam"],
             "SPL": ["Sensor de PCB detecta que hay placa cuando no la hay", "No detecta marcas Power", "Colisión placas", "Fallo dispensación glue", "Marco atascado en parte inferior", "Soldadura defectuosa", "Error en sensor de salida"]
         }
-    
+
     def initUI(self):
         self.setWindowTitle(f"Ticket Management - {self.user.username}")
         self.resize(1200, 800)
-        adjust_to_screen(self) 
+        adjust_to_screen(self)  # Ajuste responsivo
 
         main_layout = QHBoxLayout()
         central_widget = QWidget()
@@ -73,6 +74,12 @@ class TicketManagement(QMainWindow):
         right_widget = QWidget()
         right_layout = QVBoxLayout(right_widget)
         self.splitter.addWidget(right_widget)
+
+        theme_button = QPushButton("Tema", self)
+        theme_button.setFixedSize(30, 30)  # Hacer el botón más pequeño
+        theme_button.setStyleSheet("background-color: #5C85FF; color: white; border: none; border-radius: 5px;")
+        theme_button.clicked.connect(self.toggle_theme)
+        right_layout.addWidget(theme_button, alignment=Qt.AlignLeft)  # Alinearlo a la izquierda
 
         select_excel_button = QPushButton("Seleccionar Archivo Excel", self)
         select_excel_button.setStyleSheet(self.get_button_style())
@@ -170,6 +177,74 @@ class TicketManagement(QMainWindow):
         self.apply_styles()
         self.update_top_incidents()
         self.update_mtbf_display()  # Asegúrate de actualizar la visualización del MTBF al iniciar la aplicación
+
+    def confirm_incidence(self, block_name, list_widget):
+        current_item = list_widget.currentItem()
+        if current_item:
+            incidence_text = current_item.text()
+            timestamp = datetime.now()
+            date_str = timestamp.strftime("%Y-%m-%d")
+            time_str = timestamp.strftime("%H:%M:%S")
+        
+        # Mostrar un mensaje de confirmación
+            confirm_msg = QMessageBox.question(self, "Confirmar Incidencia", 
+                                        f"¿Estás seguro de confirmar la incidencia: '{incidence_text}'?", 
+                                        QMessageBox.Yes | QMessageBox.No)
+        
+            if confirm_msg == QMessageBox.Yes:
+                self.last_incidence_labels[block_name].setText(f"Incidencia confirmada: {incidence_text} a las {time_str}")
+                self.log_incidence_to_excel(block_name, date_str, time_str, incidence_text)
+                self.update_mtbf(block_name, timestamp)
+            
+                QMessageBox.information(self, "Confirmación", "Incidencia confirmada.")
+
+                fixing_label = QLabel("Fixing")
+                fixing_label.setStyleSheet("color: red; font-weight: bold; font-size: 14px;")
+                correct_button = QPushButton("Correct")
+                correct_button.setObjectName("correct_button")
+                correct_button.setStyleSheet(self.get_button_style())
+                correct_button.setFixedSize(100, 30)
+                details_button = QPushButton("Añadir Detalles")
+                details_button.setObjectName("details_button")
+                details_button.setStyleSheet(self.get_button_style())
+                details_button.setFixedSize(150, 30)
+
+                item_widget = QWidget()
+                item_layout = QVBoxLayout(item_widget)
+                label_layout = QHBoxLayout()
+                label_layout.addWidget(QLabel(f"{block_name}: {incidence_text} a las {time_str} del {date_str}"))
+                item_layout.addLayout(label_layout)
+
+                buttons_layout = QHBoxLayout()
+                buttons_layout.addStretch()
+                buttons_layout.addWidget(fixing_label)
+                buttons_layout.addWidget(correct_button)
+                buttons_layout.addWidget(details_button)
+                item_layout.addLayout(buttons_layout)
+
+                list_item = QListWidgetItem()
+                list_item.setSizeHint(item_widget.sizeHint())
+
+                self.global_incidence_list.addItem(list_item)
+                self.global_incidence_list.setItemWidget(list_item, item_widget)
+
+                correct_button.clicked.connect(partial(self.mark_incidence_as_fixed, block_name, incidence_text, date_str, time_str))
+                details_button.clicked.connect(partial(self.add_incidence_details, block_name, incidence_text, date_str, time_str))
+
+                QTimer.singleShot(60000, partial(self.remind_user_to_fix, block_name, incidence_text, date_str, time_str, correct_button, details_button))
+                self.update_top_incidents()
+            else:
+                QMessageBox.information(self, "Confirmación", "Incidencia no confirmada.")
+        else:
+            QMessageBox.warning(self, "Ninguna Incidencia Seleccionada", "Selecciona una incidencia para confirmar.")
+
+    def toggle_theme(self):
+        if self.current_theme == "light":
+            apply_dark_theme()
+            self.current_theme = "dark"
+        else:
+            apply_light_theme()
+            self.current_theme = "light"
 
     def center_window_app(self):
         screen_rect_app = QApplication.desktop().availableGeometry()
@@ -328,7 +403,6 @@ class TicketManagement(QMainWindow):
             trends = {selected_block: trends[selected_block]}
 
         return filtered_counts, trends
-
 
     def get_filtered_incidents_by_date(self, date):
         start_dt = datetime.combine(date, time.min)
@@ -547,15 +621,13 @@ class TicketManagement(QMainWindow):
             sheet.append(headers)
             workbook.save(file_path)
 
-
-
     def log_incidence_to_excel(self, block_name, date_str, time_str, incidence_text):
         if self.excel_file and os.path.exists(self.excel_file):
             try:
                 workbook = load_workbook(self.excel_file)
                 sheet = workbook.active
 
-            # Verificar que las columnas están presentes
+                # Verificar que las columnas están presentes
                 headers = [cell.value for cell in sheet[1]]
                 expected_headers = ["Bloque", "Incidencia", "Fecha", "Hora", "Turno", "Hora de Reparación", "Tiempo de Reparación", "MTBF"]
                 if headers != expected_headers:
@@ -564,14 +636,14 @@ class TicketManagement(QMainWindow):
                     for idx, header in enumerate(expected_headers):
                         sheet.cell(row=1, column=idx + 1, value=header)
 
-            # Determinar el turno basado en la hora
+                # Determinar el turno basado en la hora
                 time_obj = datetime.strptime(time_str, "%H:%M:%S").time()
                 if time(6, 0) <= time_obj < time(18, 0):
                     turno = "Mañana"
                 else:
                     turno = "Noche"
 
-            # Calcular el MTBF para el bloque
+                # Calcular el MTBF para el bloque
                 mtbf_value = self.calculate_mtbf(block_name)
 
                 new_row = [block_name, incidence_text, date_str, time_str, turno, "", "", mtbf_value]
@@ -610,7 +682,7 @@ class TicketManagement(QMainWindow):
             workbook = load_workbook(self.excel_file)
             sheet = workbook.active
             for row in sheet.iter_rows(min_row=2, values_only=True):
-                if len(row) >= len(self.incidencias) + 4:
+                if len(row) >= 8:
                     block_name, incidence, date_str, time_str, turno, repair_time, time_diff, mtbf = row
                     if block_name in self.incidencias:
                         self.incidences_count[block_name] += 1
@@ -637,7 +709,55 @@ class TicketManagement(QMainWindow):
     def apply_styles(self):
         title_font = QFont("Arial", 14, QFont.Bold)
         normal_font = QFont("Arial", 12)
-
+    
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #f0f0f0;
+        }
+        QLabel {
+            color: #333;
+        }
+        QLineEdit {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        QListWidget {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        QPushButton {
+            background-color: #5C85FF;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+        }
+        QPushButton:hover {
+            background-color: #466BB7;
+        }
+        QTabWidget::pane {
+            border: 1px solid #ccc;
+        }
+        QTabBar::tab {
+            background: #fff;
+            color: #000;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+        }
+        QTabBar::tab:selected {
+            background: #ccc;
+        }
+        QStatusBar {
+            background: #fff;
+            color: #000;
+        }
+    """)
+    
         for i in range(self.tabWidget.count()):
             tab = self.tabWidget.widget(i)
             for widget in tab.findChildren(QLabel):
@@ -645,6 +765,7 @@ class TicketManagement(QMainWindow):
                     widget.setFont(normal_font)
                 else:
                     widget.setFont(title_font)
+
 
     def save_incidence_state(self):
         incidences = []
@@ -820,4 +941,3 @@ class TicketManagement(QMainWindow):
                 background-color: #CC4A4A;
             }
         """
-
