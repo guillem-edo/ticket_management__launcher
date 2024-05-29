@@ -1,25 +1,4 @@
 {
-    "user": "pideu3",
-    "incidences": [
-        {
-            "text": "WC49 P5H: Tornillo atascado a las 12:37:00 del 2024-05-29",
-            "status": "Reparada"
-        },
-        {
-            "text": "WC49 P5H: Power atascado en prensa, cuesta sacar a las 12:37:02 del 2024-05-29",
-            "status": "Reparada"
-        },
-        {
-            "text": "WC49 P5H: La c\u00e1mara no detecta Busbar a las 12:37:21 del 2024-05-29",
-            "status": "Reparada"
-        },
-        {
-            "text": "WC49 P5H: La c\u00e1mara no detecta Busbar a las 12:37:23 del 2024-05-29",
-            "status": "Reparada"
-        },
-        {
-            "text": "WC49 P5H: La c\u00e1mara no detecta Busbar a las 12:37:35 del 2024-05-29",
-            "status": "Reparada"
-        }
-    ]
+    "user": "pideu1",
+    "incidences": []
 }
