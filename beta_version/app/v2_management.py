@@ -16,7 +16,11 @@ from .admin_dialog import AdminDialog
 from .excel_window import ExcelWindow
 from .responsive_design import center_window, adjust_to_screen
 from .animations import fade_in
-from .notifications import NotificationManager
+from .reports_export import ReportExportDialog
+from .change_history import ChangeHistoryDialog
+from .email_notifications import EmailNotifier
+from .send_report import SendReportDialog
+
 
 class TicketManagement(QMainWindow):
     def __init__(self, user):
@@ -25,6 +29,7 @@ class TicketManagement(QMainWindow):
         self.excel_file = None
         self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidencias_config.json")
         self.mtbf_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mtbf_data.json")
+        self.change_log_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "change_log.json")
         self.incidencias = AdminDialog.load_incidencias(self.config_file) or self.default_incidences()
         self.blocks = user.blocks if not user.is_admin else list(self.incidencias.keys())
         self.last_incidence_labels = {}
@@ -35,11 +40,12 @@ class TicketManagement(QMainWindow):
         self.mtbf_data = self.load_mtbf_data()
         self.state_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidence_state.json")
         self.mtbf_labels = {block: QLabel(f"MTBF {block}: N/A", self) for block in self.blocks}
-        self.notification_manager = NotificationManager()  # Añadido para notificaciones
+        self.email_notifier = EmailNotifier('smtp.example.com', 465, 'your_email@example.com', 'your_password')  # Configura con tus credenciales
         self.initUI()
         self.load_last_excel_file()
         self.load_incidence_state()
         self.reset_mtbf_timer()
+
 
     def default_incidences(self):
         return {
@@ -53,7 +59,7 @@ class TicketManagement(QMainWindow):
     def initUI(self):
         self.setWindowTitle(f"Ticket Management - {self.user.username}")
         self.resize(1200, 800)
-        adjust_to_screen(self)  # Ajuste responsivo
+        adjust_to_screen(self)
 
         main_layout = QHBoxLayout()
         central_widget = QWidget()
@@ -64,6 +70,22 @@ class TicketManagement(QMainWindow):
         main_layout.addWidget(self.splitter)
 
         self.tabWidget = QTabWidget(self)
+        self.tabWidget.setStyleSheet("""
+            QTabWidget::pane {
+                border: 1px solid #ccc;
+            }
+            QTabBar::tab {
+                background: #fff;
+                color: #000;
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-top-left-radius: 5px;
+                border-top-right-radius: 5px;
+            }
+            QTabBar::tab:selected {
+                background: #ccc;
+            }
+        """)
         self.splitter.addWidget(self.tabWidget)
 
         for name in self.blocks:
@@ -75,6 +97,7 @@ class TicketManagement(QMainWindow):
 
         select_excel_button = QPushButton("Seleccionar Archivo Excel", self)
         select_excel_button.setStyleSheet(self.get_button_style())
+        select_excel_button.setIcon(QIcon("icons/excel_icon.png"))  # Asegúrate de tener este icono
         select_excel_button.clicked.connect(self.select_excel_file)
         right_layout.addWidget(select_excel_button)
 
@@ -85,28 +108,33 @@ class TicketManagement(QMainWindow):
 
         self.view_excel_button = QPushButton("Ver Excel", self)
         self.view_excel_button.setStyleSheet(self.get_button_style())
+        self.view_excel_button.setIcon(QIcon("icons/view_icon.png"))  # Asegúrate de tener este icono
         self.view_excel_button.clicked.connect(self.open_excel_window)
         right_layout.addWidget(self.view_excel_button)
 
         self.refresh_button = QPushButton("Refrescar", self)
         self.refresh_button.setStyleSheet(self.get_refresh_button_style())
+        self.refresh_button.setIcon(QIcon("icons/refresh_icon.png"))  # Asegúrate de tener este icono
         self.refresh_button.clicked.connect(self.update_all)
         right_layout.addWidget(self.refresh_button)
 
-        self.turn_chart = TurnChart()  # Usamos la nueva clase para el gráfico por turnos
+        self.turn_chart = TurnChart()
 
-        self.daily_chart_button = QPushButton("Gráfico Diario", self)
+        self.daily_chart_button = QPushButton("Ver Gráfico Diario", self)
         self.daily_chart_button.setStyleSheet(self.get_button_style())
+        self.daily_chart_button.setIcon(QIcon("icons/daily_chart_icon.png"))  # Asegúrate de tener este icono
         self.daily_chart_button.clicked.connect(self.show_daily_chart)
         right_layout.addWidget(self.daily_chart_button)
 
-        self.shift_chart_button = QPushButton("Gráfico por Turno", self)
+        self.shift_chart_button = QPushButton("Ver Gráfico por Turno", self)
         self.shift_chart_button.setStyleSheet(self.get_button_style())
+        self.shift_chart_button.setIcon(QIcon("icons/shift_chart_icon.png"))  # Asegúrate de tener este icono
         self.shift_chart_button.clicked.connect(self.show_shift_chart)
         right_layout.addWidget(self.shift_chart_button)
 
-        self.general_chart_button = QPushButton("Gráfico General", self)
+        self.general_chart_button = QPushButton("Ver Gráfico General", self)
         self.general_chart_button.setStyleSheet(self.get_button_style())
+        self.general_chart_button.setIcon(QIcon("icons/general_chart_icon.png"))  # Asegúrate de tener este icono
         self.general_chart_button.clicked.connect(self.show_general_chart)
         right_layout.addWidget(self.general_chart_button)
 
@@ -116,7 +144,7 @@ class TicketManagement(QMainWindow):
             mtbf_layout.addWidget(self.mtbf_labels[block])
 
             info_button = QPushButton()
-            info_button.setIcon(QIcon(os.path.join(os.path.dirname(__file__), "question_icon.png")))  # Asegúrate de que esta ruta sea correcta
+            info_button.setIcon(QIcon(os.path.join(os.path.dirname(__file__), "icons/question_icon.png")))  # Asegúrate de que esta ruta sea correcta
             info_button.setToolTip("Haz clic para obtener más información sobre MTBF.")
             info_button.setStyleSheet("background-color: transparent; border: none; padding: 0px;")
             info_button.setFixedSize(24, 24)
@@ -126,11 +154,28 @@ class TicketManagement(QMainWindow):
             right_layout.addLayout(mtbf_layout)
 
         self.global_incidence_list = QListWidget(self)
-        self.global_incidence_list.setStyleSheet("QListWidget { background-color: #f0f0f0; border: 1px solid #ccc; padding: 5px; }")
+        self.global_incidence_list.setStyleSheet("""
+            QListWidget {
+                background-color: #f0f0f0;
+                border: 1px solid #ccc;
+                padding: 5px;
+                font-size: 14px;
+                font-family: Arial;
+            }
+            QListWidget::item {
+                padding: 10px;
+                border-bottom: 1px solid #ddd;
+            }
+            QListWidget::item:selected {
+                background-color: #4CAF50;
+                color: white;
+            }
+        """)
         right_layout.addWidget(self.global_incidence_list)
 
         filter_button = QPushButton("Filtro Avanzado", self)
         filter_button.setStyleSheet(self.get_button_style())
+        filter_button.setIcon(QIcon("icons/filter_icon.png"))  # Asegúrate de tener este icono
         filter_button.clicked.connect(self.open_advanced_filter_dialog)
         right_layout.addWidget(filter_button)
 
@@ -141,14 +186,31 @@ class TicketManagement(QMainWindow):
 
         self.view_details_button = QPushButton("Ver Detalles")
         self.view_details_button.setStyleSheet(self.get_button_style())
+        self.view_details_button.setIcon(QIcon("icons/details_icon.png"))  # Asegúrate de tener este icono
         self.view_details_button.clicked.connect(self.open_top_incidents_dialog)
         right_layout.addWidget(self.view_details_button)
 
         if self.user.is_admin:
             admin_button = QPushButton("Administrar Incidencias")
             admin_button.setStyleSheet(self.get_admin_button_style())
+            admin_button.setIcon(QIcon("icons/admin_icon.png"))  # Asegúrate de tener este icono
             admin_button.clicked.connect(self.open_admin_dialog)
             right_layout.addWidget(admin_button)
+
+        export_button = QPushButton("Exportar Informes", self)
+        export_button.setStyleSheet(self.get_button_style())
+        export_button.clicked.connect(self.open_report_export_dialog)
+        right_layout.addWidget(export_button)
+
+        send_report_button = QPushButton("Enviar Informe por Correo", self)
+        send_report_button.setStyleSheet(self.get_button_style())
+        send_report_button.clicked.connect(self.open_send_report_dialog)
+        right_layout.addWidget(send_report_button)
+
+        history_button = QPushButton("Historial de Cambios", self)
+        history_button.setStyleSheet(self.get_button_style())
+        history_button.clicked.connect(self.open_change_history_dialog)
+        right_layout.addWidget(history_button)
 
         right_layout.addStretch()
 
@@ -170,6 +232,10 @@ class TicketManagement(QMainWindow):
         self.update_top_incidents()
         self.update_mtbf_display()  # Asegúrate de actualizar la visualización del MTBF al iniciar la aplicación
 
+    def open_send_report_dialog(self):
+        self.send_report_dialog = SendReportDialog(self.incidencias, self.email_notifier)
+        self.send_report_dialog.exec_()
+
     def center_window_app(self):
         screen_rect_app = QApplication.desktop().availableGeometry()
         window_width = self.width()
@@ -177,6 +243,10 @@ class TicketManagement(QMainWindow):
         x = (screen_rect_app.width() - window_width) // 2
         y = (screen_rect_app.height() - window_height) // 2
         self.setGeometry(QRect(x, y, window_width, window_height))
+
+    def open_report_export_dialog(self):
+        self.report_dialog = ReportExportDialog(self.incidencias)
+        self.report_dialog.exec_()
 
     def show_mtbf_info(self):
         dialog = QDialog(self)
@@ -198,6 +268,30 @@ class TicketManagement(QMainWindow):
         layout.addWidget(close_button)
         dialog.setLayout(layout)
         dialog.exec_()
+
+    def open_report_export_dialog(self):
+        self.report_dialog = ReportExportDialog(self.incidencias)
+        self.report_dialog.exec_()
+
+    def open_change_history_dialog(self):
+        self.history_dialog = ChangeHistoryDialog(self.change_log_file)
+        self.history_dialog.exec_()
+
+    def log_change(self, action, details):
+        change = {
+            "user": self.user.username,
+            "action": action,
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "details": details
+    }
+        with open(self.change_log_file, 'a') as file:
+            json.dump(change, file)
+            file.write('\n')
+
+    def send_incidence_notification(self, incidence_text):
+        subject = "Nueva Incidencia Confirmada"
+        message = f"Se ha confirmado la siguiente incidencia: {incidence_text}"
+        self.email_notifier.send_email('recipient@example.com', subject, message)  # Configura con tu dirección de correo
 
     def open_advanced_filter_dialog(self):
         self.filter_dialog = AdvancedFilterDialog(self)
@@ -395,17 +489,18 @@ class TicketManagement(QMainWindow):
             timestamp = datetime.now()
             date_str = timestamp.strftime("%Y-%m-%d")
             time_str = timestamp.strftime("%H:%M:%S")
-            
-            # Mostrar un mensaje de confirmación
+        
             confirm_msg = QMessageBox.question(self, "Confirmar Incidencia", 
-                                            f"¿Estás seguro de confirmar la incidencia: '{incidence_text}'?", 
-                                            QMessageBox.Yes | QMessageBox.No)
-            
+                                        f"¿Estás seguro de confirmar la incidencia: '{incidence_text}'?", 
+                                        QMessageBox.Yes | QMessageBox.No)
+        
             if confirm_msg == QMessageBox.Yes:
                 self.last_incidence_labels[block_name].setText(f"Incidencia confirmada: {incidence_text} a las {time_str}")
                 self.log_incidence_to_excel(block_name, date_str, time_str, incidence_text)
                 self.update_mtbf(block_name, timestamp)
-                
+                self.log_change("Confirmar Incidencia", f"{block_name}: {incidence_text}")
+                self.send_incidence_notification(incidence_text)
+            
                 QMessageBox.information(self, "Confirmación", "Incidencia confirmada.")
 
                 fixing_label = QLabel("Fixing")
@@ -548,7 +643,7 @@ class TicketManagement(QMainWindow):
         if not os.path.exists(file_path):
             workbook = Workbook()
             sheet = workbook.active
-            headers = ["Línia", "Incidencia", "Fecha", "Hora", "Turno", "Fixed", "Tiempo Reparando", "MTBF"]
+            headers = ["Bloque", "Incidencia", "Fecha", "Hora", "Turno", "Hora de Reparación", "Tiempo de Reparación", "MTBF"]
             sheet.append(headers)
             workbook.save(file_path)
 
@@ -558,7 +653,6 @@ class TicketManagement(QMainWindow):
                 workbook = load_workbook(self.excel_file)
                 sheet = workbook.active
 
-                # Verificar que las columnas están presentes
                 headers = [cell.value for cell in sheet[1]]
                 expected_headers = ["Bloque", "Incidencia", "Fecha", "Hora", "Turno", "Hora de Reparación", "Tiempo de Reparación", "MTBF"]
                 if headers != expected_headers:
@@ -567,14 +661,12 @@ class TicketManagement(QMainWindow):
                     for idx, header in enumerate(expected_headers):
                         sheet.cell(row=1, column=idx + 1, value=header)
 
-                # Determinar el turno basado en la hora
                 time_obj = datetime.strptime(time_str, "%H:%M:%S").time()
                 if time(6, 0) <= time_obj < time(18, 0):
                     turno = "Mañana"
                 else:
                     turno = "Noche"
 
-                # Calcular el MTBF para el bloque
                 mtbf_value = self.calculate_mtbf(block_name)
 
                 new_row = [block_name, incidence_text, date_str, time_str, turno, "", "", mtbf_value]
@@ -779,7 +871,7 @@ class TicketManagement(QMainWindow):
         if block_name in self.mtbf_data:
             mtbf_info = self.mtbf_data[block_name]
             if mtbf_info["last_time"] is not None:
-                time_diff = (timestamp - mtbf_info["last_time"]).total_seconds() / 60.0  # Convertir a minutos
+                time_diff = (timestamp - mtbf_info["last_time"]).total_seconds() / 60.0
                 mtbf_info["total_time"] += time_diff
                 mtbf_info["incident_count"] += 1
             mtbf_info["last_time"] = timestamp
@@ -795,10 +887,10 @@ class TicketManagement(QMainWindow):
                     self.mtbf_labels[block].setText(f"MTBF {block}: N/A")
 
     def reset_mtbf_timer(self):
-        self.reset_mtbf_data()  # Reinicia al iniciar la aplicación
+        self.reset_mtbf_data()
         timer = QTimer(self)
         timer.timeout.connect(self.reset_mtbf_data)
-        timer.start(24 * 60 * 60 * 1000)  # 24 horas en milisegundos
+        timer.start(24 * 60 * 60 * 1000)
 
     def reset_mtbf_data(self):
         for block in self.mtbf_data.keys():
