@@ -487,18 +487,17 @@ class TicketManagement(QMainWindow):
             timestamp = datetime.now()
             date_str = timestamp.strftime("%Y-%m-%d")
             time_str = timestamp.strftime("%H:%M:%S")
-        
+            
             confirm_msg = QMessageBox.question(self, "Confirmar Incidencia", 
-                                        f"¿Estás seguro de confirmar la incidencia: '{incidence_text}'?", 
-                                        QMessageBox.Yes | QMessageBox.No)
-        
+                                            f"¿Estás seguro de confirmar la incidencia: '{incidence_text}'?", 
+                                            QMessageBox.Yes | QMessageBox.No)
+            
             if confirm_msg == QMessageBox.Yes:
                 self.last_incidence_labels[block_name].setText(f"Incidencia confirmada: {incidence_text} a las {time_str}")
                 self.log_incidence_to_excel(block_name, date_str, time_str, incidence_text)
                 self.update_mtbf(block_name, timestamp)
                 self.log_change("Confirmar Incidencia", f"{block_name}: {incidence_text}")
-                self.send_incidence_notification(incidence_text)
-            
+
                 QMessageBox.information(self, "Confirmación", "Incidencia confirmada.")
 
                 fixing_label = QLabel("Fixing")

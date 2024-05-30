@@ -1,4 +1,9 @@
 {
     "user": "pideu2",
-    "incidences": []
+    "incidences": [
+        {
+            "text": "WC48 P5F: C\u00e1mara no detecta Pcb a las 18:43:02 del 2024-05-30",
+            "status": "Fixing"
+        }
+    ]
 }
