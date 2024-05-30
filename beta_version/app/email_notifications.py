@@ -5,9 +5,16 @@ from email.mime.application import MIMEApplication
 import os
 
 class EmailNotifier:
-    def __init__(self, smtp_server, smtp_port, email, password):
-        self.smtp_server = smtp_server
-        self.smtp_port = smtp_port
+    def __init__(self, service, email, password):
+        if service == 'gmail':
+            self.smtp_server = 'smtp.gmail.com'
+            self.smtp_port = 465
+        elif service == 'outlook':
+            self.smtp_server = 'smtp-mail.outlook.com'
+            self.smtp_port = 587
+        else:
+            raise ValueError("Unsupported email service")
+        
         self.email = email
         self.password = password
 

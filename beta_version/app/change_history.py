@@ -1,29 +1,38 @@
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTableWidget, QTableWidgetItem
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QTextEdit, QPushButton
 import json
 
 class ChangeHistoryDialog(QDialog):
     def __init__(self, change_log_file, parent=None):
-        super().__init__(parent)
+        super(ChangeHistoryDialog, self).__init__(parent)
         self.change_log_file = change_log_file
         self.initUI()
 
     def initUI(self):
         self.setWindowTitle("Historial de Cambios")
+        self.setGeometry(100, 100, 600, 400)
         layout = QVBoxLayout(self)
 
-        self.history_table = QTableWidget(self)
-        self.history_table.setColumnCount(4)
-        self.history_table.setHorizontalHeaderLabels(["Usuario", "Acción", "Fecha", "Detalles"])
-        layout.addWidget(self.history_table)
+        self.text_edit = QTextEdit(self)
+        layout.addWidget(self.text_edit)
+
+        self.close_button = QPushButton("Cerrar", self)
+        self.close_button.clicked.connect(self.close)
+        layout.addWidget(self.close_button)
 
         self.load_history()
 
     def load_history(self):
-        with open(self.change_log_file, 'r') as file:
-            changes = json.load(file)
-            self.history_table.setRowCount(len(changes))
-            for row, change in enumerate(changes):
-                self.history_table.setItem(row, 0, QTableWidgetItem(change["user"]))
-                self.history_table.setItem(row, 1, QTableWidgetItem(change["action"]))
-                self.history_table.setItem(row, 2, QTableWidgetItem(change["date"]))
-                self.history_table.setItem(row, 3, QTableWidgetItem(change["details"]))
+        try:
+            with open(self.change_log_file, 'r') as file:
+                for line in file:
+                    change = json.loads(line.strip())
+                    self.display_change(change)
+        except Exception as e:
+            print(f"Error loading change history: {e}")
+
+    def display_change(self, change):
+        user = change.get("user", "Desconocido")
+        action = change.get("action", "Acción Desconocida")
+        date = change.get("date", "Fecha Desconocida")
+        details = change.get("details", "Detalles no disponibles")
+        self.text_edit.append(f"Usuario: {user}\nAcción: {action}\nFecha: {date}\nDetalles: {details}\n{'-'*40}")

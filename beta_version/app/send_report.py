@@ -1,29 +1,46 @@
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.application import MIMEApplication
-import smtplib
-import os
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QComboBox, QMessageBox
 from fpdf import FPDF
+from email_notifications import EmailNotifier
+import os
 
 class SendReportDialog(QDialog):
-    def __init__(self, incidencias, email_notifier, parent=None):
+    def __init__(self, incidencias, parent=None):
         super(SendReportDialog, self).__init__(parent)
         self.incidencias = incidencias
-        self.email_notifier = email_notifier
         self.initUI()
 
     def initUI(self):
         self.setWindowTitle("Enviar Informe por Correo")
-        self.setGeometry(100, 100, 400, 200)
+        self.setGeometry(100, 100, 400, 300)
         layout = QVBoxLayout(self)
 
-        self.label = QLabel("Introduce el correo electrónico del destinatario:", self)
-        layout.addWidget(self.label)
+        self.service_label = QLabel("Selecciona el servicio de correo:", self)
+        layout.addWidget(self.service_label)
+
+        self.service_combo = QComboBox(self)
+        self.service_combo.addItems(["Gmail", "Outlook"])
+        layout.addWidget(self.service_combo)
+
+        self.email_label = QLabel("Introduce tu correo electrónico:", self)
+        layout.addWidget(self.email_label)
 
         self.email_input = QLineEdit(self)
-        self.email_input.setPlaceholderText("correo@ejemplo.com")
+        self.email_input.setPlaceholderText("tu_correo@example.com")
         layout.addWidget(self.email_input)
+
+        self.password_label = QLabel("Introduce tu contraseña:", self)
+        layout.addWidget(self.password_label)
+
+        self.password_input = QLineEdit(self)
+        self.password_input.setEchoMode(QLineEdit.Password)
+        layout.addWidget(self.password_input)
+
+        self.recipient_label = QLabel("Introduce el correo electrónico del destinatario:", self)
+        layout.addWidget(self.recipient_label)
+
+        self.recipient_input = QLineEdit(self)
+        self.recipient_input.setPlaceholderText("destinatario@example.com")
+        layout.addWidget(self.recipient_input)
 
         self.send_button = QPushButton("Enviar Informe", self)
         self.send_button.setStyleSheet(self.get_button_style())
@@ -53,21 +70,26 @@ class SendReportDialog(QDialog):
         """
 
     def send_report(self):
-        recipient = self.email_input.text()
-        if recipient:
+        service = self.service_combo.currentText().lower()
+        email = self.email_input.text()
+        password = self.password_input.text()
+        recipient = self.recipient_input.text()
+
+        if email and password and recipient:
+            email_notifier = EmailNotifier(service, email, password)
             subject = "Informe de Incidencias"
             message = "Adjunto encontrarás el informe de incidencias."
             attachment = self.create_pdf_report()
 
             if attachment:
-                self.email_notifier.send_email_with_attachment(recipient, subject, message, attachment)
+                email_notifier.send_email_with_attachment(recipient, subject, message, attachment)
                 QMessageBox.information(self, "Enviar Informe", "Informe enviado con éxito.")
                 os.remove(attachment)
                 self.close()
             else:
                 QMessageBox.warning(self, "Error", "No se pudo generar el informe.")
         else:
-            QMessageBox.warning(self, "Error", "Por favor, introduce un correo electrónico válido.")
+            QMessageBox.warning(self, "Error", "Por favor, completa todos los campos.")
 
     def create_pdf_report(self):
         file_name = "informe_incidencias.pdf"

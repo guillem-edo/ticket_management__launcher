@@ -21,7 +21,6 @@ from .change_history import ChangeHistoryDialog
 from .email_notifications import EmailNotifier
 from .send_report import SendReportDialog
 
-
 class TicketManagement(QMainWindow):
     def __init__(self, user):
         super().__init__()
@@ -40,7 +39,6 @@ class TicketManagement(QMainWindow):
         self.mtbf_data = self.load_mtbf_data()
         self.state_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidence_state.json")
         self.mtbf_labels = {block: QLabel(f"MTBF {block}: N/A", self) for block in self.blocks}
-        self.email_notifier = EmailNotifier('smtp.example.com', 465, 'your_email@example.com', 'your_password')  # Configura con tus credenciales
         self.initUI()
         self.load_last_excel_file()
         self.load_incidence_state()
@@ -233,7 +231,7 @@ class TicketManagement(QMainWindow):
         self.update_mtbf_display()  # Asegúrate de actualizar la visualización del MTBF al iniciar la aplicación
 
     def open_send_report_dialog(self):
-        self.send_report_dialog = SendReportDialog(self.incidencias, self.email_notifier)
+        self.send_report_dialog = SendReportDialog(self.incidencias)
         self.send_report_dialog.exec_()
 
     def center_window_app(self):
