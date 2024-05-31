@@ -1,5 +1,7 @@
 import os
 import json
+import csv
+
 from datetime import datetime, timedelta, time
 from collections import Counter, defaultdict
 from openpyxl import Workbook, load_workbook
@@ -16,7 +18,7 @@ from .admin_dialog import AdminDialog
 from .excel_window import ExcelWindow
 from .responsive_design import center_window, adjust_to_screen
 from .animations import fade_in
-from .reports_export import ReportExportDialog
+from .reports_export import ExportReportDialog
 from .change_history import ChangeHistoryDialog
 from .email_notifications import EmailNotifier
 from .send_report import SendReportDialog
@@ -44,7 +46,6 @@ class TicketManagement(QMainWindow):
         self.load_incidence_state()
         self.reset_mtbf_timer()
 
-
     def default_incidences(self):
         return {
             "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva", "Fallo en paletizador", "No coge placa", "Palet atascado en la curva", "Ascensor no sube", "No pone tornillo", "Fallo tornillo", "AOI no detecta pieza", "No atornilla clips", "Fallo fijador tapa", "Secuencia atornillador", "Fallo atornillador", "Fallo cámara visión"],
@@ -57,7 +58,7 @@ class TicketManagement(QMainWindow):
     def initUI(self):
         self.setWindowTitle(f"Ticket Management - {self.user.username}")
         self.resize(1200, 800)
-        adjust_to_screen(self)
+        self.center_window_app()
 
         main_layout = QHBoxLayout()
         central_widget = QWidget()
@@ -68,26 +69,33 @@ class TicketManagement(QMainWindow):
         main_layout.addWidget(self.splitter)
 
         self.tabWidget = QTabWidget(self)
-        self.tabWidget.setStyleSheet("""
-            QTabWidget::pane {
-                border: 1px solid #ccc;
-            }
-            QTabBar::tab {
-                background: #fff;
-                color: #000;
-                padding: 10px;
-                border: 1px solid #ccc;
-                border-top-left-radius: 5px;
-                border-top-right-radius: 5px;
-            }
-            QTabBar::tab:selected {
-                background: #ccc;
-            }
-        """)
         self.splitter.addWidget(self.tabWidget)
 
         for name in self.blocks:
             self.create_tab(name, self.incidencias[name])
+
+        # Nueva pestaña para Incidencias Más Relevantes y el Historial de Cambios
+        self.relevant_tab = QWidget()
+        self.tabWidget.addTab(self.relevant_tab, "Incidencias y Historial")
+        self.relevant_layout = QVBoxLayout(self.relevant_tab)
+
+        self.top_incidents_label = QLabel("Incidencias Más Relevantes")
+        self.top_incidents_label.setFont(QFont("Arial", 14, QFont.Bold))
+        self.top_incidents_label.setStyleSheet("color: #333333; margin: 10px 0;")
+        self.relevant_layout.addWidget(self.top_incidents_label)
+
+        self.top_incidents_list = QListWidget(self)
+        self.relevant_layout.addWidget(self.top_incidents_list)
+
+        self.view_details_button = QPushButton("Ver Detalles")
+        self.view_details_button.setStyleSheet(self.get_button_style())
+        self.view_details_button.clicked.connect(self.open_top_incidents_dialog)
+        self.relevant_layout.addWidget(self.view_details_button)
+
+        self.change_history_button = QPushButton("Historial de Cambios")
+        self.change_history_button.setStyleSheet(self.get_button_style())
+        self.change_history_button.clicked.connect(self.open_change_history_dialog)
+        self.relevant_layout.addWidget(self.change_history_button)
 
         right_widget = QWidget()
         right_layout = QVBoxLayout(right_widget)
@@ -95,7 +103,6 @@ class TicketManagement(QMainWindow):
 
         select_excel_button = QPushButton("Seleccionar Archivo Excel", self)
         select_excel_button.setStyleSheet(self.get_button_style())
-        select_excel_button.setIcon(QIcon("icons/excel_icon.png"))  # Asegúrate de tener este icono
         select_excel_button.clicked.connect(self.select_excel_file)
         right_layout.addWidget(select_excel_button)
 
@@ -106,33 +113,28 @@ class TicketManagement(QMainWindow):
 
         self.view_excel_button = QPushButton("Ver Excel", self)
         self.view_excel_button.setStyleSheet(self.get_button_style())
-        self.view_excel_button.setIcon(QIcon("icons/view_icon.png"))  # Asegúrate de tener este icono
         self.view_excel_button.clicked.connect(self.open_excel_window)
         right_layout.addWidget(self.view_excel_button)
 
         self.refresh_button = QPushButton("Refrescar", self)
         self.refresh_button.setStyleSheet(self.get_refresh_button_style())
-        self.refresh_button.setIcon(QIcon("icons/refresh_icon.png"))  # Asegúrate de tener este icono
         self.refresh_button.clicked.connect(self.update_all)
         right_layout.addWidget(self.refresh_button)
 
-        self.turn_chart = TurnChart()
+        self.turn_chart = TurnChart()  # Usamos la nueva clase para el gráfico por turnos
 
         self.daily_chart_button = QPushButton("Ver Gráfico Diario", self)
         self.daily_chart_button.setStyleSheet(self.get_button_style())
-        self.daily_chart_button.setIcon(QIcon("icons/daily_chart_icon.png"))  # Asegúrate de tener este icono
         self.daily_chart_button.clicked.connect(self.show_daily_chart)
         right_layout.addWidget(self.daily_chart_button)
 
         self.shift_chart_button = QPushButton("Ver Gráfico por Turno", self)
         self.shift_chart_button.setStyleSheet(self.get_button_style())
-        self.shift_chart_button.setIcon(QIcon("icons/shift_chart_icon.png"))  # Asegúrate de tener este icono
         self.shift_chart_button.clicked.connect(self.show_shift_chart)
         right_layout.addWidget(self.shift_chart_button)
 
         self.general_chart_button = QPushButton("Ver Gráfico General", self)
         self.general_chart_button.setStyleSheet(self.get_button_style())
-        self.general_chart_button.setIcon(QIcon("icons/general_chart_icon.png"))  # Asegúrate de tener este icono
         self.general_chart_button.clicked.connect(self.show_general_chart)
         right_layout.addWidget(self.general_chart_button)
 
@@ -142,7 +144,7 @@ class TicketManagement(QMainWindow):
             mtbf_layout.addWidget(self.mtbf_labels[block])
 
             info_button = QPushButton()
-            info_button.setIcon(QIcon(os.path.join(os.path.dirname(__file__), "icons/question_icon.png")))  # Asegúrate de que esta ruta sea correcta
+            info_button.setIcon(QIcon(os.path.join(os.path.dirname(__file__), "question_icon.png")))  # Asegúrate de que esta ruta sea correcta
             info_button.setToolTip("Haz clic para obtener más información sobre MTBF.")
             info_button.setStyleSheet("background-color: transparent; border: none; padding: 0px;")
             info_button.setFixedSize(24, 24)
@@ -152,65 +154,21 @@ class TicketManagement(QMainWindow):
             right_layout.addLayout(mtbf_layout)
 
         self.global_incidence_list = QListWidget(self)
-        self.global_incidence_list.setStyleSheet("""
-            QListWidget {
-                background-color: #f0f0f0;
-                border: 1px solid #ccc;
-                padding: 5px;
-                font-size: 14px;
-                font-family: Arial;
-            }
-            QListWidget::item {
-                padding: 10px;
-                border-bottom: 1px solid #ddd;
-            }
-            QListWidget::item:selected {
-                background-color: #4CAF50;
-                color: white;
-            }
-        """)
+        self.global_incidence_list.setStyleSheet("QListWidget { background-color: #f0f0f0; border: 1px solid #ccc; padding: 5px; }")
         right_layout.addWidget(self.global_incidence_list)
 
+        button_layout = QHBoxLayout()
         filter_button = QPushButton("Filtro Avanzado", self)
         filter_button.setStyleSheet(self.get_button_style())
-        filter_button.setIcon(QIcon("icons/filter_icon.png"))  # Asegúrate de tener este icono
         filter_button.clicked.connect(self.open_advanced_filter_dialog)
-        right_layout.addWidget(filter_button)
+        button_layout.addWidget(filter_button)
 
-        self.top_incidents_label = QLabel("Incidencias Más Relevantes")
-        self.top_incidents_label.setFont(QFont("Arial", 14, QFont.Bold))
-        self.top_incidents_label.setStyleSheet("color: #333333; margin: 10px 0;")
-        right_layout.addWidget(self.top_incidents_label)
-
-        self.view_details_button = QPushButton("Ver Detalles")
-        self.view_details_button.setStyleSheet(self.get_button_style())
-        self.view_details_button.setIcon(QIcon("icons/details_icon.png"))  # Asegúrate de tener este icono
-        self.view_details_button.clicked.connect(self.open_top_incidents_dialog)
-        right_layout.addWidget(self.view_details_button)
-
-        if self.user.is_admin:
-            admin_button = QPushButton("Administrar Incidencias")
-            admin_button.setStyleSheet(self.get_admin_button_style())
-            admin_button.setIcon(QIcon("icons/admin_icon.png"))  # Asegúrate de tener este icono
-            admin_button.clicked.connect(self.open_admin_dialog)
-            right_layout.addWidget(admin_button)
-
-        export_button = QPushButton("Exportar Informes", self)
+        export_button = QPushButton("Exportar CSV", self)
         export_button.setStyleSheet(self.get_button_style())
-        export_button.clicked.connect(self.open_report_export_dialog)
-        right_layout.addWidget(export_button)
+        export_button.clicked.connect(self.export_csv)
+        button_layout.addWidget(export_button)
 
-        send_report_button = QPushButton("Enviar Informe por Correo", self)
-        send_report_button.setStyleSheet(self.get_button_style())
-        send_report_button.clicked.connect(self.open_send_report_dialog)
-        right_layout.addWidget(send_report_button)
-
-        history_button = QPushButton("Historial de Cambios", self)
-        history_button.setStyleSheet(self.get_button_style())
-        history_button.clicked.connect(self.open_change_history_dialog)
-        right_layout.addWidget(history_button)
-
-        right_layout.addStretch()
+        right_layout.addLayout(button_layout)
 
         self.status_bar = QStatusBar(self)
         self.setStatusBar(self.status_bar)
@@ -233,6 +191,31 @@ class TicketManagement(QMainWindow):
     def open_send_report_dialog(self):
         self.send_report_dialog = SendReportDialog(self.incidencias)
         self.send_report_dialog.exec_()
+    
+    def export_csv(self):
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getSaveFileName(self, "Guardar Informe CSV", "", "CSV Files (*.csv);;All Files (*)", options=options)
+        if not file_name:
+            return
+
+        with open(file_name, 'w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow(["Bloque", "Número de Incidencias", "Incidencia más frecuente"])
+            for row in range(self.results_table.rowCount()):
+                bloque = self.results_table.item(row, 0).text() if self.results_table.item(row, 0) else ''
+                num_incidencias = self.results_table.item(row, 1).text() if self.results_table.item(row, 1) else ''
+                incidencia_frecuente = self.results_table.item(row, 2).text() if self.results_table.item(row, 2) else ''
+                writer.writerow([bloque, num_incidencias, incidencia_frecuente])
+
+            writer.writerow([])
+            writer.writerow(["Incidencia", "Número de Incidencias"])
+            for row in range(self.incidents_table.rowCount()):
+                incidencia = self.incidents_table.item(row, 0).text() if self.incidents_table.item(row, 0) else ''
+                num_incidencias = self.incidents_table.item(row, 1).text() if self.incidents_table.item(row, 1) else ''
+                writer.writerow([incidencia, num_incidencias])
+
+        QMessageBox.information(self, "Exportar Informe", "Informe exportado con éxito en formato CSV.")
+
 
     def center_window_app(self):
         screen_rect_app = QApplication.desktop().availableGeometry()
@@ -243,7 +226,7 @@ class TicketManagement(QMainWindow):
         self.setGeometry(QRect(x, y, window_width, window_height))
 
     def open_report_export_dialog(self):
-        self.report_dialog = ReportExportDialog(self.incidencias)
+        self.report_dialog = ExportReportDialog(self.incidencias)
         self.report_dialog.exec_()
 
     def show_mtbf_info(self):
@@ -268,8 +251,8 @@ class TicketManagement(QMainWindow):
         dialog.exec_()
 
     def open_report_export_dialog(self):
-        self.report_dialog = ReportExportDialog(self.incidencias)
-        self.report_dialog.exec_()
+        self.export_dialog = ExportReportDialog(self.incidencias)
+        self.export_dialog.exec_()
 
     def open_change_history_dialog(self):
         self.history_dialog = ChangeHistoryDialog(self.change_log_file)
@@ -484,19 +467,15 @@ class TicketManagement(QMainWindow):
         current_item = list_widget.currentItem()
         if current_item:
             incidence_text = current_item.text()
-            timestamp = datetime.now()
-            date_str = timestamp.strftime("%Y-%m-%d")
-            time_str = timestamp.strftime("%H:%M:%S")
-            
-            confirm_msg = QMessageBox.question(self, "Confirmar Incidencia", 
-                                            f"¿Estás seguro de confirmar la incidencia: '{incidence_text}'?", 
-                                            QMessageBox.Yes | QMessageBox.No)
-            
-            if confirm_msg == QMessageBox.Yes:
+            confirm_dialog = QMessageBox.question(self, "Confirmar Incidencia", f"¿Está seguro que desea confirmar la incidencia '{incidence_text}'?", QMessageBox.Yes | QMessageBox.No)
+            if confirm_dialog == QMessageBox.Yes:
+                timestamp = datetime.now()
+                date_str = timestamp.strftime("%Y-%m-%d")
+                time_str = timestamp.strftime("%H:%M:%S")
                 self.last_incidence_labels[block_name].setText(f"Incidencia confirmada: {incidence_text} a las {time_str}")
                 self.log_incidence_to_excel(block_name, date_str, time_str, incidence_text)
+
                 self.update_mtbf(block_name, timestamp)
-                self.log_change("Confirmar Incidencia", f"{block_name}: {incidence_text}")
 
                 QMessageBox.information(self, "Confirmación", "Incidencia confirmada.")
 
@@ -534,9 +513,8 @@ class TicketManagement(QMainWindow):
                 details_button.clicked.connect(partial(self.add_incidence_details, block_name, incidence_text, date_str, time_str))
 
                 QTimer.singleShot(60000, partial(self.remind_user_to_fix, block_name, incidence_text, date_str, time_str, correct_button, details_button))
+
                 self.update_top_incidents()
-            else:
-                QMessageBox.information(self, "Confirmación", "Incidencia no confirmada.")
         else:
             QMessageBox.warning(self, "Ninguna Incidencia Seleccionada", "Selecciona una incidencia para confirmar.")
 
@@ -695,18 +673,12 @@ class TicketManagement(QMainWindow):
                     self.update_top_incidents()
 
     def update_top_incidents(self):
-        self.incidences_count = {block: 0 for block in self.incidencias.keys()}
-        self.incident_details = {block: Counter() for block in self.incidencias.keys()}
+        self.top_incidents_list.clear()
+        for block, details in self.incident_details.items():
+            for incident, count in details.items():
+                item = QListWidgetItem(f"{block}: {incident} - {count} veces")
+                self.top_incidents_list.addItem(item)
 
-        if self.excel_file and os.path.exists(self.excel_file):
-            workbook = load_workbook(self.excel_file)
-            sheet = workbook.active
-            for row in sheet.iter_rows(min_row=2, values_only=True):
-                if len(row) >= 8:
-                    block_name, incidence, date_str, time_str, turno, repair_time, time_diff, mtbf = row
-                    if block_name in self.incidencias:
-                        self.incidences_count[block_name] += 1
-                        self.incident_details[block_name][incidence] += 1
 
     def show_daily_chart(self):
         today = datetime.today().date()

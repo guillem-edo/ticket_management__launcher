@@ -3,3 +3,20 @@
 {"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-05-30 18:21:36", "details": "WC48 P5F: C\u00e1mara no detecta busbar"}
 {"user": "pideu4", "action": "Confirmar Incidencia", "date": "2024-05-30 18:39:20", "details": "WV50 FILTER: Traza"}
 {"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-05-30 18:43:03", "details": "WC48 P5F: C\u00e1mara no detecta Pcb"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-05-31 11:27:17", "details": "WC48 P5F: C\u00e1mara no detecta skeleton"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-05-31 11:27:24", "details": "WC48 P5F: C\u00e1mara no detecta skeleton"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-05-31 11:27:40", "details": "WC48 P5F: C\u00e1mara no detecta foams"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-05-31 11:31:04", "details": "WC48 P5F: Etiquetadora"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-05-31 11:31:05", "details": "WC48 P5F: Etiquetadora"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-05-31 11:31:11", "details": "WC48 P5F: C\u00e1mara no detecta Power CP"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-05-31 11:31:12", "details": "WC48 P5F: C\u00e1mara no detecta Power CP"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-05-31 12:09:27", "details": "WC48 P5F: C\u00e1mara no detecta busbar"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-05-31 12:09:32", "details": "WC48 P5F: AOI (malla)"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-05-31 12:09:37", "details": "WC48 P5F: AOI (malla)"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-05-31 12:14:02", "details": "WC48 P5F: C\u00e1mara no detecta skeleton"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-05-31 12:14:15", "details": "WC48 P5F: AOI (malla)"}
+{"user": "pideu4", "action": "Confirmar Incidencia", "date": "2024-05-31 12:23:32", "details": "WV50 FILTER: No coloca bien el core"}
+{"user": "pideu4", "action": "Confirmar Incidencia", "date": "2024-05-31 12:23:37", "details": "WV50 FILTER: Fallo visi\u00f3n core"}
+{"user": "pideu5", "action": "Confirmar Incidencia", "date": "2024-05-31 12:30:52", "details": "SPL: Fallo dispensaci\u00f3n glue"}
+{"user": "pideu5", "action": "Confirmar Incidencia", "date": "2024-05-31 12:30:54", "details": "SPL: Soldadura defectuosa"}
+{"user": "pideu5", "action": "Confirmar Incidencia", "date": "2024-05-31 12:30:55", "details": "SPL: Soldadura defectuosa"}

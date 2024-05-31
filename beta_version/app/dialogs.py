@@ -1,13 +1,13 @@
 # app/dialogs.py
-from PyQt5.QtWidgets import QDialog, QFrame, QHeaderView, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea, QWidget, QInputDialog, QMessageBox, QLineEdit
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont, QPixmap, QIcon
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QComboBox, QPushButton, QTableWidget, QTableWidgetItem, QLineEdit, QHBoxLayout, QHeaderView, QMessageBox, QFileDialog
 from collections import Counter
-import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from datetime import datetime, timedelta
+from datetime import datetime, timedelta
+from collections import Counter
+import csv
+
 
 class AdvancedFilterDialog(QDialog):
     def __init__(self, parent=None):
@@ -21,17 +21,24 @@ class AdvancedFilterDialog(QDialog):
             QLabel {
                 font-size: 14px;
             }
-            QComboBox, QPushButton, QTableWidget {
+            QComboBox, QTableWidget {
                 font-size: 14px;
             }
             QPushButton {
-                background-color: #4CAF50;
-                color: white;
-                padding: 10px;
-                border-radius: 5px;
+                background-color: #E0E0E0;
+                color: #000000;
+                padding: 5px 10px;
+                border: 1px solid #A0A0A0;
+                border-radius: 4px;
+                font-size: 12px;
+                font-weight: bold;
+                min-width: 80px;
             }
             QPushButton:hover {
-                background-color: #45a049;
+                background-color: #D0D0D0;
+            }
+            QPushButton:pressed {
+                background-color: #C0C0C0;
             }
             QTableWidget {
                 background-color: white;
@@ -43,10 +50,12 @@ class AdvancedFilterDialog(QDialog):
                 padding: 5px;
             }
             QTableWidget::item:selected {
-                background-color: #4CAF50;
+                background-color: #B0C4DE;
                 color: white;
             }
         """)
+
+        self.parent_widget = parent
 
         layout = QVBoxLayout()
 
@@ -87,9 +96,16 @@ class AdvancedFilterDialog(QDialog):
 
         layout.addLayout(block_layout)
 
+        button_layout = QHBoxLayout()
         filter_button = QPushButton("Aplicar Filtro")
         filter_button.clicked.connect(self.apply_filter)
-        layout.addWidget(filter_button)
+        button_layout.addWidget(filter_button)
+
+        export_button = QPushButton("Exportar CSV")
+        export_button.clicked.connect(self.export_csv)
+        button_layout.addWidget(export_button)
+
+        layout.addLayout(button_layout)
 
         search_results_layout = QVBoxLayout()
         search_results_layout.addWidget(QLabel("Buscar en Resultados:"))
@@ -147,7 +163,7 @@ class AdvancedFilterDialog(QDialog):
 
             selected_block = self.block_selector.currentText()
 
-            results, trends = self.parent().get_filtered_incidents(start_dt, end_dt, selected_block)
+            results, trends = self.parent_widget.get_filtered_incidents(start_dt, end_dt, selected_block)
 
             self.results_table.setRowCount(len(results))
             for row, (block, data) in enumerate(results.items()):
@@ -194,6 +210,29 @@ class AdvancedFilterDialog(QDialog):
                     break
             self.incidents_table.setRowHidden(row, not match)
 
+    def export_csv(self):
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getSaveFileName(self, "Guardar Informe CSV", "", "CSV Files (*.csv);;All Files (*)", options=options)
+        if not file_name:
+            return
+
+        with open(file_name, 'w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow(["Bloque", "Número de Incidencias", "Incidencia más frecuente"])
+            for row in range(self.results_table.rowCount()):
+                bloque = self.results_table.item(row, 0).text() if self.results_table.item(row, 0) else ''
+                num_incidencias = self.results_table.item(row, 1).text() if self.results_table.item(row, 1) else ''
+                incidencia_frecuente = self.results_table.item(row, 2).text() if self.results_table.item(row, 2) else ''
+                writer.writerow([bloque, num_incidencias, incidencia_frecuente])
+
+            writer.writerow([])
+            writer.writerow(["Incidencia", "Número de Incidencias"])
+            for row in range(self.incidents_table.rowCount()):
+                incidencia = self.incidents_table.item(row, 0).text() if self.incidents_table.item(row, 0) else ''
+                num_incidencias = self.incidents_table.item(row, 1).text() if self.incidents_table.item(row, 1) else ''
+                writer.writerow([incidencia, num_incidencias])
+
+        QMessageBox.information(self, "Exportar Informe", "Informe exportado con éxito en formato CSV.")
 class TopIncidentsDialog(QDialog):
     def __init__(self, parent=None, incident_details=None):
         super().__init__(parent)
@@ -257,70 +296,3 @@ class TopIncidentsDialog(QDialog):
                 self.incidents_table.setItem(row, 1, QTableWidgetItem(incident))
                 self.incidents_table.setItem(row, 2, QTableWidgetItem(str(count)))
                 row += 1
-
-class GraphDialog(QDialog):
-    def __init__(self, parent=None, data=None):
-        super().__init__(parent)
-        self.setWindowTitle("Gráfico de Incidencias")
-        self.setGeometry(300, 300, 800, 600)
-        self.setStyleSheet("""
-            QDialog {
-                background-color: #f0f0f0;
-            }
-            QPushButton {
-                background-color: #4CAF50;
-                color: white;
-                padding: 10px;
-                border-radius: 5px;
-            }
-            QPushButton:hover {
-                background-color: #45a049;
-            }
-        """)
-
-        self.data = data
-
-        layout = QVBoxLayout()
-
-        self.figure = Figure()
-        self.canvas = FigureCanvas(self.figure)
-        self.toolbar = NavigationToolbar(self.canvas, self)
-        layout.addWidget(self.toolbar)
-        layout.addWidget(self.canvas)
-
-        self.fullscreen_button = QPushButton("Pantalla Completa")
-        self.fullscreen_button.clicked.connect(self.toggle_fullscreen)
-        layout.addWidget(self.fullscreen_button)
-
-        self.setLayout(layout)
-        self.generate_charts()
-
-    def generate_charts(self):
-        self.figure.clear()
-        ax = self.figure.add_subplot(111)
-
-        all_incidents = []
-        for data in self.data.values():
-            all_incidents.extend(data['incidences'])
-
-        counter = Counter(all_incidents)
-
-        if counter:
-            incidents, counts = zip(*counter.items())
-            ax.bar(incidents, counts)
-            ax.set_xlabel('Incidencias')
-            ax.set_ylabel('Número de Incidencias')
-            ax.set_title('Distribución de Incidencias')
-            ax.tick_params(axis='x', rotation=45)
-        else:
-            ax.text(0.5, 0.5, 'No data available', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
-
-        self.canvas.draw()
-
-    def toggle_fullscreen(self):
-        if self.isFullScreen():
-            self.showNormal()
-            self.fullscreen_button.setText("Pantalla Completa")
-        else:
-            self.showFullScreen()
-            self.fullscreen_button.setText("Salir de Pantalla Completa")
