@@ -1,17 +1,4 @@
 {
-    "user": "pideu5",
-    "incidences": [
-        {
-            "text": "SPL: Fallo dispensaci\u00f3n glue a las 12:30:52 del 2024-05-31",
-            "status": "Pendiente"
-        },
-        {
-            "text": "SPL: Soldadura defectuosa a las 12:30:54 del 2024-05-31",
-            "status": "Pendiente"
-        },
-        {
-            "text": "SPL: Soldadura defectuosa a las 12:30:55 del 2024-05-31",
-            "status": "Pendiente"
-        }
-    ]
+    "user": "pideu4",
+    "incidences": []
 }
