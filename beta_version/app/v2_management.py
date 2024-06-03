@@ -133,14 +133,6 @@ class TicketManagement(QMainWindow):
         self.chart_display_area.setWidget(self.scroll_content)
         self.charts_layout.addWidget(self.chart_display_area)
 
-        # Inicializar los gráficos
-        self.daily_chart = TurnChart(self)
-        self.daily_chart_canvas = FigureCanvas(self.daily_chart.figure)
-        self.shift_chart = TurnChart(self)
-        self.shift_chart_canvas = FigureCanvas(self.shift_chart.figure)
-        self.general_chart = TurnChart(self)
-        self.general_chart_canvas = FigureCanvas(self.general_chart.figure)
-
         right_widget = QWidget()
         right_layout = QVBoxLayout(right_widget)
         self.splitter.addWidget(right_widget)
@@ -323,7 +315,6 @@ class TicketManagement(QMainWindow):
 
     def update_all(self):
         self.update_top_incidents()
-        self.update_change_history()
         self.update_global_incidence_list()
         self.update_tabs_incidences()
         self.update_mtbf_display()
@@ -342,26 +333,35 @@ class TicketManagement(QMainWindow):
         self.update_general_chart()
     
     def update_daily_chart(self):
+        self.clear_chart_display_area()
         today = datetime.today().date()
         incidents_daily, _ = self.get_filtered_incidents_by_date(today)
+        self.daily_chart = TurnChart(self)
         self.daily_chart.plot_daily_chart(incidents_daily, "Incidencias Diarias")
-        self.daily_chart_canvas.draw()
-        
+        self.daily_chart_canvas = FigureCanvas(self.daily_chart.figure)
+        self.scroll_layout.addWidget(self.daily_chart_canvas)
+            
     def update_shift_chart(self):
+        self.clear_chart_display_area()
         today = datetime.today().date()
         shift_start = time(6, 0)
         shift_end = time(18, 0)
         incidents_shift, _ = self.get_filtered_incidents_by_shift(today, shift_start, shift_end)
+        self.shift_chart = TurnChart(self)
         self.shift_chart.plot_shift_chart(incidents_shift, "Incidencias por Turno")
-        self.shift_chart_canvas.draw()
+        self.shift_chart_canvas = FigureCanvas(self.shift_chart.figure)
+        self.scroll_layout.addWidget(self.shift_chart_canvas)
 
     def update_general_chart(self):
+        self.clear_chart_display_area()
         start_dt = datetime.combine(datetime.today(), time.min)
         end_dt = datetime.combine(datetime.today(), time.max)
         incidents_general, _ = self.get_general_filtered_incidents(start_dt, end_dt)
+        self.general_chart = TurnChart(self)
         self.general_chart.plot_general_chart(incidents_general, "Incidencias Generales")
-        self.general_chart_canvas.draw()
-        
+        self.general_chart_canvas = FigureCanvas(self.general_chart.figure)
+        self.scroll_layout.addWidget(self.general_chart_canvas)
+
     def clear_chart_display_area(self):
         for i in reversed(range(self.scroll_layout.count())):
             widget = self.scroll_layout.itemAt(i).widget()
