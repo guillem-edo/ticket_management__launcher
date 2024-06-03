@@ -3,7 +3,8 @@ import json
 import csv
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtWidgets import QScrollArea, QVBoxLayout, QWidget, QSpacerItem, QSizePolicy
+from PyQt5.QtWidgets import QScrollArea, QVBoxLayout, QWidget, QHBoxLayout, QSpacerItem, QSizePolicy
+from functools import partial
 
 from datetime import datetime, timedelta, time
 from collections import Counter, defaultdict
@@ -101,26 +102,44 @@ class TicketManagement(QMainWindow):
         # Nueva pestaña para gráficos con tres botones
         self.charts_tab = QWidget()
         self.tabWidget.addTab(self.charts_tab, "Gráficos")
-        self.charts_layout = QVBoxLayout(self.charts_tab)
+        self.charts_layout = QHBoxLayout(self.charts_tab)
 
-        self.daily_chart_button = QPushButton("Ver Gráfico Diario", self)
+        self.buttons_layout = QVBoxLayout()
+        self.charts_layout.addLayout(self.buttons_layout)
+
+        self.daily_chart_button = QPushButton("Diario", self)
+        self.daily_chart_button.setFixedSize(100, 30)
         self.daily_chart_button.setStyleSheet(self.get_button_style())
         self.daily_chart_button.clicked.connect(self.show_daily_chart)
-        self.charts_layout.addWidget(self.daily_chart_button)
+        self.buttons_layout.addWidget(self.daily_chart_button)
 
-        self.shift_chart_button = QPushButton("Ver Gráfico por Turno", self)
+        self.shift_chart_button = QPushButton("Por Turno", self)
+        self.shift_chart_button.setFixedSize(100, 30)
         self.shift_chart_button.setStyleSheet(self.get_button_style())
         self.shift_chart_button.clicked.connect(self.show_shift_chart)
-        self.charts_layout.addWidget(self.shift_chart_button)
+        self.buttons_layout.addWidget(self.shift_chart_button)
 
-        self.general_chart_button = QPushButton("Ver Gráfico General", self)
+        self.general_chart_button = QPushButton("General", self)
+        self.general_chart_button.setFixedSize(100, 30)
         self.general_chart_button.setStyleSheet(self.get_button_style())
         self.general_chart_button.clicked.connect(self.show_general_chart)
-        self.charts_layout.addWidget(self.general_chart_button)
+        self.buttons_layout.addWidget(self.general_chart_button)
 
-        self.chart_display_area = QWidget(self.charts_tab)
-        self.chart_display_layout = QVBoxLayout(self.chart_display_area)
+        self.chart_display_area = QScrollArea(self.charts_tab)
+        self.chart_display_area.setWidgetResizable(True)
+        self.scroll_content = QWidget()
+        self.scroll_layout = QVBoxLayout(self.scroll_content)
+        self.scroll_content.setLayout(self.scroll_layout)
+        self.chart_display_area.setWidget(self.scroll_content)
         self.charts_layout.addWidget(self.chart_display_area)
+
+        # Inicializar los gráficos
+        self.daily_chart = TurnChart(self)
+        self.daily_chart_canvas = FigureCanvas(self.daily_chart.figure)
+        self.shift_chart = TurnChart(self)
+        self.shift_chart_canvas = FigureCanvas(self.shift_chart.figure)
+        self.general_chart = TurnChart(self)
+        self.general_chart_canvas = FigureCanvas(self.general_chart.figure)
 
         right_widget = QWidget()
         right_layout = QVBoxLayout(right_widget)
@@ -193,10 +212,10 @@ class TicketManagement(QMainWindow):
         update_timer.start(60000)  # Actualiza cada 60 segundos
 
         self.apply_styles()
-        self.update_all()
         self.load_last_excel_file()
         self.load_incidence_state()
         self.reset_mtbf_timer()
+        self.update_all()
 
     def open_send_report_dialog(self):
         self.send_report_dialog = SendReportDialog(self.incidencias)
@@ -342,10 +361,10 @@ class TicketManagement(QMainWindow):
         incidents_general, _ = self.get_general_filtered_incidents(start_dt, end_dt)
         self.general_chart.plot_general_chart(incidents_general, "Incidencias Generales")
         self.general_chart_canvas.draw()
-    
+        
     def clear_chart_display_area(self):
-        for i in reversed(range(self.chart_display_layout.count())):
-            widget = self.chart_display_layout.itemAt(i).widget()
+        for i in reversed(range(self.scroll_layout.count())):
+            widget = self.scroll_layout.itemAt(i).widget()
             if widget is not None:
                 widget.deleteLater()
 
@@ -767,9 +786,10 @@ class TicketManagement(QMainWindow):
         self.clear_chart_display_area()
         today = datetime.today().date()
         incidents_daily, _ = self.get_filtered_incidents_by_date(today)
+        self.daily_chart = TurnChart(self)
         self.daily_chart.plot_daily_chart(incidents_daily, "Incidencias Diarias")
         self.daily_chart_canvas = FigureCanvas(self.daily_chart.figure)
-        self.chart_display_layout.addWidget(self.daily_chart_canvas)
+        self.scroll_layout.addWidget(self.daily_chart_canvas)
 
     def show_shift_chart(self):
         self.clear_chart_display_area()
@@ -777,18 +797,20 @@ class TicketManagement(QMainWindow):
         shift_start = time(6, 0)
         shift_end = time(18, 0)
         incidents_shift, _ = self.get_filtered_incidents_by_shift(today, shift_start, shift_end)
+        self.shift_chart = TurnChart(self)
         self.shift_chart.plot_shift_chart(incidents_shift, "Incidencias por Turno")
         self.shift_chart_canvas = FigureCanvas(self.shift_chart.figure)
-        self.chart_display_layout.addWidget(self.shift_chart_canvas)
+        self.scroll_layout.addWidget(self.shift_chart_canvas)
 
     def show_general_chart(self):
         self.clear_chart_display_area()
         start_dt = datetime.combine(datetime.today(), time.min)
         end_dt = datetime.combine(datetime.today(), time.max)
         incidents_general, _ = self.get_general_filtered_incidents(start_dt, end_dt)
+        self.general_chart = TurnChart(self)
         self.general_chart.plot_general_chart(incidents_general, "Incidencias Generales")
         self.general_chart_canvas = FigureCanvas(self.general_chart.figure)
-        self.chart_display_layout.addWidget(self.general_chart_canvas)
+        self.scroll_layout.addWidget(self.general_chart_canvas)
 
     def apply_styles(self):
         title_font = QFont("Arial", 14, QFont.Bold)
@@ -983,30 +1005,30 @@ class TicketManagement(QMainWindow):
     def get_button_style(self):
         return """
             QPushButton {
-                background-color: #5C85FF;
+                background-color: #007BFF;
                 color: white;
-                padding: 10px 20px;
-                font-size: 16px;
+                padding: 5px 10px;
+                font-size: 12px;
                 border: none;
                 border-radius: 5px;
             }
             QPushButton:hover {
-                background-color: #466BB7;
+                background-color: #0056b3;
             }
         """
 
     def get_refresh_button_style(self):
         return """
             QPushButton {
-                background-color: #FF8C42;
+                background-color: #28a745;
                 color: white;
-                padding: 10px 20px;
-                font-size: 16px;
+                padding: 5px 10px;
+                font-size: 12px;
                 border: none;
                 border-radius: 5px;
             }
             QPushButton:hover {
-                background-color: #CC7033;
+                background-color: #218838;
             }
         """
 
