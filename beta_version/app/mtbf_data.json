@@ -15,13 +15,13 @@
         "incident_count": 0
     },
     "WV50 FILTER": {
-        "last_time": "2024-05-31 12:48:55",
+        "last_time": null,
         "total_time": 0,
         "incident_count": 0
     },
     "SPL": {
-        "last_time": null,
-        "total_time": 0,
-        "incident_count": 0
+        "last_time": "2024-06-03 11:52:48",
+        "total_time": 0.20495621666666666,
+        "incident_count": 2
     }
 }

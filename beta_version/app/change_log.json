@@ -20,3 +20,29 @@
 {"user": "pideu5", "action": "Confirmar Incidencia", "date": "2024-05-31 12:30:52", "details": "SPL: Fallo dispensaci\u00f3n glue"}
 {"user": "pideu5", "action": "Confirmar Incidencia", "date": "2024-05-31 12:30:54", "details": "SPL: Soldadura defectuosa"}
 {"user": "pideu5", "action": "Confirmar Incidencia", "date": "2024-05-31 12:30:55", "details": "SPL: Soldadura defectuosa"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-06-03 10:34:45", "details": "WC48 P5F: AOI (fallo etiqueta)"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-06-03 10:34:52", "details": "WC48 P5F: AOI (fallo etiqueta)"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-06-03 10:36:16", "details": "WC48 P5F: AOI (fallo etiqueta)"}
+{"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-03 10:41:37", "details": "WC47 NACP: Secuencia atornillador"}
+{"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-03 10:41:51", "details": "WC47 NACP: Fallo c\u00e1mara visi\u00f3n"}
+{"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-03 10:42:29", "details": "WC47 NACP: Fallo c\u00e1mara visi\u00f3n"}
+{"user": "pideu4", "action": "Confirmar Incidencia", "date": "2024-06-03 10:47:33", "details": "WV50 FILTER: NOK Soldad. Pl\u00e1stico+Metal"}
+{"user": "pideu3", "action": "Confirmar Incidencia", "date": "2024-06-03 10:56:52", "details": "WC49 P5H: La c\u00e1mara no detecta Top Cover"}
+{"user": "pideu3", "action": "Confirmar Incidencia", "date": "2024-06-03 10:57:55", "details": "WC49 P5H: La c\u00e1mara no detecta Busbar"}
+{"user": "pideu4", "action": "Confirmar Incidencia", "date": "2024-06-03 11:03:45", "details": "WV50 FILTER: Pieza enganchada en HV Test"}
+{"user": "pideu4", "action": "Confirmar Incidencia", "date": "2024-06-03 11:11:55", "details": "WV50 FILTER: Core enganchado"}
+{"user": "pideu4", "action": "Confirmar Incidencia", "date": "2024-06-03 11:13:19", "details": "WV50 FILTER: NOK Soldadura Pl\u00e1stico"}
+{"user": "pideu4", "action": "Confirmar Incidencia", "date": "2024-06-03 11:13:27", "details": "WV50 FILTER: Fallo atornillador"}
+{"user": "pideu4", "action": "Confirmar Incidencia", "date": "2024-06-03 11:13:29", "details": "WV50 FILTER: Fallo atornillador"}
+{"user": "pideu4", "action": "Confirmar Incidencia", "date": "2024-06-03 11:16:58", "details": "WV50 FILTER: Pieza enganchada en HV Test"}
+{"user": "pideu4", "action": "Confirmar Incidencia", "date": "2024-06-03 11:18:49", "details": "WV50 FILTER: NOK Soldadura Pl\u00e1stico"}
+{"user": "pideu4", "action": "Confirmar Incidencia", "date": "2024-06-03 11:23:47", "details": "WV50 FILTER: NOK Soldadura metal"}
+{"user": "pideu4", "action": "Confirmar Incidencia", "date": "2024-06-03 11:24:10", "details": "WV50 FILTER: Fallo c\u00e1mara ferrite"}
+{"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-03 11:28:50", "details": "WC47 NACP: No atornilla tapa"}
+{"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-03 11:29:36", "details": "WC47 NACP: No coge placa"}
+{"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-03 11:29:46", "details": "WC47 NACP: No atornilla clips"}
+{"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-03 11:31:30", "details": "WC47 NACP: No pone tornillo"}
+{"user": "pideu3", "action": "Confirmar Incidencia", "date": "2024-06-03 11:39:26", "details": "WC49 P5H: Tornillo atascado"}
+{"user": "pideu5", "action": "Confirmar Incidencia", "date": "2024-06-03 11:52:36", "details": "SPL: Marco atascado en parte inferior"}
+{"user": "pideu5", "action": "Confirmar Incidencia", "date": "2024-06-03 11:52:41", "details": "SPL: Error en sensor de salida"}
+{"user": "pideu5", "action": "Confirmar Incidencia", "date": "2024-06-03 11:52:48", "details": "SPL: Sensor de PCB detecta que hay placa cuando no la hay"}

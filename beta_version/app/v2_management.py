@@ -2,6 +2,9 @@ import os
 import json
 import csv
 
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from PyQt5.QtWidgets import QScrollArea, QVBoxLayout, QWidget, QSpacerItem, QSizePolicy
+
 from datetime import datetime, timedelta, time
 from collections import Counter, defaultdict
 from openpyxl import Workbook, load_workbook
@@ -87,15 +90,37 @@ class TicketManagement(QMainWindow):
         self.top_incidents_list = QListWidget(self)
         self.relevant_layout.addWidget(self.top_incidents_list)
 
-        self.view_details_button = QPushButton("Ver Detalles")
-        self.view_details_button.setStyleSheet(self.get_button_style())
-        self.view_details_button.clicked.connect(self.open_top_incidents_dialog)
-        self.relevant_layout.addWidget(self.view_details_button)
+        self.change_history_label = QLabel("Historial de Cambios")
+        self.change_history_label.setFont(QFont("Arial", 14, QFont.Bold))
+        self.change_history_label.setStyleSheet("color: #333333; margin: 10px 0;")
+        self.relevant_layout.addWidget(self.change_history_label)
 
-        self.change_history_button = QPushButton("Historial de Cambios")
-        self.change_history_button.setStyleSheet(self.get_button_style())
-        self.change_history_button.clicked.connect(self.open_change_history_dialog)
-        self.relevant_layout.addWidget(self.change_history_button)
+        self.change_history_list = QListWidget(self)
+        self.relevant_layout.addWidget(self.change_history_list)
+
+        # Nueva pestaña para gráficos con tres botones
+        self.charts_tab = QWidget()
+        self.tabWidget.addTab(self.charts_tab, "Gráficos")
+        self.charts_layout = QVBoxLayout(self.charts_tab)
+
+        self.daily_chart_button = QPushButton("Ver Gráfico Diario", self)
+        self.daily_chart_button.setStyleSheet(self.get_button_style())
+        self.daily_chart_button.clicked.connect(self.show_daily_chart)
+        self.charts_layout.addWidget(self.daily_chart_button)
+
+        self.shift_chart_button = QPushButton("Ver Gráfico por Turno", self)
+        self.shift_chart_button.setStyleSheet(self.get_button_style())
+        self.shift_chart_button.clicked.connect(self.show_shift_chart)
+        self.charts_layout.addWidget(self.shift_chart_button)
+
+        self.general_chart_button = QPushButton("Ver Gráfico General", self)
+        self.general_chart_button.setStyleSheet(self.get_button_style())
+        self.general_chart_button.clicked.connect(self.show_general_chart)
+        self.charts_layout.addWidget(self.general_chart_button)
+
+        self.chart_display_area = QWidget(self.charts_tab)
+        self.chart_display_layout = QVBoxLayout(self.chart_display_area)
+        self.charts_layout.addWidget(self.chart_display_area)
 
         right_widget = QWidget()
         right_layout = QVBoxLayout(right_widget)
@@ -118,25 +143,8 @@ class TicketManagement(QMainWindow):
 
         self.refresh_button = QPushButton("Refrescar", self)
         self.refresh_button.setStyleSheet(self.get_refresh_button_style())
-        self.refresh_button.clicked.connect(self.update_all)
+        self.refresh_button.clicked.connect(self.update_data)
         right_layout.addWidget(self.refresh_button)
-
-        self.turn_chart = TurnChart()  # Usamos la nueva clase para el gráfico por turnos
-
-        self.daily_chart_button = QPushButton("Ver Gráfico Diario", self)
-        self.daily_chart_button.setStyleSheet(self.get_button_style())
-        self.daily_chart_button.clicked.connect(self.show_daily_chart)
-        right_layout.addWidget(self.daily_chart_button)
-
-        self.shift_chart_button = QPushButton("Ver Gráfico por Turno", self)
-        self.shift_chart_button.setStyleSheet(self.get_button_style())
-        self.shift_chart_button.clicked.connect(self.show_shift_chart)
-        right_layout.addWidget(self.shift_chart_button)
-
-        self.general_chart_button = QPushButton("Ver Gráfico General", self)
-        self.general_chart_button.setStyleSheet(self.get_button_style())
-        self.general_chart_button.clicked.connect(self.show_general_chart)
-        right_layout.addWidget(self.general_chart_button)
 
         for block in self.user.blocks:
             mtbf_layout = QHBoxLayout()
@@ -163,11 +171,6 @@ class TicketManagement(QMainWindow):
         filter_button.clicked.connect(self.open_advanced_filter_dialog)
         button_layout.addWidget(filter_button)
 
-        export_button = QPushButton("Exportar CSV", self)
-        export_button.setStyleSheet(self.get_button_style())
-        export_button.clicked.connect(self.export_csv)
-        button_layout.addWidget(export_button)
-
         right_layout.addLayout(button_layout)
 
         self.status_bar = QStatusBar(self)
@@ -184,9 +187,16 @@ class TicketManagement(QMainWindow):
         timer.timeout.connect(self.update_status_bar)
         timer.start(1000)
 
+        # Configura un temporizador para actualizar las incidencias y el historial de cambios periódicamente
+        update_timer = QTimer(self)
+        update_timer.timeout.connect(self.update_all)
+        update_timer.start(60000)  # Actualiza cada 60 segundos
+
         self.apply_styles()
-        self.update_top_incidents()
-        self.update_mtbf_display()  # Asegúrate de actualizar la visualización del MTBF al iniciar la aplicación
+        self.update_all()
+        self.load_last_excel_file()
+        self.load_incidence_state()
+        self.reset_mtbf_timer()
 
     def open_send_report_dialog(self):
         self.send_report_dialog = SendReportDialog(self.incidencias)
@@ -294,9 +304,50 @@ class TicketManagement(QMainWindow):
 
     def update_all(self):
         self.update_top_incidents()
+        self.update_change_history()
         self.update_global_incidence_list()
         self.update_tabs_incidences()
         self.update_mtbf_display()
+        self.update_charts()
+
+    def update_data(self):
+        self.update_top_incidents()
+        self.update_change_history()
+        self.update_global_incidence_list()
+        self.update_tabs_incidences()
+        self.update_mtbf_display()
+
+    def update_charts(self):
+        self.update_daily_chart()
+        self.update_shift_chart()
+        self.update_general_chart()
+    
+    def update_daily_chart(self):
+        today = datetime.today().date()
+        incidents_daily, _ = self.get_filtered_incidents_by_date(today)
+        self.daily_chart.plot_daily_chart(incidents_daily, "Incidencias Diarias")
+        self.daily_chart_canvas.draw()
+        
+    def update_shift_chart(self):
+        today = datetime.today().date()
+        shift_start = time(6, 0)
+        shift_end = time(18, 0)
+        incidents_shift, _ = self.get_filtered_incidents_by_shift(today, shift_start, shift_end)
+        self.shift_chart.plot_shift_chart(incidents_shift, "Incidencias por Turno")
+        self.shift_chart_canvas.draw()
+
+    def update_general_chart(self):
+        start_dt = datetime.combine(datetime.today(), time.min)
+        end_dt = datetime.combine(datetime.today(), time.max)
+        incidents_general, _ = self.get_general_filtered_incidents(start_dt, end_dt)
+        self.general_chart.plot_general_chart(incidents_general, "Incidencias Generales")
+        self.general_chart_canvas.draw()
+    
+    def clear_chart_display_area(self):
+        for i in reversed(range(self.chart_display_layout.count())):
+            widget = self.chart_display_layout.itemAt(i).widget()
+            if widget is not None:
+                widget.deleteLater()
 
     def update_tabs_incidences(self):
         for name in self.blocks:
@@ -477,8 +528,12 @@ class TicketManagement(QMainWindow):
 
                 self.update_mtbf(block_name, timestamp)
 
+                # Registrar el cambio
+                self.log_change("Confirmar Incidencia", f"{block_name}: {incidence_text}")
+
                 QMessageBox.information(self, "Confirmación", "Incidencia confirmada.")
 
+                # Código adicional para actualizar la lista de incidencias global
                 fixing_label = QLabel("Fixing")
                 fixing_label.setStyleSheet("color: red; font-weight: bold; font-size: 14px;")
                 correct_button = QPushButton("Correct")
@@ -671,32 +726,69 @@ class TicketManagement(QMainWindow):
                     self.excel_file = file_path
                     self.excel_path_display.setText(file_path)
                     self.update_top_incidents()
+    
+    def calculate_top_incidents(self):
+        # Calcula las incidencias más relevantes a partir de los datos disponibles para el bloque del usuario
+        incident_counter = Counter()
+        user_block = self.user.blocks[0]  # Asumiendo que el usuario tiene un solo bloque
+        for incidence in self.incidencias[user_block]:
+            incident_counter[incidence] += 1
+        return incident_counter.most_common(10)  # Devuelve las 10 incidencias más comunes
+
 
     def update_top_incidents(self):
         self.top_incidents_list.clear()
-        for block, details in self.incident_details.items():
-            for incident, count in details.items():
-                item = QListWidgetItem(f"{block}: {incident} - {count} veces")
-                self.top_incidents_list.addItem(item)
+        top_incidents = self.calculate_top_incidents()
+        for incident, count in top_incidents:
+            item = QListWidgetItem(f"{incident} - {count} veces")
+            self.top_incidents_list.addItem(item)
+
+    def update_change_history(self):
+        self.change_history_list.clear()
+        changes = []
+        if os.path.exists(self.change_log_file):
+            with open(self.change_log_file, "r") as file:
+                for line in file:
+                    try:
+                        change = json.loads(line)
+                        changes.append(change)
+                    except json.JSONDecodeError:
+                        continue
+
+        # Ordenar cambios por fecha en orden cronológico inverso
+        changes.sort(key=lambda x: x['date'], reverse=True)
+
+        for change in changes:
+            item = QListWidgetItem(f"{change['date']} - {change['user']}: {change['action']} - {change['details']}")
+            self.change_history_list.addItem(item)
 
 
     def show_daily_chart(self):
+        self.clear_chart_display_area()
         today = datetime.today().date()
         incidents_daily, _ = self.get_filtered_incidents_by_date(today)
-        self.turn_chart.plot_daily_chart(incidents_daily, "Incidencias Diarias")
+        self.daily_chart.plot_daily_chart(incidents_daily, "Incidencias Diarias")
+        self.daily_chart_canvas = FigureCanvas(self.daily_chart.figure)
+        self.chart_display_layout.addWidget(self.daily_chart_canvas)
 
     def show_shift_chart(self):
+        self.clear_chart_display_area()
         today = datetime.today().date()
         shift_start = time(6, 0)
         shift_end = time(18, 0)
         incidents_shift, _ = self.get_filtered_incidents_by_shift(today, shift_start, shift_end)
-        self.turn_chart.plot_shift_chart(incidents_shift, "Incidencias por Turno")
+        self.shift_chart.plot_shift_chart(incidents_shift, "Incidencias por Turno")
+        self.shift_chart_canvas = FigureCanvas(self.shift_chart.figure)
+        self.chart_display_layout.addWidget(self.shift_chart_canvas)
 
     def show_general_chart(self):
+        self.clear_chart_display_area()
         start_dt = datetime.combine(datetime.today(), time.min)
         end_dt = datetime.combine(datetime.today(), time.max)
         incidents_general, _ = self.get_general_filtered_incidents(start_dt, end_dt)
-        self.turn_chart.plot_general_chart(incidents_general, "Incidencias Generales")
+        self.general_chart.plot_general_chart(incidents_general, "Incidencias Generales")
+        self.general_chart_canvas = FigureCanvas(self.general_chart.figure)
+        self.chart_display_layout.addWidget(self.general_chart_canvas)
 
     def apply_styles(self):
         title_font = QFont("Arial", 14, QFont.Bold)
