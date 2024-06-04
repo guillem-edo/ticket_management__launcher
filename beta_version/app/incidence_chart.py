@@ -126,7 +126,7 @@ class TurnChart(QWidget):
         ax.set_title(title, fontsize=14, fontweight='bold')
         ax.set_xlabel('Cantidad', fontsize=12)
         ax.set_ylabel('Incidencia', fontsize=12)
-        ax.legend(title="Bloques")
+        ax.legend(title="Linias")
 
         plt.xticks(rotation=45, ha='right')
         try:

@@ -147,7 +147,7 @@ class TicketManagement(QMainWindow):
         self.excel_path_display.setStyleSheet("background-color: #ffffff; border: 1px solid #cccccc; padding: 5px;")
         right_layout.addWidget(self.excel_path_display)
 
-        self.view_excel_button = QPushButton("Ver Excel", self)
+        self.view_excel_button = QPushButton("Ver Archivo", self)
         self.view_excel_button.setStyleSheet(self.get_button_style())
         self.view_excel_button.clicked.connect(self.open_excel_window)
         right_layout.addWidget(self.view_excel_button)
@@ -165,7 +165,7 @@ class TicketManagement(QMainWindow):
             info_button = QPushButton()
             info_button.setIcon(QIcon(os.path.join(os.path.dirname(__file__), "question_icon.png")))  # Asegúrate de que esta ruta sea correcta
             info_button.setToolTip("Haz clic para obtener más información sobre MTBF.")
-            info_button.setStyleSheet("background-color: transparent; border: none; padding: 0px;")
+            info_button.setStyleSheet("background-color: transparent; border: white; padding: 0px;")
             info_button.setFixedSize(24, 24)
             info_button.clicked.connect(self.show_mtbf_info)
             mtbf_layout.addWidget(info_button)
@@ -201,7 +201,7 @@ class TicketManagement(QMainWindow):
         # Configura un temporizador para actualizar las incidencias y el historial de cambios periódicamente
         update_timer = QTimer(self)
         update_timer.timeout.connect(self.update_all)
-        update_timer.start(60000)  # Actualiza cada 60 segundos
+        update_timer.start(10000)  # Actualiza cada 10 segundos
 
         self.apply_styles()
         self.load_last_excel_file()
