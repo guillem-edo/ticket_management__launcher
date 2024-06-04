@@ -5,12 +5,12 @@
         "incident_count": 0
     },
     "WC48 P5F": {
-        "last_time": "2024-06-03 12:57:14",
-        "total_time": 5.901457866666666,
-        "incident_count": 5
+        "last_time": null,
+        "total_time": 0,
+        "incident_count": 0
     },
     "WC49 P5H": {
-        "last_time": null,
+        "last_time": "2024-06-04 09:16:44",
         "total_time": 0,
         "incident_count": 0
     },

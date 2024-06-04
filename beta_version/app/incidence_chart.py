@@ -13,7 +13,7 @@ class TurnChart(QWidget):
 
     def initUI(self):
         self.setLayout(QVBoxLayout())
-        self.chart_label = QLabel("Gráfico de Incidencias", self)
+        self.chart_label = QLabel("", self)
         self.chart_label.setFont(QFont("Arial", 14, QFont.Bold))
         self.layout().addWidget(self.chart_label)
 
