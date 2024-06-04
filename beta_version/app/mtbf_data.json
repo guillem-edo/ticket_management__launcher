@@ -15,9 +15,9 @@
         "incident_count": 0
     },
     "WV50 FILTER": {
-        "last_time": null,
-        "total_time": 0,
-        "incident_count": 0
+        "last_time": "2024-06-04 10:51:54",
+        "total_time": 6.7504454166666665,
+        "incident_count": 8
     },
     "SPL": {
         "last_time": null,
