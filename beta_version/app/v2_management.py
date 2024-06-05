@@ -37,11 +37,15 @@ class TicketManagement(QMainWindow):
     def __init__(self, user):
         super().__init__()
         self.user = user
+                
+        # Inizializar la interfaz del usuario
+        self.initUI() 
+        
         self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidencias_config.json")
         self.mtbf_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mtbf_data.json")
         self.change_log_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "change_log.json")
         self.state_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidence_state.json")
-        
+
         # Cargar configuraciones y datos iniciales
         self.incidencias = AdminDialog.load_incidencias(self.config_file) or self.default_incidences()
         self.blocks = user.blocks if not user.is_admin else list(self.incidencias.keys())
@@ -53,10 +57,7 @@ class TicketManagement(QMainWindow):
         self.incident_details = {block: Counter() for block in self.incidencias.keys()}
         self.filtered_incidents_data = {}
         self.mtbf_data = {}  # Asegurar que se inicializa como un diccionario vacío antes de cargar
-
-        # Inicialización de la interfaz de usuario
-        self.initUI()  # Esta llamada debe ir antes de cualquier método que use elementos de la UI
-
+        self.mtbf_labels = {}
         # Carga de datos externos
         self.load_incident_details()
         self.load_mtbf_data()  # Asegúrate de que se carga correctamente antes de cualquier función que dependa de esto
