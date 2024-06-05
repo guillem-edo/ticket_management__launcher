@@ -1,4 +1,4 @@
-# Ticket Management System - Launcher v.6.0
+# Ticket Management System - Beta v.6.0
 
 ## Overview
 
@@ -125,6 +125,8 @@ Upon logging in, the main window presents a dashboard where you can manage incid
 - The application saves the current state of incidents and MTBF data when closed, ensuring no data is lost between sessions.
 
 ## Contributing
+
+**Updating and fixing some bugs and issues, because this is a beta version and we are working on.**
 
 Contributions are welcome! Please follow these steps:
 
