@@ -46,7 +46,7 @@ The Ticket Management System is a comprehensive tool designed to help manage and
 
 4. **Run the application**:
     ```bash
-    python main.py
+    python beta_version.py
     ```
 
 ## Usage
