@@ -37,10 +37,10 @@ class TicketManagement(QMainWindow):
     def __init__(self, user):
         super().__init__()
         self.user = user
-                
+
         # Inizializar la interfaz del usuario
         self.initUI() 
-        
+
         self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidencias_config.json")
         self.mtbf_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mtbf_data.json")
         self.change_log_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "change_log.json")
