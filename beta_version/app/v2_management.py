@@ -37,29 +37,36 @@ class TicketManagement(QMainWindow):
     def __init__(self, user):
         super().__init__()
         self.user = user
-        self.excel_file = None
         self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidencias_config.json")
         self.mtbf_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mtbf_data.json")
         self.change_log_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "change_log.json")
+        self.state_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidence_state.json")
+        
+        # Cargar configuraciones y datos iniciales
         self.incidencias = AdminDialog.load_incidencias(self.config_file) or self.default_incidences()
         self.blocks = user.blocks if not user.is_admin else list(self.incidencias.keys())
+        
+        # Inicializar los contadores y estructuras de datos
         self.last_incidence_labels = {}
         self.incidences_count = {block: 0 for block in self.incidencias.keys()}
         self.pending_incidents = []
         self.incident_details = {block: Counter() for block in self.incidencias.keys()}
-        self.load_incident_details()  # Cargar detalles de incidencias
         self.filtered_incidents_data = {}
-        self.mtbf_data = self.load_mtbf_data()
-        self.state_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidence_state.json")
-        self.mtbf_labels = {block: QLabel(f"MTBF {block}: N/A", self) for block in self.blocks}
-        self.initUI()
+        self.mtbf_data = {}  # Asegurar que se inicializa como un diccionario vacío antes de cargar
+
+        # Inicialización de la interfaz de usuario
+        self.initUI()  # Esta llamada debe ir antes de cualquier método que use elementos de la UI
+
+        # Carga de datos externos
+        self.load_incident_details()
+        self.load_mtbf_data()  # Asegúrate de que se carga correctamente antes de cualquier función que dependa de esto
         self.load_last_excel_file()
         self.load_incidence_state()
-        self.reset_mtbf_timer()
-        self.schedule_daily_reset()  # Programar el reseteo diario de las incidencias
-        self.load_mtbf_data()  
-        self.mtbf_data = {}
 
+        # Realizar acciones iniciales de actualización
+        self.reset_mtbf_timer()
+        self.schedule_daily_reset()
+        self.update_all()  # Esta debe ser una de las últimas cosas en ejecutarse
 
     def default_incidences(self):
         return {
@@ -1035,13 +1042,18 @@ class TicketManagement(QMainWindow):
             self.update_mtbf_display()
 
     def update_mtbf_display(self):
+        if self.mtbf_data is None:
+            self.mtbf_data = {}  # Asegurarse de que self.mtbf_data es un diccionario si era None.
+            print("MTBF data was None, initialized to empty dictionary.")
+
         for block, data in self.mtbf_data.items():
             if block in self.mtbf_labels:
                 if data["incident_count"] > 0:
                     mtbf = data["total_time"] / data["incident_count"]
                     self.mtbf_labels[block].setText(f"MTBF {block}: {mtbf:.2f} minutos")
                 else:
-                    self.mtbf_labels[block].setText(f"MTBF {block}: N/A")
+                    self.mtbf_labels[block].setText("MTBF {block}: N/A")
+
 
     def reset_mtbf_timer(self):
         self.reset_mtbf_data()
@@ -1074,8 +1086,12 @@ class TicketManagement(QMainWindow):
                             'last_time': None
                         }
         except FileNotFoundError:
+            print("MTBF data file not found. Initializing with empty data.")
             self.mtbf_data = {block: {'last_time': None, 'total_time': 0, 'incident_count': 0} for block in self.incidencias.keys()}
-    
+        except Exception as e:
+            print(f"Failed to load MTBF data: {e}")
+            self.mtbf_data = {}
+
     def save_mtbf_data(self):
         mtbf_data_to_save = {}
         for block, data in self.mtbf_data.items():
