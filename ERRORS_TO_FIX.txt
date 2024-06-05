@@ -7,9 +7,6 @@ El MTBF no se guarda una vez la app se cierra y se logea el mismo usuario, y me 
 que si se vuelve a logear se quede el ultimo registro del  MTBF guardado y para la siguiente
 incidencia que se confirme, que se aplique a esta.
 
-Las incidencias mas relevantes, no se actualizan correctamente
-debería mostrar las incidencias que mas se confirman en orden ascendente
-
 El admin, cuando hace cualquier cambio en la app no se queda de forma permanente
 en la app. Y me gustaria que cualquier cambio que haga el admin se quede reflejado
 permanentemente. Lo que pasa ahora esque hace el cambio, pero cuando se cierra la app

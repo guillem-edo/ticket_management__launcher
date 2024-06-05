@@ -3,25 +3,31 @@ import json
 import csv
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+mpl.rcParams['figure.max_open_warning'] = 50
+
 from PyQt5.QtWidgets import QScrollArea, QVBoxLayout, QWidget, QHBoxLayout, QSpacerItem, QSizePolicy
 from functools import partial
 
 from datetime import datetime, timedelta, time
 from collections import Counter, defaultdict
 from openpyxl import Workbook, load_workbook
+
 from PyQt5.QtWidgets import (
     QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QLineEdit, QFileDialog, QTableWidget, QTableWidgetItem, QMessageBox,
     QTabWidget, QLabel, QListWidget, QStatusBar, QSplitter, QAbstractItemView, QListWidgetItem, QInputDialog, QApplication, QDialog, QTextEdit
 )
-from PyQt5.QtCore import QTimer, Qt, QRect, pyqtSlot
+from PyQt5.QtCore import QTimer, Qt, QRect # pyqtSlot
 from PyQt5.QtGui import QFont, QIcon
 from functools import partial
 from .dialogs import AdvancedFilterDialog, TopIncidentsDialog
 from .incidence_chart import TurnChart
 from .admin_dialog import AdminDialog
 from .excel_window import ExcelWindow
-from .responsive_design import center_window, adjust_to_screen
-from .animations import fade_in
+# from .responsive_design import center_window, adjust_to_screen
+# from .animations import fade_in
 from .reports_export import ExportReportDialog
 from .change_history import ChangeHistoryDialog
 from .email_notifications import EmailNotifier
@@ -51,6 +57,8 @@ class TicketManagement(QMainWindow):
         self.load_incidence_state()
         self.reset_mtbf_timer()
         self.schedule_daily_reset()  # Programar el reseteo diario de las incidencias
+        self.load_mtbf_data()  
+        self.mtbf_data = {}
 
 
     def default_incidences(self):
@@ -130,6 +138,7 @@ class TicketManagement(QMainWindow):
 
             self.chart_display_area = QScrollArea(self.charts_tab)
             self.chart_display_area.setWidgetResizable(True)
+            self.chart_display_area.setLayout(QVBoxLayout())
             self.scroll_content = QWidget()
             self.scroll_layout = QVBoxLayout(self.scroll_content)
             self.scroll_content.setLayout(self.scroll_layout)
@@ -329,6 +338,33 @@ class TicketManagement(QMainWindow):
         self.update_global_incidence_list()
         self.update_tabs_incidences()
         self.update_mtbf_display()
+
+    def update_chart(self):
+        # Asegúrate de cerrar cualquier figura antigua que esté abierta
+        if hasattr(self, 'current_canvas') and self.current_canvas.figure:
+            plt.close(self.current_canvas.figure)  # Cerrar la figura para liberar memoria
+
+        # Crear un nuevo gráfico sin usar pyplot
+        fig = Figure()
+        ax = fig.add_subplot(111)
+        ax.plot([1, 2, 3], [1, 2, 3])  # Ejemplo de datos
+
+        # Crear el canvas con el nuevo gráfico
+        canvas = FigureCanvas(fig)
+        canvas.setParent(self.chart_display_area)
+
+        # Limpiar el layout antes de añadir el nuevo canvas
+        while self.chart_display_area.layout().count():
+            child = self.chart_display_area.layout().takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+        # Añadir el canvas al layout del widget
+        self.chart_display_area.layout().addWidget(canvas)
+        canvas.draw()
+
+        # Guardar la referencia al canvas para poder cerrarlo después
+        self.current_canvas = canvas
 
     def update_charts(self):
         self.update_daily_chart()
@@ -789,7 +825,7 @@ class TicketManagement(QMainWindow):
         self.save_incident_details()
         self.update_top_incidents()
         self.schedule_daily_reset()  # Programar el siguiente reseteo diario
-        
+
     def update_change_history(self):
         self.change_history_list.clear()
         changes = []
@@ -988,12 +1024,6 @@ class TicketManagement(QMainWindow):
         except FileNotFoundError:
             self.incident_details = {block: Counter() for block in self.incidencias.keys()}
 
-
-    def closeEvent(self, event):
-        self.save_incidence_state()
-        self.save_mtbf_data()
-        event.accept()
-
     def update_mtbf(self, block_name, timestamp):
         if block_name in self.mtbf_data:
             mtbf_info = self.mtbf_data[block_name]
@@ -1020,31 +1050,50 @@ class TicketManagement(QMainWindow):
         timer.start(24 * 60 * 60 * 1000)
 
     def reset_mtbf_data(self):
-        for block in self.mtbf_data.keys():
-            self.mtbf_data[block] = {"last_time": None, "total_time": 0, "incident_count": 0}
-        self.update_mtbf_display()
+        if self.mtbf_data is not None:
+            for block in self.mtbf_data.keys():
+                self.mtbf_data[block] = {'last_time': None, 'total_time': 0, 'incident_count': 0}
+        else:
+            print("MTBF data is not initialized.")
 
     def load_mtbf_data(self):
-        if os.path.exists(self.mtbf_file):
-            try:
-                with open(self.mtbf_file, "r") as file:
-                    data = json.load(file)
-                    for block, mtbf_info in data.items():
-                        if mtbf_info["last_time"] is not None:
-                            mtbf_info["last_time"] = datetime.strptime(mtbf_info["last_time"], "%Y-%m-%d %H:%M:%S")
-                    return data
-            except json.JSONDecodeError:
-                pass
-        return {block: {"last_time": None, "total_time": 0, "incident_count": 0} for block in self.incidencias.keys()}
-
+        try:
+            with open('mtbf_data.json', 'r') as f:
+                mtbf_data_loaded = json.load(f)
+                for block, data in mtbf_data_loaded.items():
+                    if data['last_time'] is not None:
+                        self.mtbf_data[block] = {
+                            'total_time': data['total_time'],
+                            'incident_count': data['incident_count'],
+                            'last_time': datetime.strptime(data['last_time'], '%Y-%m-%d %H:%M:%S')
+                        }
+                    else:
+                        self.mtbf_data[block] = {
+                            'total_time': data['total_time'],
+                            'incident_count': data['incident_count'],
+                            'last_time': None
+                        }
+        except FileNotFoundError:
+            self.mtbf_data = {block: {'last_time': None, 'total_time': 0, 'incident_count': 0} for block in self.incidencias.keys()}
+    
     def save_mtbf_data(self):
-        with open(self.mtbf_file, "w") as file:
-            data = {}
-            for block, mtbf_info in self.mtbf_data.items():
-                data[block] = mtbf_info.copy()
-                if mtbf_info["last_time"] is not None:
-                    data[block]["last_time"] = mtbf_info["last_time"].strftime("%Y-%m-%d %H:%M:%S")
-            json.dump(data, file, indent=4)
+        mtbf_data_to_save = {}
+        for block, data in self.mtbf_data.items():
+            if data['last_time'] is not None:
+                mtbf_data_to_save[block] = {
+                    'total_time': data['total_time'],
+                    'incident_count': data['incident_count'],
+                    'last_time': data['last_time'].strftime('%Y-%m-%d %H:%M:%S')
+                }
+            else:
+                mtbf_data_to_save[block] = {
+                    'total_time': data['total_time'],
+                    'incident_count': data['incident_count'],
+                    'last_time': None
+                }
+
+        with open('mtbf_data.json', 'w') as f:
+            json.dump(mtbf_data_to_save, f)
 
     def get_button_style(self):
         return """
@@ -1090,3 +1139,8 @@ class TicketManagement(QMainWindow):
                 background-color: #CC4A4A;
             }
         """
+
+    def closeEvent(self, event):
+        self.save_incidence_state()
+        self.save_mtbf_data()
+        event.accept()
