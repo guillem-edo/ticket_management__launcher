@@ -1,8 +1,30 @@
 import json
 import datetime
 from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextEdit, QPushButton
 
 class MTBFDisplay():
+
+    def show_mtbf_info(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Información sobre MTBF")
+        dialog.setFixedSize(400, 200)
+        layout = QVBoxLayout()
+        text_edit = QTextEdit()
+        text_edit.setReadOnly(True)
+        text_edit.setPlainText(
+            "MTBF (Mean Time Between Failures) es una métrica que indica el tiempo promedio entre fallas en un sistema. "
+            "Se calcula tomando el tiempo total de operación dividido por el número de fallas ocurridas durante ese tiempo. "
+            "En esta aplicación, el MTBF se muestra en minutos y se actualiza cada vez que se registra una incidencia. "
+            "El valor se reinicia cada 24 horas."
+        )
+        layout.addWidget(text_edit)
+        close_button = QPushButton("Cerrar")
+        close_button.setStyleSheet(self.get_button_style())
+        close_button.clicked.connect(dialog.accept)
+        layout.addWidget(close_button)
+        dialog.setLayout(layout)
+        dialog.exec_()
 
     def update_mtbf(self, block_name, timestamp):
         if block_name in self.mtbf_data:
@@ -83,3 +105,12 @@ class MTBFDisplay():
 
         with open('mtbf_data.json', 'w') as f:
             json.dump(mtbf_data_to_save, f)
+    
+    
+    def calculate_mtbf(self, block_name):
+        if block_name in self.mtbf_data:
+            mtbf_info = self.mtbf_data[block_name]
+            if mtbf_info["incident_count"] > 0:
+                mtbf = mtbf_info["total_time"] / mtbf_info["incident_count"]
+                return f"{mtbf:.2f} minutos"
+        return "N/A"

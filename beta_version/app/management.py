@@ -1,28 +1,4 @@
-import os
-import json
-import csv
-
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-mpl.rcParams['figure.max_open_warning'] = 50
-
-from PyQt5.QtWidgets import QScrollArea, QVBoxLayout, QWidget, QHBoxLayout, QSpacerItem, QSizePolicy
-from functools import partial
-
-from datetime import datetime, timedelta, time
-from collections import Counter, defaultdict
-from openpyxl import Workbook, load_workbook
-
-from PyQt5.QtWidgets import (
-    QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QLineEdit, QFileDialog, QTableWidget, QTableWidgetItem, QMessageBox,
-    QTabWidget, QLabel, QListWidget, QStatusBar, QSplitter, QAbstractItemView, QListWidgetItem, QInputDialog, QApplication, QDialog, QTextEdit
-)
-from PyQt5.QtCore import QTimer, Qt, QRect # pyqtSlot
-from PyQt5.QtGui import QFont, QIcon
-from functools import partial
-
+from .dependencies import *
 
 from .ui.dialogs import AdvancedFilterDialog, TopIncidentsDialog
 from .detail.incidence_chart import TurnChart
@@ -32,10 +8,8 @@ from .ui.excel_window import ExcelWindow
 # from .animations import fade_in
 from .services.reports_export import ExportReportDialog
 from .services.change_history import ChangeHistoryDialog
-from .components.email_notifications import EmailNotifier
 from .services.send_report import SendReportDialog
 from .services.mtbf_dialog import MTBFDisplay
-
 
 class TicketManagement(QMainWindow):
     def __init__(self, user):
@@ -246,31 +220,6 @@ class TicketManagement(QMainWindow):
         self.send_report_dialog = SendReportDialog(self.incidencias)
         self.send_report_dialog.exec_()
     
-    def export_csv(self):
-        options = QFileDialog.Options()
-        file_name, _ = QFileDialog.getSaveFileName(self, "Guardar Informe CSV", "", "CSV Files (*.csv);;All Files (*)", options=options)
-        if not file_name:
-            return
-
-        with open(file_name, 'w', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file)
-            writer.writerow(["Bloque", "Número de Incidencias", "Incidencia más frecuente"])
-            for row in range(self.results_table.rowCount()):
-                bloque = self.results_table.item(row, 0).text() if self.results_table.item(row, 0) else ''
-                num_incidencias = self.results_table.item(row, 1).text() if self.results_table.item(row, 1) else ''
-                incidencia_frecuente = self.results_table.item(row, 2).text() if self.results_table.item(row, 2) else ''
-                writer.writerow([bloque, num_incidencias, incidencia_frecuente])
-
-            writer.writerow([])
-            writer.writerow(["Incidencia", "Número de Incidencias"])
-            for row in range(self.incidents_table.rowCount()):
-                incidencia = self.incidents_table.item(row, 0).text() if self.incidents_table.item(row, 0) else ''
-                num_incidencias = self.incidents_table.item(row, 1).text() if self.incidents_table.item(row, 1) else ''
-                writer.writerow([incidencia, num_incidencias])
-
-        QMessageBox.information(self, "Exportar Informe", "Informe exportado con éxito en formato CSV.")
-
-
     def center_window_app(self):
         screen_rect_app = QApplication.desktop().availableGeometry()
         window_width = self.width()
@@ -282,27 +231,6 @@ class TicketManagement(QMainWindow):
     def open_report_export_dialog(self):
         self.report_dialog = ExportReportDialog(self.incidencias)
         self.report_dialog.exec_()
-
-    def show_mtbf_info(self):
-        dialog = QDialog(self)
-        dialog.setWindowTitle("Información sobre MTBF")
-        dialog.setFixedSize(400, 200)
-        layout = QVBoxLayout()
-        text_edit = QTextEdit()
-        text_edit.setReadOnly(True)
-        text_edit.setPlainText(
-            "MTBF (Mean Time Between Failures) es una métrica que indica el tiempo promedio entre fallas en un sistema. "
-            "Se calcula tomando el tiempo total de operación dividido por el número de fallas ocurridas durante ese tiempo. "
-            "En esta aplicación, el MTBF se muestra en minutos y se actualiza cada vez que se registra una incidencia. "
-            "El valor se reinicia cada 24 horas."
-        )
-        layout.addWidget(text_edit)
-        close_button = QPushButton("Cerrar")
-        close_button.setStyleSheet(self.get_button_style())
-        close_button.clicked.connect(dialog.accept)
-        layout.addWidget(close_button)
-        dialog.setLayout(layout)
-        dialog.exec_()
 
     def open_report_export_dialog(self):
         self.export_dialog = ExportReportDialog(self.incidencias)
@@ -346,19 +274,13 @@ class TicketManagement(QMainWindow):
             self.excel_window = ExcelWindow(self.excel_file)
             self.excel_window.show()
 
-    def update_all(self):
-        self.update_top_incidents()
-        self.update_global_incidence_list()
-        self.update_tabs_incidences()
-        self.update_mtbf_display()
-        self.update_charts()
-
-    def update_data(self):
+    def udpate_all(self):
         self.update_top_incidents()
         self.update_change_history()
         self.update_global_incidence_list()
         self.update_tabs_incidences()
-        self.update_mtbf_display()
+        #self.update_mtbf_display()
+        self.update_charts()
 
     def update_chart(self):
         # Asegúrate de cerrar cualquier figura antigua que esté abierta
@@ -721,95 +643,9 @@ class TicketManagement(QMainWindow):
             detail_message = f"{timestamp} - {block_name}: {incidence_text} ({date_str} {time_str})\nDetalles: {detail_text}"
             self.detailed_messages_list.addItem(detail_message)
 
-    def log_repair_time_to_excel(self, block_name, date_str, time_str, repair_time_str):
-        if self.excel_file and os.path.exists(self.excel_file):
-            try:
-                workbook = load_workbook(self.excel_file)
-                sheet = workbook.active
-
-                for row in sheet.iter_rows(min_row=2, values_only=False):
-                    if row[0].value == block_name and row[2].value == date_str and row[3].value == time_str:
-                        repair_time_cell = row[5]
-                        repair_time_cell.value = repair_time_str
-
-                        start_time = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M:%S")
-                        end_time = datetime.strptime(f"{date_str} {repair_time_str}", "%Y-%m-%d %H:%M:%S")
-                        time_diff = end_time - start_time
-                        time_diff_cell = row[6]
-                        time_diff_cell.value = str(time_diff)
-                        break
-
-                workbook.save(self.excel_file)
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"Error al registrar la hora de reparación en Excel: {e}")
-
-    def select_excel_file(self):
-        file_dialog = QFileDialog()
-        file_dialog.setNameFilter("Archivos Excel (*.xlsx)")
-        if file_dialog.exec_():
-            self.excel_file = file_dialog.selectedFiles()[0]
-            self.excel_path_display.setText(self.excel_file)
-            with open(self.config_file, "w") as config:
-                config.write(self.excel_file)
-            self.update_top_incidents()
-
-    def create_excel_if_not_exists(self, file_path):
-        if not os.path.exists(file_path):
-            workbook = Workbook()
-            sheet = workbook.active
-            headers = ["Bloque", "Incidencia", "Fecha", "Hora", "Turno", "Hora de Reparación", "Tiempo de Reparación", "MTBF"]
-            sheet.append(headers)
-            workbook.save(file_path)
-
-    def log_incidence_to_excel(self, block_name, date_str, time_str, incidence_text):
-        if self.excel_file and os.path.exists(self.excel_file):
-            try:
-                workbook = load_workbook(self.excel_file)
-                sheet = workbook.active
-
-                headers = [cell.value for cell in sheet[1]]
-                expected_headers = ["Bloque", "Incidencia", "Fecha", "Hora", "Turno", "Hora de Reparación", "Tiempo de Reparación", "MTBF"]
-                if headers != expected_headers:
-                    sheet.delete_rows(1, 1)
-                    sheet.insert_rows(1)
-                    for idx, header in enumerate(expected_headers):
-                        sheet.cell(row=1, column=idx + 1, value=header)
-
-                time_obj = datetime.strptime(time_str, "%H:%M:%S").time()
-                if time(6, 0) <= time_obj < time(18, 0):
-                    turno = "Mañana"
-                else:
-                    turno = "Noche"
-
-                mtbf_value = self.calculate_mtbf(block_name)
-
-                new_row = [block_name, incidence_text, date_str, time_str, turno, "", "", mtbf_value]
-                sheet.append(new_row)
-
-                workbook.save(self.excel_file)
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"Error al registrar la incidencia en Excel: {e}")
-
-    def calculate_mtbf(self, block_name):
-        if block_name in self.mtbf_data:
-            mtbf_info = self.mtbf_data[block_name]
-            if mtbf_info["incident_count"] > 0:
-                mtbf = mtbf_info["total_time"] / mtbf_info["incident_count"]
-                return f"{mtbf:.2f} minutos"
-        return "N/A"
-
     def update_status_bar(self):
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.statusBar().showMessage(f"Fecha y Hora Actual: {current_time}")
-
-    def load_last_excel_file(self):
-        if os.path.exists(self.config_file):
-            with open(self.config_file, "r") as config:
-                file_path = config.read().strip()
-                if os.path.exists(file_path):
-                    self.excel_file = file_path
-                    self.excel_path_display.setText(file_path)
-                    self.update_top_incidents()
     
     def calculate_top_incidents(self):
         # Calcula las incidencias más relevantes a partir de los datos disponibles para el bloque del usuario
@@ -818,7 +654,6 @@ class TicketManagement(QMainWindow):
         for incidence in self.incidencias[user_block]:
             incident_counter[incidence] += 1
         return incident_counter.most_common(10)  # Devuelve las 10 incidencias más comunes
-
 
     def update_top_incidents(self):
         # Suponiendo que 'self.incident_details' es un diccionario de bloques que contiene contadores de incidencias
@@ -865,7 +700,6 @@ class TicketManagement(QMainWindow):
         for change in changes:
             item = QListWidgetItem(f"{change['date']} - {change['user']}: {change['action']} - {change['details']}")
             self.change_history_list.addItem(item)
-
 
     def show_daily_chart(self):
         self.clear_chart_display_area()
