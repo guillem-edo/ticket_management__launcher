@@ -1,11 +1,4 @@
-import os
-import csv
-from openpyxl import load_workbook
-from PyQt5.QtWidgets import (
-    QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QFileDialog, QTableWidget, QTableWidgetItem, QMessageBox
-)
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont, QColor
+from dependencies import *
 
 class ExcelWindow(QMainWindow):
 

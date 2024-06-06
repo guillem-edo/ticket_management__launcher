@@ -17,14 +17,25 @@ class excelDialogs(QWidget):
         self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.txt")
 
     def select_excel_file(self):
-            file_dialog = QFileDialog()
-            file_dialog.setNameFilter("Archivos Excel (*.xlsx)")
-            if file_dialog.exec_():
-                self.excel_file = file_dialog.selectedFiles()[0]
-                self.excel_path_display.setText(self.excel_file)
-                with open(self.config_file, "w") as config:
-                    config.write(self.excel_file)
-                self.updated.emit()
+        file_dialog = QFileDialog()
+        file_dialog.setNameFilter("Archivos Excel (*.xlsx)")
+        if file_dialog.exec_():  # Si el usuario selecciona un archivo y confirma
+            selected_files = file_dialog.selectedFiles()
+            if selected_files:  # Verificación para asegurarse de que la lista no esté vacía
+                selected_file = selected_files[0]
+                if os.path.exists(selected_file):  # Verificar que el archivo realmente existe
+                    self.excel_file = selected_file
+                    self.excel_path_display.setText(self.excel_file)  # Actualiza la interfaz
+                    with open(self.config_file, "w") as config:
+                        config.write(self.excel_file)  # Guardar la configuración del archivo
+                    self.updated.emit()  # Emitir una señal para actualizar otras partes de la aplicación
+                else:
+                    QMessageBox.warning(self, "Error", "El archivo seleccionado no existe.")
+            else:
+                QMessageBox.warning(self, "Selección cancelada", "No se seleccionó ningún archivo.")
+        else:
+            QMessageBox.warning(self, "Selección cancelada", "No se seleccionó ningún archivo.")
+
 
     def create_excel_if_not_exists(self, file_path):
         if not os.path.exists(file_path):

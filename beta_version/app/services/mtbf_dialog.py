@@ -2,11 +2,12 @@ from dependencies import *
 
 class MTBFDisplay(QObject):
 
-    def __init__(self):
+    def __init__(self, parent = None):
+        self.parent = parent
         super().__init__()
 
-    def show_mtbf_info(self):
-        dialog = QDialog(self)
+    def show_mtbf_info(self, parent = None):
+        dialog = QDialog(parent)
         dialog.setWindowTitle("Información sobre MTBF")
         dialog.setFixedSize(400, 200)
         layout = QVBoxLayout()
@@ -20,7 +21,7 @@ class MTBFDisplay(QObject):
         )
         layout.addWidget(text_edit)
         close_button = QPushButton("Cerrar")
-        close_button.setStyleSheet(self.get_button_style())
+        close_button.setStyleSheet(self.parent.get_button_style())
         close_button.clicked.connect(dialog.accept)
         layout.addWidget(close_button)
         dialog.setLayout(layout)
