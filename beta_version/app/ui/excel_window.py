@@ -7,8 +7,8 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QColor
 
-
 class ExcelWindow(QMainWindow):
+
     def __init__(self, excel_file):
         super().__init__()
         self.excel_file = excel_file

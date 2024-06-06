@@ -6,6 +6,10 @@ from datetime import time, datetime
 
 class excelDialogs():
 
+    def __init__(self):
+        self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.txt")
+        print("excelDialogs instance created")
+        
     def select_excel_file(self):
             file_dialog = QFileDialog()
             file_dialog.setNameFilter("Archivos Excel (*.xlsx)")

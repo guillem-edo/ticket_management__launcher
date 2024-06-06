@@ -3,7 +3,7 @@ import os
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox, QApplication
 from PyQt5.QtCore import pyqtSignal, Qt, QRect
 from PyQt5.QtGui import QFont, QPixmap
-from beta_version.app.models.user import User
+from app.models.user import User
 
 class LoginWindow(QWidget):
     login_successful = pyqtSignal(User)
@@ -15,17 +15,20 @@ class LoginWindow(QWidget):
         self.center_window()
         self.setStyleSheet("background-color: white;")
 
+        # Inicialización de usuarios aquí
         self.users = [
             User("pideu1", "1111", ["WC47 NACP"]),
             User("pideu2", "1111", ["WC48 P5F"]),
             User("pideu3", "1111", ["WC49 P5H"]),
             User("pideu4", "1111", ["WV50 FILTER"]),
             User("pideu5", "1111", ["SPL"]),
-            User("admin", "admin", [], is_admin=True)  # Usuario administrador
+            User("admin", "admin", [], is_admin=True)
         ]
 
         layout = QVBoxLayout()
-        logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logo.png")
+        # Ajustar la ruta para incluir la carpeta 'resources'
+        logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "resources", "logo.png")
+        print("Trying to load logo from:", logo_path)  # Debugging path
         logo_pixmap = QPixmap(logo_path)
 
         if not logo_pixmap.isNull():

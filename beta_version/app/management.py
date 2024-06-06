@@ -4,6 +4,7 @@ from .ui.dialogs import AdvancedFilterDialog, TopIncidentsDialog
 from .detail.incidence_chart import TurnChart
 from .ui.admin_dialog import AdminDialog
 from .ui.excel_window import ExcelWindow
+from .ui.excel_files import excelDialogs
 # from .responsive_design import center_window, adjust_to_screen
 # from .animations import fade_in
 from .services.reports_export import ExportReportDialog
@@ -16,9 +17,6 @@ class TicketManagement(QMainWindow):
         super().__init__()
         self.user = user
 
-        # Inizializar la interfaz del usuario
-        self.initUI() 
-
         self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidencias_config.json")
         self.mtbf_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mtbf_data.json")
         self.change_log_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "change_log.json")
@@ -27,7 +25,7 @@ class TicketManagement(QMainWindow):
         # Cargar configuraciones y datos iniciales
         self.incidencias = AdminDialog.load_incidencias(self.config_file) or self.default_incidences()
         self.blocks = user.blocks if not user.is_admin else list(self.incidencias.keys())
-        
+
         # Inicializar los contadores y estructuras de datos
         self.last_incidence_labels = {}
         self.incidences_count = {block: 0 for block in self.incidencias.keys()}
@@ -38,7 +36,7 @@ class TicketManagement(QMainWindow):
         # Inicializar datos para MTBFDisplay
         self.mtbf_data = {}
         self.mtbf_labels = {}
-        
+
         # Instancia de MTBFDisplay
         self.mtbf_display = MTBFDisplay()
         self.mtbf_display.load_mtbf_data()
@@ -47,23 +45,21 @@ class TicketManagement(QMainWindow):
 
         # Carga de datos externos
         self.load_incident_details()
-        self.load_mtbf_data()  # Asegúrate de que se carga correctamente antes de cualquier función que dependa de esto
-        self.load_last_excel_file()
+        self.mtbf_display.load_mtbf_data()  # Asegúrate de que se carga correctamente antes de cualquier función que dependa de esto
         self.load_incidence_state()
+        
+        # Instancia a excelDialogs
+        self.excel_display = excelDialogs()
+        self.excel_display.load_last_excel_file()
+        self.excel_display.select_excel_file()
+
+        # Inizializar la interfaz del usuario
+        self.initUI() 
 
         # Realizar acciones iniciales de actualización
         self.reset_mtbf_timer()
         self.schedule_daily_reset()
         self.update_all()
-
-    def default_incidences(self):
-        return {
-            "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva", "Fallo en paletizador", "No coge placa", "Palet atascado en la curva", "Ascensor no sube", "No pone tornillo", "Fallo tornillo", "AOI no detecta pieza", "No atornilla clips", "Fallo fijador tapa", "Secuencia atornillador", "Fallo atornillador", "Fallo cámara visión"],
-            "WC48 P5F": ["Etiquetadora", "AOI (fallo etiqueta)", "AOI (malla)", "Cámara no detecta Pcb", "Cámara no detecta skeleton", "Cámara no detecta foams", "Cámara no detecta busbar", "Cámara no detecta foam derecho", "No detecta presencia power CP", "Tornillo atascado en tolva", "Cámara no detecta Power CP", "Cámara no detecta Top cover", "Detección de sealling mal puesto", "Robot no coge busbar", "Fallo etiqueta", "Power atascado en prensa, cuesta sacar", "No coloca bien el sealling"],
-            "WC49 P5H": ["La cámara no detecta Busbar", "La cámara no detecta Top Cover", "Screw K30 no lo detecta puesto", "Atasco tuerca", "Tornillo atascado", "Etiquetadora", "Detección de sealling mal puesto", "No coloca bien el sealling", "Power atascado en prensa, cuesta sacar", "No lee QR"],
-            "WV50 FILTER": ["Fallo cámara ferrite", "NOK Soldadura Plástico", "NOK Soldadura metal", "Traza", "NOK Soldad. Plástico+Metal", "Robot no coloca bien filter en palet", "No coloca bien la pcb", "QR desplazado", "Core enganchado", "Robot no coge PCB", "Fallo atornillador", "Pieza enganchada en HV Test", "Cover atascado", "Robot no coloca bien ferrita", "No coloca bien el core", "Fallo Funcional", "Fallo visión core", "Fallo cámara cover", "Repeat funcional", "Fallo cámara QR", "No coloca bien foam"],
-            "SPL": ["Sensor de PCB detecta que hay placa cuando no la hay", "No detecta marcas Power", "Colisión placas", "Fallo dispensación glue", "Marco atascado en parte inferior", "Soldadura defectuosa", "Error en sensor de salida"]
-        }
 
     def initUI(self):
             self.setWindowTitle(f"Ticket Management - {self.user.username}")
@@ -211,10 +207,15 @@ class TicketManagement(QMainWindow):
             update_timer.start(60000)  # Actualiza cada 60 segundos
 
             self.apply_styles()
-            self.load_last_excel_file()
-            self.load_incidence_state()
-            self.reset_mtbf_timer()
-            self.update_all()
+
+    def default_incidences(self):
+        return {
+            "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva", "Fallo en paletizador", "No coge placa", "Palet atascado en la curva", "Ascensor no sube", "No pone tornillo", "Fallo tornillo", "AOI no detecta pieza", "No atornilla clips", "Fallo fijador tapa", "Secuencia atornillador", "Fallo atornillador", "Fallo cámara visión"],
+            "WC48 P5F": ["Etiquetadora", "AOI (fallo etiqueta)", "AOI (malla)", "Cámara no detecta Pcb", "Cámara no detecta skeleton", "Cámara no detecta foams", "Cámara no detecta busbar", "Cámara no detecta foam derecho", "No detecta presencia power CP", "Tornillo atascado en tolva", "Cámara no detecta Power CP", "Cámara no detecta Top cover", "Detección de sealling mal puesto", "Robot no coge busbar", "Fallo etiqueta", "Power atascado en prensa, cuesta sacar", "No coloca bien el sealling"],
+            "WC49 P5H": ["La cámara no detecta Busbar", "La cámara no detecta Top Cover", "Screw K30 no lo detecta puesto", "Atasco tuerca", "Tornillo atascado", "Etiquetadora", "Detección de sealling mal puesto", "No coloca bien el sealling", "Power atascado en prensa, cuesta sacar", "No lee QR"],
+            "WV50 FILTER": ["Fallo cámara ferrite", "NOK Soldadura Plástico", "NOK Soldadura metal", "Traza", "NOK Soldad. Plástico+Metal", "Robot no coloca bien filter en palet", "No coloca bien la pcb", "QR desplazado", "Core enganchado", "Robot no coge PCB", "Fallo atornillador", "Pieza enganchada en HV Test", "Cover atascado", "Robot no coloca bien ferrita", "No coloca bien el core", "Fallo Funcional", "Fallo visión core", "Fallo cámara cover", "Repeat funcional", "Fallo cámara QR", "No coloca bien foam"],
+            "SPL": ["Sensor de PCB detecta que hay placa cuando no la hay", "No detecta marcas Power", "Colisión placas", "Fallo dispensación glue", "Marco atascado en parte inferior", "Soldadura defectuosa", "Error en sensor de salida"]
+        }
 
     def open_send_report_dialog(self):
         self.send_report_dialog = SendReportDialog(self.incidencias)
