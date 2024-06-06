@@ -36,7 +36,6 @@ class excelDialogs(QWidget):
         else:
             QMessageBox.warning(self, "Selección cancelada", "No se seleccionó ningún archivo.")
 
-
     def create_excel_if_not_exists(self, file_path):
         if not os.path.exists(file_path):
             workbook = Workbook()
