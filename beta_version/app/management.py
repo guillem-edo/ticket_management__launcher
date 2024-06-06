@@ -13,6 +13,7 @@ from .services.send_report import SendReportDialog
 from .services.mtbf_dialog import MTBFDisplay
 
 class TicketManagement(QMainWindow):
+
     def __init__(self, user):
         super().__init__()
         self.user = user
@@ -34,6 +35,7 @@ class TicketManagement(QMainWindow):
         self.filtered_incidents_data = {}
 
         # Inicializar datos para MTBFDisplay
+        self.mtbf_labels = defaultdict(lambda: QLabel("MTBF: N/A"))
         self.mtbf_data = {}
         self.mtbf_labels = {}
 
@@ -52,6 +54,7 @@ class TicketManagement(QMainWindow):
         self.excel_display = excelDialogs()
         self.excel_display.load_last_excel_file()
         self.excel_display.select_excel_file()
+        self.excel_display.updated.connect(self.update_top_incidents)
 
         # Inizializar la interfaz del usuario
         self.initUI() 
@@ -60,6 +63,15 @@ class TicketManagement(QMainWindow):
         self.reset_mtbf_timer()
         self.schedule_daily_reset()
         self.update_all()
+    
+    def default_incidences(self):
+        return {
+            "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva", "Fallo en paletizador", "No coge placa", "Palet atascado en la curva", "Ascensor no sube", "No pone tornillo", "Fallo tornillo", "AOI no detecta pieza", "No atornilla clips", "Fallo fijador tapa", "Secuencia atornillador", "Fallo atornillador", "Fallo cámara visión"],
+            "WC48 P5F": ["Etiquetadora", "AOI (fallo etiqueta)", "AOI (malla)", "Cámara no detecta Pcb", "Cámara no detecta skeleton", "Cámara no detecta foams", "Cámara no detecta busbar", "Cámara no detecta foam derecho", "No detecta presencia power CP", "Tornillo atascado en tolva", "Cámara no detecta Power CP", "Cámara no detecta Top cover", "Detección de sealling mal puesto", "Robot no coge busbar", "Fallo etiqueta", "Power atascado en prensa, cuesta sacar", "No coloca bien el sealling"],
+            "WC49 P5H": ["La cámara no detecta Busbar", "La cámara no detecta Top Cover", "Screw K30 no lo detecta puesto", "Atasco tuerca", "Tornillo atascado", "Etiquetadora", "Detección de sealling mal puesto", "No coloca bien el sealling", "Power atascado en prensa, cuesta sacar", "No lee QR"],
+            "WV50 FILTER": ["Fallo cámara ferrite", "NOK Soldadura Plástico", "NOK Soldadura metal", "Traza", "NOK Soldad. Plástico+Metal", "Robot no coloca bien filter en palet", "No coloca bien la pcb", "QR desplazado", "Core enganchado", "Robot no coge PCB", "Fallo atornillador", "Pieza enganchada en HV Test", "Cover atascado", "Robot no coloca bien ferrita", "No coloca bien el core", "Fallo Funcional", "Fallo visión core", "Fallo cámara cover", "Repeat funcional", "Fallo cámara QR", "No coloca bien foam"],
+            "SPL": ["Sensor de PCB detecta que hay placa cuando no la hay", "No detecta marcas Power", "Colisión placas", "Fallo dispensación glue", "Marco atascado en parte inferior", "Soldadura defectuosa", "Error en sensor de salida"]
+        }
 
     def initUI(self):
             self.setWindowTitle(f"Ticket Management - {self.user.username}")
@@ -142,7 +154,7 @@ class TicketManagement(QMainWindow):
 
             select_excel_button = QPushButton("Seleccionar Archivo Excel", self)
             select_excel_button.setStyleSheet(self.get_button_style())
-            select_excel_button.clicked.connect(self.select_excel_file)
+            select_excel_button.clicked.connect(self.excel_display.select_excel_file)
             right_layout.addWidget(select_excel_button)
 
             self.excel_path_display = QLineEdit(self)
@@ -157,7 +169,7 @@ class TicketManagement(QMainWindow):
 
             self.refresh_button = QPushButton("Refrescar", self)
             self.refresh_button.setStyleSheet(self.get_refresh_button_style())
-            self.refresh_button.clicked.connect(self.update_data)
+            self.refresh_button.clicked.connect(self.update_tab)
             right_layout.addWidget(self.refresh_button)
 
             for block in self.user.blocks:
@@ -166,7 +178,7 @@ class TicketManagement(QMainWindow):
                 mtbf_layout.addWidget(self.mtbf_labels[block])
 
                 info_button = QPushButton()
-                info_button.setIcon(QIcon(os.path.join(os.path.dirname(__file__), "question_icon.png")))  # Asegúrate de que esta ruta sea correcta
+                info_button.setIcon(QIcon(os.path.join(os.path.dirname(__file__), "question_icon.png")))
                 info_button.setToolTip("Haz clic para obtener más información sobre MTBF.")
                 info_button.setStyleSheet("background-color: transparent; border: none; padding: 0px;")
                 info_button.setFixedSize(24, 24)
@@ -207,15 +219,6 @@ class TicketManagement(QMainWindow):
             update_timer.start(60000)  # Actualiza cada 60 segundos
 
             self.apply_styles()
-
-    def default_incidences(self):
-        return {
-            "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva", "Fallo en paletizador", "No coge placa", "Palet atascado en la curva", "Ascensor no sube", "No pone tornillo", "Fallo tornillo", "AOI no detecta pieza", "No atornilla clips", "Fallo fijador tapa", "Secuencia atornillador", "Fallo atornillador", "Fallo cámara visión"],
-            "WC48 P5F": ["Etiquetadora", "AOI (fallo etiqueta)", "AOI (malla)", "Cámara no detecta Pcb", "Cámara no detecta skeleton", "Cámara no detecta foams", "Cámara no detecta busbar", "Cámara no detecta foam derecho", "No detecta presencia power CP", "Tornillo atascado en tolva", "Cámara no detecta Power CP", "Cámara no detecta Top cover", "Detección de sealling mal puesto", "Robot no coge busbar", "Fallo etiqueta", "Power atascado en prensa, cuesta sacar", "No coloca bien el sealling"],
-            "WC49 P5H": ["La cámara no detecta Busbar", "La cámara no detecta Top Cover", "Screw K30 no lo detecta puesto", "Atasco tuerca", "Tornillo atascado", "Etiquetadora", "Detección de sealling mal puesto", "No coloca bien el sealling", "Power atascado en prensa, cuesta sacar", "No lee QR"],
-            "WV50 FILTER": ["Fallo cámara ferrite", "NOK Soldadura Plástico", "NOK Soldadura metal", "Traza", "NOK Soldad. Plástico+Metal", "Robot no coloca bien filter en palet", "No coloca bien la pcb", "QR desplazado", "Core enganchado", "Robot no coge PCB", "Fallo atornillador", "Pieza enganchada en HV Test", "Cover atascado", "Robot no coloca bien ferrita", "No coloca bien el core", "Fallo Funcional", "Fallo visión core", "Fallo cámara cover", "Repeat funcional", "Fallo cámara QR", "No coloca bien foam"],
-            "SPL": ["Sensor de PCB detecta que hay placa cuando no la hay", "No detecta marcas Power", "Colisión placas", "Fallo dispensación glue", "Marco atascado en parte inferior", "Soldadura defectuosa", "Error en sensor de salida"]
-        }
 
     def open_send_report_dialog(self):
         self.send_report_dialog = SendReportDialog(self.incidencias)
@@ -280,8 +283,23 @@ class TicketManagement(QMainWindow):
         self.update_change_history()
         self.update_global_incidence_list()
         self.update_tabs_incidences()
-        #self.update_mtbf_display()
+        self.update_mtbf_display()
         self.update_charts()
+        
+    def update_top_incidents(self):
+        # Suponiendo que 'self.incident_details' es un diccionario de bloques que contiene contadores de incidencias
+        all_incidents = Counter()
+        for block, incidents in self.incident_details.items():
+            all_incidents.update(incidents)
+        
+        sorted_incidents = sorted(all_incidents.items(), key=lambda x: x[1], reverse=True)
+
+        # Limpiar la lista existente para actualizarla
+        self.top_incidents_list.clear()
+
+        # Agregar incidencias ordenadas a la lista
+        for incident, count in sorted_incidents:
+            self.top_incidents_list.addItem(f"{incident} - {count} veces")
 
     def update_chart(self):
         # Asegúrate de cerrar cualquier figura antigua que esté abierta
@@ -655,21 +673,6 @@ class TicketManagement(QMainWindow):
         for incidence in self.incidencias[user_block]:
             incident_counter[incidence] += 1
         return incident_counter.most_common(10)  # Devuelve las 10 incidencias más comunes
-
-    def update_top_incidents(self):
-        # Suponiendo que 'self.incident_details' es un diccionario de bloques que contiene contadores de incidencias
-        all_incidents = Counter()
-        for block, incidents in self.incident_details.items():
-            all_incidents.update(incidents)
-        
-        sorted_incidents = sorted(all_incidents.items(), key=lambda x: x[1], reverse=True)
-
-        # Limpiar la lista existente para actualizarla
-        self.top_incidents_list.clear()
-
-        # Agregar incidencias ordenadas a la lista
-        for incident, count in sorted_incidents:
-            self.top_incidents_list.addItem(f"{incident} - {count} veces")
 
     def schedule_daily_reset(self):
         now = datetime.now()

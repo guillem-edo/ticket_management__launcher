@@ -1,15 +1,21 @@
-import os 
-import csv
-from openpyxl import Workbook, load_workbook
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
-from datetime import time, datetime
+from app.dependencies import *
 
-class excelDialogs():
+class excelDialogs(QWidget):
+    updated = pyqtSignal()
 
     def __init__(self):
+        super().__init__()
+        # Asegura que la clase usa un QVBoxLayout
+        self.setLayout(QVBoxLayout())
+
+        # Inicializa QLineEdit para mostrar la ruta del archivo Excel
+        self.excel_path_display = QLineEdit()
+        self.excel_path_display.setReadOnly(True)
+        self.layout().addWidget(self.excel_path_display)
+
+        # Define y inicializa el atributo config_file
         self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.txt")
-        print("excelDialogs instance created")
-        
+
     def select_excel_file(self):
             file_dialog = QFileDialog()
             file_dialog.setNameFilter("Archivos Excel (*.xlsx)")
@@ -18,7 +24,7 @@ class excelDialogs():
                 self.excel_path_display.setText(self.excel_file)
                 with open(self.config_file, "w") as config:
                     config.write(self.excel_file)
-                self.update_top_incidents()
+                self.updated.emit()
 
     def create_excel_if_not_exists(self, file_path):
         if not os.path.exists(file_path):
@@ -33,10 +39,14 @@ class excelDialogs():
             with open(self.config_file, "r") as config:
                 file_path = config.read().strip()
                 if os.path.exists(file_path):
-                    self.excel_file = file_path
-                    self.excel_path_display.setText(file_path)
-                    self.update_top_incidents()
-    
+                    self.excel_file = file_path 
+                    self.excel_path_display.setText(file_path)  # Actualiza el display
+                    self.updated.emit()  # Emite la señal solo si el archivo es válido y todo está actualizado
+                else:
+                    print("El archivo especificado en config.txt no existe.")
+        else:
+            print("No se encontró config.txt.")
+
     def export_csv(self):
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getSaveFileName(self, "Guardar Informe CSV", "", "CSV Files (*.csv);;All Files (*)", options=options)
