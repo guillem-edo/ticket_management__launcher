@@ -24,17 +24,17 @@ from PyQt5.QtGui import QFont, QIcon
 from functools import partial
 
 
-from .dialogs import AdvancedFilterDialog, TopIncidentsDialog
-from .incidence_chart import TurnChart
-from .admin_dialog import AdminDialog
-from .excel_window import ExcelWindow
+from .ui.dialogs import AdvancedFilterDialog, TopIncidentsDialog
+from .detail.incidence_chart import TurnChart
+from .ui.admin_dialog import AdminDialog
+from .ui.excel_window import ExcelWindow
 # from .responsive_design import center_window, adjust_to_screen
 # from .animations import fade_in
-from .reports_export import ExportReportDialog
-from .change_history import ChangeHistoryDialog
-from .email_notifications import EmailNotifier
-from .send_report import SendReportDialog
-from .mtbf_dialog import MTBFDisplay
+from .services.reports_export import ExportReportDialog
+from .services.change_history import ChangeHistoryDialog
+from .components.email_notifications import EmailNotifier
+from .services.send_report import SendReportDialog
+from .services.mtbf_dialog import MTBFDisplay
 
 
 class TicketManagement(QMainWindow):

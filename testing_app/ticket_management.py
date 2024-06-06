@@ -10,10 +10,10 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import QTimer, Qt, QRect, pyqtSlot
 from PyQt5.QtGui import QFont, QIcon
 from functools import partial
-from .dialogs import AdvancedFilterDialog, TopIncidentsDialog
-from .incidence_chart import TurnChart
-from .admin_dialog import AdminDialog
-from .excel_window import ExcelWindow
+from ..beta_version.app.ui.dialogs import AdvancedFilterDialog, TopIncidentsDialog
+from ..beta_version.app.detail.incidence_chart import TurnChart
+from ..beta_version.app.ui.admin_dialog import AdminDialog
+from ..beta_version.app.ui.excel_window import ExcelWindow
 
 class TicketManagement(QMainWindow):
     def __init__(self, user):

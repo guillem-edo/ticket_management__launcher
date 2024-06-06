@@ -3,7 +3,7 @@ import os
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox, QApplication
 from PyQt5.QtCore import pyqtSignal, Qt, QRect
 from PyQt5.QtGui import QFont, QPixmap
-from app.user import User
+from beta_version.app.models.user import User
 
 class LoginWindow(QWidget):
     login_successful = pyqtSignal(User)

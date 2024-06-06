@@ -9,8 +9,8 @@ parent_dir = os.path.dirname(current_dir)
 if parent_dir not in sys.path:
     sys.path.append(parent_dir)
 
-from app.login_window import LoginWindow
-from app.v2_management import TicketManagement
+from beta_version.app.ui.login_window import LoginWindow
+from app.management import TicketManagement
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
