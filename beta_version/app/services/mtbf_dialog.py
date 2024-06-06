@@ -1,9 +1,9 @@
-import json
-import datetime
-from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextEdit, QPushButton
+from dependencies import *
 
-class MTBFDisplay():
+class MTBFDisplay(QObject):
+
+    def __init__(self):
+        super().__init__()
 
     def show_mtbf_info(self):
         dialog = QDialog(self)
@@ -48,7 +48,6 @@ class MTBFDisplay():
                     self.mtbf_labels[block].setText(f"MTBF {block}: {mtbf:.2f} minutos")
                 else:
                     self.mtbf_labels[block].setText("MTBF {block}: N/A")
-
 
     def reset_mtbf_timer(self):
         self.reset_mtbf_data()

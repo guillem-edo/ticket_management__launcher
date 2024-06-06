@@ -35,13 +35,15 @@ class TicketManagement(QMainWindow):
         self.filtered_incidents_data = {}
 
         # Inicializar datos para MTBFDisplay
-        self.mtbf_labels = defaultdict(lambda: QLabel("MTBF: N/A"))
         self.mtbf_data = {}
         self.mtbf_labels = {}
+        for block in self.incidencias.keys():  # Asegurándose de que todos los bloques estén cubiertos
+            self.mtbf_labels[block] = QLabel(f"MTBF {block}: N/A")
 
         # Instancia de MTBFDisplay
         self.mtbf_display = MTBFDisplay()
         self.mtbf_display.load_mtbf_data()
+        self.mtbf_display.show_mtbf_info()
         self.mtbf_display.mtbf_data = self.mtbf_data
         self.mtbf_display.mtbf_labels = self.mtbf_labels
 
@@ -58,12 +60,12 @@ class TicketManagement(QMainWindow):
 
         # Inizializar la interfaz del usuario
         self.initUI() 
-
+        
         # Realizar acciones iniciales de actualización
-        self.reset_mtbf_timer()
+        self.mtbf_display.reset_mtbf_timer()
         self.schedule_daily_reset()
         self.update_all()
-    
+
     def default_incidences(self):
         return {
             "WC47 NACP": ["Etiquetadora", "Fallo en elevador", "No atornilla tapa", "Fallo tolva", "Fallo en paletizador", "No coge placa", "Palet atascado en la curva", "Ascensor no sube", "No pone tornillo", "Fallo tornillo", "AOI no detecta pieza", "No atornilla clips", "Fallo fijador tapa", "Secuencia atornillador", "Fallo atornillador", "Fallo cámara visión"],
@@ -172,20 +174,23 @@ class TicketManagement(QMainWindow):
             self.refresh_button.clicked.connect(self.update_tab)
             right_layout.addWidget(self.refresh_button)
 
-            for block in self.user.blocks:
-                mtbf_layout = QHBoxLayout()
-                self.mtbf_labels[block].setStyleSheet("font-size: 16px; font-weight: bold; color: #4CAF50; background-color: #f0f0f0; padding: 5px; border-radius: 5px;")
-                mtbf_layout.addWidget(self.mtbf_labels[block])
+            for block in self.user.blocks:  # Asumiendo que self.user.blocks contiene los bloques que el usuario puede gestionar
+                if block in self.mtbf_labels:
+                    mtbf_layout = QHBoxLayout()
+                    self.mtbf_labels[block].setStyleSheet("font-size: 16px; font-weight: bold; color: #4CAF50; background-color: #f0f0f0; padding: 5px; border-radius: 5px;")
+                    mtbf_layout.addWidget(self.mtbf_labels[block])
 
-                info_button = QPushButton()
-                info_button.setIcon(QIcon(os.path.join(os.path.dirname(__file__), "question_icon.png")))
-                info_button.setToolTip("Haz clic para obtener más información sobre MTBF.")
-                info_button.setStyleSheet("background-color: transparent; border: none; padding: 0px;")
-                info_button.setFixedSize(24, 24)
-                info_button.clicked.connect(self.show_mtbf_info)
-                mtbf_layout.addWidget(info_button)
+                    # Configuración del botón de información
+                    info_button = QPushButton()
+                    info_button.setIcon(QIcon(os.path.join(os.path.dirname(__file__), "question_icon.png")))
+                    info_button.setToolTip("Haz clic para obtener más información sobre MTBF.")
+                    info_button.setStyleSheet("background-color: transparent; border: none; padding: 0px;")
+                    info_button.setFixedSize(24, 24)
+                    info_button.clicked.connect(self.show_mtbf_info)
+                    mtbf_layout.addWidget(info_button)
 
-                right_layout.addLayout(mtbf_layout)
+                    # Añadir el layout al contenedor adecuado
+                    right_layout.addLayout(mtbf_layout)
 
             self.global_incidence_list = QListWidget(self)
             self.global_incidence_list.setStyleSheet("QListWidget { background-color: #f0f0f0; border: 1px solid #ccc; padding: 5px; }")
@@ -236,10 +241,6 @@ class TicketManagement(QMainWindow):
         self.report_dialog = ExportReportDialog(self.incidencias)
         self.report_dialog.exec_()
 
-    def open_report_export_dialog(self):
-        self.export_dialog = ExportReportDialog(self.incidencias)
-        self.export_dialog.exec_()
-
     def open_change_history_dialog(self):
         self.history_dialog = ChangeHistoryDialog(self.change_log_file)
         self.history_dialog.exec_()
@@ -278,7 +279,7 @@ class TicketManagement(QMainWindow):
             self.excel_window = ExcelWindow(self.excel_file)
             self.excel_window.show()
 
-    def udpate_all(self):
+    def update_all(self):
         self.update_top_incidents()
         self.update_change_history()
         self.update_global_incidence_list()
