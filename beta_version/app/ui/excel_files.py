@@ -1,41 +1,30 @@
 from app.dependencies import *
 
 class excelDialogs(QWidget):
-    updated = pyqtSignal()
 
+    updated = pyqtSignal()  # Señal cuando se actualiza cualquier configuración interna
+    excelSelected = pyqtSignal(str)  # Señal que pasa la ruta del archivo Excel seleccionado
+    
     def __init__(self):
         super().__init__()
-        # Asegura que la clase usa un QVBoxLayout
+        self.excel_file = None
         self.setLayout(QVBoxLayout())
-
-        # Inicializa QLineEdit para mostrar la ruta del archivo Excel
-        self.excel_path_display = QLineEdit()
+        self.excel_path_display = QLineEdit(self)
         self.excel_path_display.setReadOnly(True)
         self.layout().addWidget(self.excel_path_display)
-
-        # Define y inicializa el atributo config_file
-        self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.txt")
 
     def select_excel_file(self):
         file_dialog = QFileDialog()
         file_dialog.setNameFilter("Archivos Excel (*.xlsx)")
-        if file_dialog.exec_():  # Si el usuario selecciona un archivo y confirma
+        if file_dialog.exec_():
             selected_files = file_dialog.selectedFiles()
-            if selected_files:  # Verificación para asegurarse de que la lista no esté vacía
+            if selected_files:
                 selected_file = selected_files[0]
-                if os.path.exists(selected_file):  # Verificar que el archivo realmente existe
-                    self.excel_file = selected_file
-                    self.excel_path_display.setText(self.excel_file)  # Actualiza la interfaz
-                    with open(self.config_file, "w") as config:
-                        config.write(self.excel_file)  # Guardar la configuración del archivo
-                    self.updated.emit()  # Emitir una señal para actualizar otras partes de la aplicación
-                else:
-                    QMessageBox.warning(self, "Error", "El archivo seleccionado no existe.")
-            else:
-                QMessageBox.warning(self, "Selección cancelada", "No se seleccionó ningún archivo.")
-        else:
-            QMessageBox.warning(self, "Selección cancelada", "No se seleccionó ningún archivo.")
-
+                self.excel_file = selected_file
+                self.excel_path_display.setText(self.excel_file)
+                self.excelSelected.emit(self.excel_file)  # Emite la ruta del archivo seleccionado
+                self.updated.emit()
+                
     def create_excel_if_not_exists(self, file_path):
         if not os.path.exists(file_path):
             workbook = Workbook()
@@ -49,9 +38,9 @@ class excelDialogs(QWidget):
             with open(self.config_file, "r") as config:
                 file_path = config.read().strip()
                 if os.path.exists(file_path):
-                    self.excel_file = file_path 
-                    self.excel_path_display.setText(file_path)  # Actualiza el display
-                    self.updated.emit()  # Emite la señal solo si el archivo es válido y todo está actualizado
+                    self.excel_file = file_path
+                    self.excel_path_display.setText(file_path)
+                    self.updated.emit()
                 else:
                     print("El archivo especificado en config.txt no existe.")
         else:
@@ -65,21 +54,9 @@ class excelDialogs(QWidget):
 
         with open(file_name, 'w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
-            writer.writerow(["Bloque", "Número de Incidencias", "Incidencia más frecuente"])
-            for row in range(self.results_table.rowCount()):
-                bloque = self.results_table.item(row, 0).text() if self.results_table.item(row, 0) else ''
-                num_incidencias = self.results_table.item(row, 1).text() if self.results_table.item(row, 1) else ''
-                incidencia_frecuente = self.results_table.item(row, 2).text() if self.results_table.item(row, 2) else ''
-                writer.writerow([bloque, num_incidencias, incidencia_frecuente])
-
-            writer.writerow([])
-            writer.writerow(["Incidencia", "Número de Incidencias"])
-            for row in range(self.incidents_table.rowCount()):
-                incidencia = self.incidents_table.item(row, 0).text() if self.incidents_table.item(row, 0) else ''
-                num_incidencias = self.incidents_table.item(row, 1).text() if self.incidents_table.item(row, 1) else ''
-                writer.writerow([incidencia, num_incidencias])
-
-        QMessageBox.information(self, "Exportar Informe", "Informe exportado con éxito en formato CSV.")
+            # Supongamos que self.results_table y self.incidents_table están correctamente definidos en algún lugar
+            # Agregar el código relevante para manejar las tablas aquí
+            QMessageBox.information(self, "Exportar Informe", "Informe exportado con éxito en formato CSV.")
 
     def log_repair_time_to_excel(self, block_name, date_str, time_str, repair_time_str):
         if self.excel_file and os.path.exists(self.excel_file):

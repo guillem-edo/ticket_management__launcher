@@ -19,6 +19,7 @@ class TicketManagement(QMainWindow):
         self.user = user
 
         self.excel_file = None
+        self.excel_window = None
 
         # Configuración de archivos y carga de datos
         self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidencias_config.json")
@@ -49,9 +50,11 @@ class TicketManagement(QMainWindow):
 
         self.excel_display = excelDialogs()
         self.excel_display.updated.connect(self.update_top_incidents)
+        self.excel_display.excelSelected.connect(self.handle_excel_selected)
 
-        self.excel_window = ExcelWindow(self.excel_file)
-        self.excel_window.load_excel_file()
+        # Asegura que ExcelWindow solo se inicialice cuando sea necesario
+        # self.excel_window = ExcelWindow(self.excel_file)
+        # self.excel_window.load_excel_file()
 
         self.initUI()
 
@@ -135,9 +138,8 @@ class TicketManagement(QMainWindow):
 
         self.chart_display_area = QScrollArea(self.charts_tab)
         self.chart_display_area.setWidgetResizable(True)
-        self.chart_display_area.setLayout(QVBoxLayout())
         self.scroll_content = QWidget()
-        self.scroll_layout = QVBoxLayout(self.scroll_content)
+        self.scroll_layout = QVBoxLayout(self.scroll_content)  # Aquí se define scroll_layout
         self.scroll_content.setLayout(self.scroll_layout)
         self.chart_display_area.setWidget(self.scroll_content)
         self.charts_layout.addWidget(self.chart_display_area)
@@ -163,36 +165,12 @@ class TicketManagement(QMainWindow):
 
         self.refresh_button = QPushButton("Refrescar", self)
         self.refresh_button.setStyleSheet(self.get_refresh_button_style())
-        self.refresh_button.clicked.connect(self.update_tab)
+        self.refresh_button.clicked.connect(self.update_all)
         right_layout.addWidget(self.refresh_button)
-
-        for block in self.user.blocks:
-            if block in self.mtbf_labels:
-                mtbf_layout = QHBoxLayout()
-                self.mtbf_labels[block].setStyleSheet("font-size: 16px; font-weight: bold; color: #4CAF50; background-color: #f0f0f0; padding: 5px; border-radius: 5px;")
-                mtbf_layout.addWidget(self.mtbf_labels[block])
-
-                info_button = QPushButton()
-                info_button.setIcon(QIcon(os.path.join(os.path.dirname(__file__), "question_icon.png")))
-                info_button.setToolTip("Haz clic para obtener más información sobre MTBF.")
-                info_button.setStyleSheet("background-color: transparent; border: none; padding: 0px;")
-                info_button.setFixedSize(24, 24)
-                info_button.clicked.connect(self.mtbf_display.show_mtbf_info)
-                mtbf_layout.addWidget(info_button)
-
-                right_layout.addLayout(mtbf_layout)
 
         self.global_incidence_list = QListWidget(self)
         self.global_incidence_list.setStyleSheet("QListWidget { background-color: #f0f0f0; border: 1px solid #ccc; padding: 5px; }")
         right_layout.addWidget(self.global_incidence_list)
-
-        button_layout = QHBoxLayout()
-        filter_button = QPushButton("Filtro Avanzado", self)
-        filter_button.setStyleSheet(self.get_button_style())
-        filter_button.clicked.connect(self.open_advanced_filter_dialog)
-        button_layout.addWidget(filter_button)
-
-        right_layout.addLayout(button_layout)
 
         self.status_bar = QStatusBar(self)
         self.setStatusBar(self.status_bar)
@@ -262,14 +240,29 @@ class TicketManagement(QMainWindow):
         self.admin_dialog = AdminDialog(self, incidencias=self.incidencias, config_file=self.config_file)
         self.admin_dialog.incidences_modified.connect(self.update_all)
         self.admin_dialog.exec_()
+    
+    def handle_excel_selected(self, excel_path):
+        """Actualiza la ruta del archivo Excel cuando un nuevo archivo es seleccionado."""
+        self.excel_file = excel_path
+        self.excel_path_display.setText(excel_path)  # Actualiza el display del path en la UI
+        self.view_excel_button.setEnabled(True)  # Habilita el botón de visualización si es necesario
+        QMessageBox.information(self, "Archivo Excel seleccionado", f"El archivo {excel_path} ha sido seleccionado y está listo para su uso.")
+
 
     def open_excel_window(self):
-        if self.excel_file and os.path.exists(self.excel_file):
-            self.excel_window = ExcelWindow(self.excel_file)
-            self.excel_window.show()
-        else:
-            QMessageBox.warning(self, "Archivo no encontrado", "No se pudo encontrar el archivo Excel seleccionado.")
+        """Abre o actualiza la ventana de visualización de Excel con el archivo seleccionado."""
+        if self.excel_file:  # Asegúrate de que haya un archivo seleccionado.
+            if self.excel_window:
+                self.excel_window.close()  # Cierra la ventana existente si está abierta.
             
+            self.excel_window = ExcelWindow(self.excel_file)  # Crea una nueva ventana con el archivo actual.
+            self.excel_window.show()
+            self.excel_window.raise_()
+            self.excel_window.activateWindow()
+        else:
+            QMessageBox.warning(self, "Advertencia", "No hay un archivo de Excel seleccionado.")
+
+
     def update_all(self):
         self.update_top_incidents()
         self.update_change_history()
@@ -356,9 +349,14 @@ class TicketManagement(QMainWindow):
         self.scroll_layout.addWidget(self.general_chart_canvas)
 
     def clear_chart_display_area(self):
-        for i in reversed(range(self.scroll_layout.count())):
-            widget = self.scroll_layout.itemAt(i).widget()
+        # Elimina todos los widgets en el layout que contienen los gráficos
+        while self.scroll_layout.count():
+            item = self.scroll_layout.takeAt(0)
+            widget = item.widget()
             if widget is not None:
+                # Si el widget es un FigureCanvas, cierra la figura asociada antes de eliminar el widget
+                if isinstance(widget, FigureCanvas):
+                    plt.close(widget.figure)
                 widget.deleteLater()
 
     def update_tabs_incidences(self):
