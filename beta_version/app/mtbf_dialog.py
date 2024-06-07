@@ -4,6 +4,10 @@ from PyQt5.QtCore import QTimer
 
 class MTBFDisplay():
 
+    def __init__(self):
+        self.mtbf_data = {}
+        self.mtbf_labels = {}
+
     def update_mtbf(self, block_name, timestamp):
         if block_name in self.mtbf_data:
             mtbf_info = self.mtbf_data[block_name]

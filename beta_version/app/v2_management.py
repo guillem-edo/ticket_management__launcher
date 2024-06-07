@@ -1,28 +1,4 @@
-import os
-import json
-import csv
-
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-mpl.rcParams['figure.max_open_warning'] = 50
-
-from PyQt5.QtWidgets import QScrollArea, QVBoxLayout, QWidget, QHBoxLayout, QSpacerItem, QSizePolicy
-from functools import partial
-
-from datetime import datetime, timedelta, time
-from collections import Counter, defaultdict
-from openpyxl import Workbook, load_workbook
-
-from PyQt5.QtWidgets import (
-    QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QLineEdit, QFileDialog, QTableWidget, QTableWidgetItem, QMessageBox,
-    QTabWidget, QLabel, QListWidget, QStatusBar, QSplitter, QAbstractItemView, QListWidgetItem, QInputDialog, QApplication, QDialog, QTextEdit
-)
-from PyQt5.QtCore import QTimer, Qt, QRect # pyqtSlot
-from PyQt5.QtGui import QFont, QIcon
-from functools import partial
-
+from dependencies import *
 
 from .dialogs import AdvancedFilterDialog, TopIncidentsDialog
 from .incidence_chart import TurnChart
@@ -42,9 +18,6 @@ class TicketManagement(QMainWindow):
         super().__init__()
         self.user = user
 
-        # Inizializar la interfaz del usuario
-        self.initUI() 
-
         self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidencias_config.json")
         self.mtbf_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mtbf_data.json")
         self.change_log_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "change_log.json")
@@ -53,27 +26,29 @@ class TicketManagement(QMainWindow):
         # Cargar configuraciones y datos iniciales
         self.incidencias = AdminDialog.load_incidencias(self.config_file) or self.default_incidences()
         self.blocks = user.blocks if not user.is_admin else list(self.incidencias.keys())
-        
-        # Inicializar los contadores y estructuras de datos
+
+        # Deberías inicializar todos los atributos necesarios antes de llamar a initUI()
         self.last_incidence_labels = {}
         self.incidences_count = {block: 0 for block in self.incidencias.keys()}
         self.pending_incidents = []
         self.incident_details = {block: Counter() for block in self.incidencias.keys()}
         self.filtered_incidents_data = {}
 
-        # Inicializar datos para MTBFDisplay
         self.mtbf_data = {}
-        self.mtbf_labels = {}
-        
+        self.mtbf_labels = {block: QLabel(f"MTBF {block}: N/A") for block in self.incidencias.keys()}
+
         # Instancia de MTBFDisplay
         self.mtbf_display = MTBFDisplay()
         self.mtbf_display.load_mtbf_data()
         self.mtbf_display.mtbf_data = self.mtbf_data
         self.mtbf_display.mtbf_labels = self.mtbf_labels
 
+        # Ahora puedes llamar a initUI
+        self.initUI()
+
         # Carga de datos externos
         self.load_incident_details()
-        self.load_mtbf_data()  # Asegúrate de que se carga correctamente antes de cualquier función que dependa de esto
+        self.load_mtbf_data()
         self.load_last_excel_file()
         self.load_incidence_state()
 
@@ -187,7 +162,7 @@ class TicketManagement(QMainWindow):
 
             self.refresh_button = QPushButton("Refrescar", self)
             self.refresh_button.setStyleSheet(self.get_refresh_button_style())
-            self.refresh_button.clicked.connect(self.update_data)
+            self.refresh_button.clicked.connect(self.update_all)
             right_layout.addWidget(self.refresh_button)
 
             for block in self.user.blocks:
@@ -239,6 +214,8 @@ class TicketManagement(QMainWindow):
             self.apply_styles()
             self.load_last_excel_file()
             self.load_incidence_state()
+
+            
             self.reset_mtbf_timer()
             self.update_all()
 
@@ -350,15 +327,8 @@ class TicketManagement(QMainWindow):
         self.update_top_incidents()
         self.update_global_incidence_list()
         self.update_tabs_incidences()
-        self.update_mtbf_display()
+        self.mtbf_display.update_mtbf_display()
         self.update_charts()
-
-    def update_data(self):
-        self.update_top_incidents()
-        self.update_change_history()
-        self.update_global_incidence_list()
-        self.update_tabs_incidences()
-        self.update_mtbf_display()
 
     def update_chart(self):
         # Asegúrate de cerrar cualquier figura antigua que esté abierta
