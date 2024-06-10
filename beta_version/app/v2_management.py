@@ -582,18 +582,18 @@ class TicketManagement(QMainWindow):
                 date_str = timestamp.strftime("%Y-%m-%d")
                 time_str = timestamp.strftime("%H:%M:%S")
                 self.last_incidence_labels[block_name].setText(f"Incidencia confirmada: {incidence_text} a las {time_str}")
-                self.log_incidence_to_excel(block_name, date_str, time_str, incidence_text)
-            
+                
+                # Actualizar MTBF antes de registrar la incidencia en Excel
                 self.mtbf_display.update_mtbf(block_name, timestamp)
+                self.log_incidence_to_excel(block_name, date_str, time_str, incidence_text)
 
-                # Actualizar los detalles de las incidencias
                 if incidence_text in self.incident_details[block_name]:
                     self.incident_details[block_name][incidence_text] += 1
                 else:
                     self.incident_details[block_name][incidence_text] = 1
 
-                self.save_incident_details()  # Guardar los detalles de las incidencias
-                self.update_top_incidents()  # Actualizar las incidencias más relevantes
+                self.save_incident_details()
+                self.update_top_incidents()
 
                 QMessageBox.information(self, "Confirmación", "Incidencia confirmada.")
 
@@ -760,7 +760,9 @@ class TicketManagement(QMainWindow):
                 else:
                     turno = "Noche"
 
-                mtbf_value = self.calculate_mtbf(block_name)
+                # Asegurarse de que se calcula el MTBF antes de registrar la incidencia
+                self.mtbf_display.update_mtbf(block_name, datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M:%S"))
+                mtbf_value = self.mtbf_display.calculate_mtbf(block_name)
 
                 new_row = [block_name, incidence_text, date_str, time_str, turno, "", "", mtbf_value]
                 sheet.append(new_row)

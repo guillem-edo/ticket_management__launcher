@@ -1,42 +1,46 @@
 from dependencies import *
 
-class MTBFDisplay():
-
+class MTBFDisplay:
     def __init__(self):
         self.mtbf_data = {}
         self.mtbf_labels = {}
 
     def update_mtbf(self, block_name, timestamp):
+        if block_name not in self.mtbf_data:
+            self.mtbf_data[block_name] = {'last_time': None, 'total_time': 0, 'incident_count': 0}
+
+        mtbf_info = self.mtbf_data[block_name]
+        if mtbf_info["last_time"] is not None:
+            time_diff = (timestamp - mtbf_info["last_time"]).total_seconds() / 60.0
+            mtbf_info["total_time"] += time_diff
+            mtbf_info["incident_count"] += 1
+        else:
+            mtbf_info["incident_count"] = 1
+        
+        mtbf_info["last_time"] = timestamp
+        self.update_mtbf_display()
+
+    def calculate_mtbf(self, block_name):
         if block_name in self.mtbf_data:
             mtbf_info = self.mtbf_data[block_name]
-            if mtbf_info["last_time"] is not None:
-                time_diff = (timestamp - mtbf_info["last_time"]).total_seconds() / 60.0
-                mtbf_info["total_time"] += time_diff
-                mtbf_info["incident_count"] += 1
-            mtbf_info["last_time"] = timestamp
-            self.update_mtbf_display()
+            if mtbf_info["incident_count"] > 0:
+                mtbf = mtbf_info["total_time"] / mtbf_info["incident_count"]
+                return f"{mtbf:.2f} minutos"
+        return "N/A"
 
     def update_mtbf_display(self):
-        if self.mtbf_data is None:
-            self.mtbf_data = {}  # Asegurarse de que self.mtbf_data es un diccionario si era None.
-            print("MTBF data was None, initialized to empty dictionary.")
-
         for block, data in self.mtbf_data.items():
             if block in self.mtbf_labels:
                 if data["incident_count"] > 0:
                     mtbf = data["total_time"] / data["incident_count"]
                     self.mtbf_labels[block].setText(f"MTBF {block}: {mtbf:.2f} minutos")
                 else:
-                    self.mtbf_labels[block].setText("MTBF {block}: N/A")
-
+                    self.mtbf_labels[block].setText(f"MTBF {block}: N/A")
 
     def reset_mtbf_timer(self):
-        """Reinicia el temporizador para el cálculo del MTBF."""
-        self.mtbf_data = {block: {"total_time": 0, "incident_count": 0} for block in self.mtbf_data.keys()}
+        self.mtbf_data = {block: {"total_time": 0, "incident_count": 0, "last_time": None} for block in self.mtbf_data.keys()}
         for block in self.mtbf_labels.keys():
             self.mtbf_labels[block].setText(f"MTBF {block}: N/A")
-
-        # Asegúrate de que el temporizador se reinicia cada 24 horas
         self.schedule_daily_reset()
 
     def schedule_daily_reset(self):
@@ -45,13 +49,6 @@ class MTBFDisplay():
         delay = (next_reset - now).total_seconds() * 1000  # Convertir a milisegundos
         self.timer = QTimer()
         self.timer.singleShot(int(delay), self.reset_mtbf_timer)
-
-    def reset_mtbf_data(self):
-        if self.mtbf_data is not None:
-            for block in self.mtbf_data.keys():
-                self.mtbf_data[block] = {'last_time': None, 'total_time': 0, 'incident_count': 0}
-        else:
-            print("MTBF data is not initialized.")
 
     def load_mtbf_data(self):
         try:
@@ -71,8 +68,7 @@ class MTBFDisplay():
                             'last_time': None
                         }
         except FileNotFoundError:
-            print("MTBF data file not found. Initializing with empty data.")
-            self.mtbf_data = {block: {'last_time': None, 'total_time': 0, 'incident_count': 0} for block in self.incidencias.keys()}
+            self.mtbf_data = {}
         except Exception as e:
             print(f"Failed to load MTBF data: {e}")
             self.mtbf_data = {}
@@ -92,6 +88,5 @@ class MTBFDisplay():
                     'incident_count': data['incident_count'],
                     'last_time': None
                 }
-
         with open('mtbf_data.json', 'w') as f:
             json.dump(mtbf_data_to_save, f)
