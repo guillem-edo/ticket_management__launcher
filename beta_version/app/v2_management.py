@@ -60,7 +60,6 @@ class TicketManagement(QMainWindow):
         self.update_all()
 
     def load_mtbf_data(self):
-        """Carga los datos de MTBF desde un archivo JSON."""
         if os.path.exists(self.mtbf_file):
             with open(self.mtbf_file, "r") as file:
                 self.mtbf_data = json.load(file)
@@ -226,7 +225,7 @@ class TicketManagement(QMainWindow):
         self.load_last_excel_file()
         self.load_incidence_state()
 
-        self.reset_mtbf_timer()
+        self.mtbf_display.reset_mtbf_timer()
         self.update_all()
 
     def open_send_report_dialog(self):
