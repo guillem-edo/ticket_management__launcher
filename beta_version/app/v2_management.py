@@ -575,6 +575,7 @@ class TicketManagement(QMainWindow):
         confirm_button.clicked.connect(lambda: self.confirm_incidence(name, list_widget))
         layout.addWidget(confirm_button)
 
+    # Método para confirmar una incidencia
     def confirm_incidence(self, block_name, list_widget):
         current_item = list_widget.currentItem()
         if current_item:
@@ -585,10 +586,14 @@ class TicketManagement(QMainWindow):
                 date_str = timestamp.strftime("%Y-%m-%d")
                 time_str = timestamp.strftime("%H:%M:%S")
                 self.last_incidence_labels[block_name].setText(f"Incidencia confirmada: {incidence_text} a las {time_str}")
-                
-                # Actualizar MTBF antes de registrar la incidencia en Excel
+
+                # Actualizar MTBF y registrar la incidencia en Excel
                 self.mtbf_display.update_mtbf(block_name, timestamp)
                 self.log_incidence_to_excel(block_name, date_str, time_str, incidence_text)
+
+                # Registrar el cambio y actualizar el historial
+                self.log_change("Confirmar Incidencia", f"{block_name}: {incidence_text}")
+                self.update_change_history()
 
                 if incidence_text in self.incident_details[block_name]:
                     self.incident_details[block_name][incidence_text] += 1
@@ -677,6 +682,7 @@ class TicketManagement(QMainWindow):
                     self.global_incidence_list.scrollToItem(item, QAbstractItemView.PositionAtCenter)
                     break
 
+    # Método para registrar la hora de reparación en Excel
     def mark_incidence_as_fixed(self, block_name, incidence_text, date_str, time_str):
         for i in range(self.global_incidence_list.count()):
             item = self.global_incidence_list.item(i)
@@ -693,15 +699,25 @@ class TicketManagement(QMainWindow):
 
                     repair_time_str = datetime.now().strftime("%H:%M:%S")
                     self.log_repair_time_to_excel(block_name, date_str, time_str, repair_time_str)
+
+                    # Registrar el cambio y actualizar el historial
+                    self.log_change("Marcar Incidencia como Reparada", f"{block_name}: {incidence_text}")
+                    self.update_change_history()
+
                     self.update_top_incidents()
                     break
 
+    # Método para añadir detalles de la incidencia
     def add_incidence_details(self, block_name, incidence_text, date_str, time_str):
         detail_text, ok = QInputDialog.getMultiLineText(self, "Añadir Detalles", "Escribe los detalles de la incidencia:")
         if ok and detail_text:
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             detail_message = f"{timestamp} - {block_name}: {incidence_text} ({date_str} {time_str})\nDetalles: {detail_text}"
             self.detailed_messages_list.addItem(detail_message)
+
+            # Registrar el cambio y actualizar el historial
+            self.log_change("Añadir Detalles a Incidencia", f"{block_name}: {incidence_text}")
+            self.update_change_history()
 
     def log_repair_time_to_excel(self, block_name, date_str, time_str, repair_time_str):
         if self.excel_file and os.path.exists(self.excel_file):
