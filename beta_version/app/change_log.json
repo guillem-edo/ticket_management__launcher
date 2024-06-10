@@ -107,3 +107,16 @@
 {"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 11:32:59", "details": "WC47 NACP: No coge placa"}
 {"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-10 11:36:34", "details": "WC47 NACP: No pone tornillo"}
 {"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 11:36:36", "details": "WC47 NACP: No pone tornillo"}
+{"user": "pideu3", "action": "Confirmar Incidencia", "date": "2024-06-10 11:47:59", "details": "WC49 P5H: Screw K30 no lo detecta puesto"}
+{"user": "pideu3", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 11:48:00", "details": "WC49 P5H: Screw K30 no lo detecta puesto"}
+{"user": "pideu3", "action": "Confirmar Incidencia", "date": "2024-06-10 11:48:06", "details": "WC49 P5H: No lee QR"}
+{"user": "pideu3", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 11:48:07", "details": "WC49 P5H: No lee QR"}
+{"user": "pideu3", "action": "Confirmar Incidencia", "date": "2024-06-10 11:48:45", "details": "WC49 P5H: Atasco tuerca"}
+{"user": "pideu3", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 11:48:46", "details": "WC49 P5H: Atasco tuerca"}
+{"user": "pideu4", "action": "Confirmar Incidencia", "date": "2024-06-10 11:51:14", "details": "WV50 FILTER: QR desplazado"}
+{"user": "pideu4", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 11:51:16", "details": "WV50 FILTER: QR desplazado"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-06-10 11:57:17", "details": "WC48 P5F: AOI (fallo etiqueta)"}
+{"user": "pideu2", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 11:57:18", "details": "WC48 P5F: AOI (fallo etiqueta)"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-06-10 11:57:29", "details": "WC48 P5F: Etiquetadora"}
+{"user": "pideu2", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 11:57:30", "details": "WC48 P5F: Etiquetadora"}
+{"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-10 12:01:55", "details": "WC47 NACP: No atornilla tapa"}

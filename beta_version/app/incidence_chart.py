@@ -1,21 +1,19 @@
-# incidence_chart.py
-import matplotlib.pyplot as plt
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel
-from PyQt5.QtGui import QFont
-from collections import Counter, defaultdict
+from dependencies import *
 
 class TurnChart(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.incident_details = {}
-        self.figure = plt.figure()
+        self.figure = None  # Inicializa sin figura
+        self.canvas = None  # Inicializa sin canvas
         self.initUI()
 
     def initUI(self):
-        self.setLayout(QVBoxLayout())
+        layout = QVBoxLayout()
+        self.setLayout(layout)
         self.chart_label = QLabel("", self)
         self.chart_label.setFont(QFont("Arial", 14, QFont.Bold))
-        self.layout().addWidget(self.chart_label)
+        layout.addWidget(self.chart_label)
 
     def set_incident_details(self, incident_details):
         self.incident_details = incident_details
@@ -28,72 +26,10 @@ class TurnChart(QWidget):
             self.plot_shift_chart(shift_incidents, "Incidencias por Turno")
 
     def plot_daily_chart(self, incidents, title):
-        counts = Counter()
-        for block, data in incidents.items():
-            counts.update(data['incidences'])
-
-        if not counts:
-            return  # Si no hay incidencias, no se genera ningún gráfico
-
-        labels, values = zip(*counts.items())
-        total = sum(values)
-        percentages = [f'{(value / total) * 100:.2f}%' for value in values]
-
-        self.figure.clf()
-        ax = self.figure.add_subplot(111)
-        bars = ax.bar(labels, values, color='skyblue')
-
-        ax.set_title(title, fontsize=14, fontweight='bold')
-        ax.set_xlabel('Incidencia', fontsize=12)
-        ax.set_ylabel('Cantidad', fontsize=12)
-
-        for bar, value, percentage in zip(bars, values, percentages):
-            height = bar.get_height()
-            ax.annotate(f'{value} ({percentage})',
-                        xy=(bar.get_x() + bar.get_width() / 2, height),
-                        xytext=(0, 3),  # 3 points vertical offset
-                        textcoords="offset points",
-                        ha='center', va='bottom')
-
-        plt.xticks(rotation=45, ha='right')
-        try:
-            self.figure.tight_layout()
-        except ValueError:
-            pass  # Si tight_layout falla, solo continuamos sin él
+        self._plot_chart(incidents, title, 'skyblue')
 
     def plot_shift_chart(self, incidents, title):
-        counts = Counter()
-        for block, data in incidents.items():
-            counts.update(data['incidences'])
-
-        if not counts:
-            return  # Si no hay incidencias, no se genera ningún gráfico
-
-        labels, values = zip(*counts.items())
-        total = sum(values)
-        percentages = [f'{(value / total) * 100:.2f}%' for value in values]
-
-        self.figure.clf()
-        ax = self.figure.add_subplot(111)
-        bars = ax.bar(labels, values, color='lightcoral')
-
-        ax.set_title(title, fontsize=14, fontweight='bold')
-        ax.set_xlabel('Incidencia', fontsize=12)
-        ax.set_ylabel('Cantidad', fontsize=12)
-
-        for bar, value, percentage in zip(bars, values, percentages):
-            height = bar.get_height()
-            ax.annotate(f'{value} ({percentage})',
-                        xy=(bar.get_x() + bar.get_width() / 2, height),
-                        xytext=(0, 3),  # 3 points vertical offset
-                        textcoords="offset points",
-                        ha='center', va='bottom')
-
-        plt.xticks(rotation=45, ha='right')
-        try:
-            self.figure.tight_layout()
-        except ValueError:
-            pass  # Si tight_layout falla, solo continuamos sin él
+        self._plot_chart(incidents, title, 'lightcoral')
 
     def plot_general_chart(self, incidents, title):
         counts = defaultdict(Counter)
@@ -103,7 +39,14 @@ class TurnChart(QWidget):
         if not counts:
             return  # Si no hay incidencias, no se genera ningún gráfico
 
-        self.figure.clf()
+        if self.figure:
+            plt.close(self.figure)  # Cerrar cualquier figura antigua
+
+        self.figure = plt.figure()
+        self.canvas = FigureCanvas(self.figure)  # Crear el canvas de la figura
+        layout = self.layout()
+        layout.addWidget(self.canvas)  # Añadir el canvas al layout
+
         ax = self.figure.add_subplot(111)
         colors = plt.cm.tab20.colors  # Usamos un colormap con suficientes colores
 
@@ -126,10 +69,56 @@ class TurnChart(QWidget):
         ax.set_title(title, fontsize=14, fontweight='bold')
         ax.set_xlabel('Cantidad', fontsize=12)
         ax.set_ylabel('Incidencia', fontsize=12)
-        ax.legend(title="Linias")
+        ax.legend(title="Linias", bbox_to_anchor=(1.05, 1), loc='upper left')  # Ajustar la leyenda para que no solape las barras
 
         plt.xticks(rotation=45, ha='right')
         try:
             self.figure.tight_layout()
         except ValueError:
             pass  # Si tight_layout falla, solo continuamos sin él
+
+        self.canvas.draw()  # Asegurarse de actualizar el canvas
+
+    def _plot_chart(self, incidents, title, color):
+        counts = Counter()
+        for block, data in incidents.items():
+            counts.update(data['incidences'])
+
+        if not counts:
+            return  # Si no hay incidencias, no se genera ningún gráfico
+
+        if self.figure:
+            plt.close(self.figure)  # Cerrar cualquier figura antigua
+
+        self.figure = plt.figure()
+        self.canvas = FigureCanvas(self.figure)  # Crear el canvas de la figura
+        layout = self.layout()
+        layout.addWidget(self.canvas)  # Añadir el canvas al layout
+
+        labels, values = zip(*counts.items())
+        total = sum(values)
+        percentages = [f'{(value / total) * 100:.2f}%' for value in values]
+
+        self.figure.clf()
+        ax = self.figure.add_subplot(111)
+        bars = ax.bar(labels, values, color=color)
+
+        ax.set_title(title, fontsize=14, fontweight='bold')
+        ax.set_xlabel('Incidencia', fontsize=12)
+        ax.set_ylabel('Cantidad', fontsize=12)
+
+        for bar, value, percentage in zip(bars, values, percentages):
+            height = bar.get_height()
+            ax.annotate(f'{value} ({percentage})',
+                        xy=(bar.get_x() + bar.get_width() / 2, height),
+                        xytext=(0, 3),  # 3 points vertical offset
+                        textcoords="offset points",
+                        ha='center', va='bottom')
+
+        plt.xticks(rotation=45, ha='right')
+        try:
+            self.figure.tight_layout()
+        except ValueError:
+            pass  # Si tight_layout falla, solo continuamos sin él
+
+        self.canvas.draw()  # Asegurarse de actualizar el canvas

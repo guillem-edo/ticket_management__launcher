@@ -400,52 +400,13 @@ class TicketManagement(QMainWindow):
         if not incidents_general:
             return
 
-        # Organizar incidencias por bloque
-        block_incidents = {}
-        for block, data in incidents_general.items():
-            for incident in data['incidences']:
-                if block not in block_incidents:
-                    block_incidents[block] = []
-                block_incidents[block].append(incident)
+        # Crear una instancia de TurnChart
+        turn_chart = TurnChart(self)
+        turn_chart.plot_general_chart(incidents_general, "Incidencias Generales")
 
-        # Crear la figura y los ejes
-        fig, ax = plt.subplots(figsize=(10, 6))
+        # Añadir el nuevo gráfico al layout
+        self.scroll_layout.addWidget(turn_chart)
 
-        # Colores para los bloques
-        colors = plt.cm.tab20.colors  # Usar una paleta de colores predefinida
-        color_dict = {block: colors[i % len(colors)] for i, block in enumerate(block_incidents)}
-
-        # Crear el gráfico de barras horizontal
-        incident_labels = []
-        incident_counts = []
-        bar_colors = []
-
-        for block, incidents in block_incidents.items():
-            counter = Counter(incidents)
-            for incident, count in counter.items():
-                incident_labels.append(incident)  # Mostrar solo el nombre de la incidencia
-                incident_counts.append(count)
-                bar_colors.append(color_dict[block])
-
-        bars = ax.barh(incident_labels, incident_counts, color=bar_colors)
-
-        # Ajustar la leyenda
-        legend_labels = {color_dict[block]: block for block in block_incidents}
-        handles = [plt.Line2D([0], [0], color=color, lw=4) for color in legend_labels.keys()]
-        ax.legend(handles, legend_labels.values(), title="Bloques", bbox_to_anchor=(1.05, 1), loc='upper left')
-
-        # Mejorar la estética del gráfico
-        ax.set_ylabel("Incidencias")
-        ax.set_xlabel("Número de Incidencias")
-        ax.set_title("Incidencias Generales")
-
-        # Ajustar los márgenes para que la leyenda no solape las barras
-        plt.subplots_adjust(left=0.3, right=0.75)
-
-        # Crear el canvas y añadirlo al área de visualización
-        canvas = FigureCanvas(fig)
-        self.scroll_layout.addWidget(canvas)
-        canvas.draw()
 
     def clear_chart_display_area(self):
         while self.scroll_layout.count():
@@ -924,15 +885,7 @@ class TicketManagement(QMainWindow):
         self.scroll_layout.addWidget(self.shift_chart_canvas)
 
     def show_general_chart(self):
-        self.clear_chart_display_area()
         self.update_general_chart()
-        start_dt = datetime.combine(datetime.today(), time.min)
-        end_dt = datetime.combine(datetime.today(), time.max)
-        incidents_general, _ = self.get_general_filtered_incidents(start_dt, end_dt)
-        self.general_chart = TurnChart(self)
-        self.general_chart.plot_general_chart(incidents_general, "Incidencias Generales")
-        self.general_chart_canvas = FigureCanvas(self.general_chart.figure)
-        self.scroll_layout.addWidget(self.general_chart_canvas)
 
     def apply_styles(self):
         title_font = QFont("Arial", 14, QFont.Bold)
