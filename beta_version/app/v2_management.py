@@ -392,7 +392,7 @@ class TicketManagement(QMainWindow):
 
     def update_general_chart(self):
         self.clear_chart_display_area()
-        
+
         start_dt = datetime.combine(datetime.today(), time.min)
         end_dt = datetime.combine(datetime.today(), time.max)
         incidents_general, trends = self.get_general_filtered_incidents(start_dt, end_dt)
@@ -406,7 +406,6 @@ class TicketManagement(QMainWindow):
 
         # Añadir el nuevo gráfico al layout
         self.scroll_layout.addWidget(turn_chart)
-
 
     def clear_chart_display_area(self):
         while self.scroll_layout.count():

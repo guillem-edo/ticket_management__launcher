@@ -15,21 +15,11 @@ class TurnChart(QWidget):
         self.chart_label.setFont(QFont("Arial", 14, QFont.Bold))
         layout.addWidget(self.chart_label)
 
-    def set_incident_details(self, incident_details):
-        self.incident_details = incident_details
-        self.update_charts()
-
-    def update_charts(self, daily_incidents=None, shift_incidents=None):
-        if daily_incidents:
-            self.plot_daily_chart(daily_incidents, "Incidencias Diarias")
-        if shift_incidents:
-            self.plot_shift_chart(shift_incidents, "Incidencias por Turno")
-
     def plot_daily_chart(self, incidents, title):
-        self._plot_chart(incidents, title, 'skyblue')
+        self._plot_chart(incidents, title, 'skyblue', horizontal=False)
 
     def plot_shift_chart(self, incidents, title):
-        self._plot_chart(incidents, title, 'lightcoral')
+        self._plot_chart(incidents, title, 'lightcoral', horizontal=False)
 
     def plot_general_chart(self, incidents, title):
         counts = defaultdict(Counter)
@@ -69,7 +59,7 @@ class TurnChart(QWidget):
         ax.set_title(title, fontsize=14, fontweight='bold')
         ax.set_xlabel('Cantidad', fontsize=12)
         ax.set_ylabel('Incidencia', fontsize=12)
-        ax.legend(title="Linias", bbox_to_anchor=(1.05, 1), loc='upper left')  # Ajustar la leyenda para que no solape las barras
+        ax.legend(title="Líneas", bbox_to_anchor=(1.05, 1), loc='upper left')  # Ajustar la leyenda para que no solape las barras
 
         plt.xticks(rotation=45, ha='right')
         try:
@@ -79,7 +69,7 @@ class TurnChart(QWidget):
 
         self.canvas.draw()  # Asegurarse de actualizar el canvas
 
-    def _plot_chart(self, incidents, title, color):
+    def _plot_chart(self, incidents, title, color, horizontal=True):
         counts = Counter()
         for block, data in incidents.items():
             counts.update(data['incidences'])
@@ -101,19 +91,31 @@ class TurnChart(QWidget):
 
         self.figure.clf()
         ax = self.figure.add_subplot(111)
-        bars = ax.bar(labels, values, color=color)
+
+        if horizontal:
+            bars = ax.barh(labels, values, color=color)
+        else:
+            bars = ax.bar(labels, values, color=color)
 
         ax.set_title(title, fontsize=14, fontweight='bold')
-        ax.set_xlabel('Incidencia', fontsize=12)
-        ax.set_ylabel('Cantidad', fontsize=12)
+        ax.set_xlabel('Cantidad', fontsize=12)
+        ax.set_ylabel('Incidencia', fontsize=12)
 
         for bar, value, percentage in zip(bars, values, percentages):
-            height = bar.get_height()
-            ax.annotate(f'{value} ({percentage})',
-                        xy=(bar.get_x() + bar.get_width() / 2, height),
-                        xytext=(0, 3),  # 3 points vertical offset
-                        textcoords="offset points",
-                        ha='center', va='bottom')
+            if horizontal:
+                width = bar.get_width()
+                ax.annotate(f'{value} ({percentage})',
+                            xy=(width, bar.get_y() + bar.get_height() / 2),
+                            xytext=(3, 0),  # 3 points horizontal offset
+                            textcoords="offset points",
+                            ha='left', va='center')
+            else:
+                height = bar.get_height()
+                ax.annotate(f'{value} ({percentage})',
+                            xy=(bar.get_x() + bar.get_width() / 2, height),
+                            xytext=(0, 3),  # 3 points vertical offset
+                            textcoords="offset points",
+                            ha='center', va='bottom')
 
         plt.xticks(rotation=45, ha='right')
         try:
