@@ -395,7 +395,7 @@ class TicketManagement(QMainWindow):
 
         start_dt = datetime.combine(datetime.today(), time.min)
         end_dt = datetime.combine(datetime.today(), time.max)
-        incidents_general, trends = self.get_general_filtered_incidents(start_dt, end_dt)
+        incidents_general, _ = self.get_general_filtered_incidents(start_dt, end_dt)
 
         if not incidents_general:
             return

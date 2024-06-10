@@ -126,3 +126,25 @@
 {"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 12:08:36", "details": "WC47 NACP: Fallo en elevador"}
 {"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-10 12:13:59", "details": "WC47 NACP: Fallo en paletizador"}
 {"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 12:14:00", "details": "WC47 NACP: Fallo en paletizador"}
+{"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-10 12:19:25", "details": "WC47 NACP: Fallo tolva"}
+{"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 12:19:27", "details": "WC47 NACP: Fallo tolva"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-06-10 12:24:10", "details": "WC48 P5F: AOI (malla)"}
+{"user": "pideu2", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 12:24:13", "details": "WC48 P5F: AOI (malla)"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-06-10 12:25:47", "details": "WC48 P5F: AOI (fallo etiqueta)"}
+{"user": "pideu2", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 12:25:48", "details": "WC48 P5F: AOI (fallo etiqueta)"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-06-10 12:26:00", "details": "WC48 P5F: AOI (fallo etiqueta)"}
+{"user": "pideu2", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 12:26:01", "details": "WC48 P5F: AOI (fallo etiqueta)"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-06-10 12:30:37", "details": "WC48 P5F: Etiquetadora"}
+{"user": "pideu2", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 12:30:38", "details": "WC48 P5F: Etiquetadora"}
+{"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-10 12:38:44", "details": "WC47 NACP: Etiquetadora"}
+{"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 12:38:48", "details": "WC47 NACP: Etiquetadora"}
+{"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-10 12:42:58", "details": "WC47 NACP: Ascensor no sube"}
+{"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 12:42:59", "details": "WC47 NACP: Ascensor no sube"}
+{"user": "pideu3", "action": "Confirmar Incidencia", "date": "2024-06-10 12:50:25", "details": "WC49 P5H: No coloca bien el sealling"}
+{"user": "pideu3", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 12:50:26", "details": "WC49 P5H: No coloca bien el sealling"}
+{"user": "pideu3", "action": "Confirmar Incidencia", "date": "2024-06-10 12:50:31", "details": "WC49 P5H: La c\u00e1mara no detecta Busbar"}
+{"user": "pideu3", "action": "Confirmar Incidencia", "date": "2024-06-10 12:50:32", "details": "WC49 P5H: La c\u00e1mara no detecta Busbar"}
+{"user": "pideu3", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 12:50:33", "details": "WC49 P5H: La c\u00e1mara no detecta Busbar"}
+{"user": "pideu3", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 12:50:34", "details": "WC49 P5H: La c\u00e1mara no detecta Busbar"}
+{"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-10 12:54:48", "details": "WC47 NACP: No atornilla clips"}
+{"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 12:54:50", "details": "WC47 NACP: No atornilla clips"}

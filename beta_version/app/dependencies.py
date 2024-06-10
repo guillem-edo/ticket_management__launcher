@@ -1,6 +1,7 @@
 import os
 import json
 import csv
+import seaborn as sns
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure

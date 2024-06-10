@@ -16,10 +16,10 @@ class TurnChart(QWidget):
         layout.addWidget(self.chart_label)
 
     def plot_daily_chart(self, incidents, title):
-        self._plot_chart(incidents, title, 'skyblue', horizontal=False)
+        self._plot_chart(incidents, title, horizontal=False)
 
     def plot_shift_chart(self, incidents, title):
-        self._plot_chart(incidents, title, 'lightcoral', horizontal=False)
+        self._plot_chart(incidents, title, horizontal=False)
 
     def plot_general_chart(self, incidents, title):
         counts = defaultdict(Counter)
@@ -32,20 +32,26 @@ class TurnChart(QWidget):
         if self.figure:
             plt.close(self.figure)  # Cerrar cualquier figura antigua
 
-        self.figure = plt.figure()
+        self.figure = plt.figure(figsize=(12, 8))  # Ajustar el tamaño de la figura
         self.canvas = FigureCanvas(self.figure)  # Crear el canvas de la figura
         layout = self.layout()
         layout.addWidget(self.canvas)  # Añadir el canvas al layout
 
         ax = self.figure.add_subplot(111)
-        colors = plt.cm.tab20.colors  # Usamos un colormap con suficientes colores
+        colors = sns.color_palette("Set2", n_colors=len(counts))  # Usar una paleta de colores suaves
 
         all_labels = sorted({label for counter in counts.values() for label in counter})
         bottom = [0] * len(all_labels)
 
-        for idx, (block, counter) in enumerate(counts.items()):
+        # Mapa de colores por bloque
+        block_colors = {block: colors[idx % len(colors)] for idx, block in enumerate(counts.keys())}
+
+        bar_collections = []
+
+        for block, counter in counts.items():
             values = [counter[label] for label in all_labels]
-            bars = ax.barh(all_labels, values, left=bottom, color=colors[idx % len(colors)], label=block)
+            bars = ax.barh(all_labels, values, left=bottom, color=block_colors[block], label=block)
+            bar_collections.append((block, bars))
             bottom = [i + j for i, j in zip(bottom, values)]
             for bar, value in zip(bars, values):
                 if value > 0:
@@ -59,9 +65,13 @@ class TurnChart(QWidget):
         ax.set_title(title, fontsize=14, fontweight='bold')
         ax.set_xlabel('Cantidad', fontsize=12)
         ax.set_ylabel('Incidencia', fontsize=12)
-        ax.legend(title="Líneas", bbox_to_anchor=(1.05, 1), loc='upper left')  # Ajustar la leyenda para que no solape las barras
+
+        # Reubicar la leyenda fuera del gráfico
+        ax.legend(title="Bloques", bbox_to_anchor=(1.05, 1), loc='upper left')  
 
         plt.xticks(rotation=45, ha='right')
+        ax.set_yticklabels([label if len(label) < 30 else label[:27] + '...' for label in all_labels], fontsize=10)  # Ajustar etiquetas largas
+
         try:
             self.figure.tight_layout()
         except ValueError:
@@ -69,7 +79,7 @@ class TurnChart(QWidget):
 
         self.canvas.draw()  # Asegurarse de actualizar el canvas
 
-    def _plot_chart(self, incidents, title, color, horizontal=True):
+    def _plot_chart(self, incidents, title, horizontal=True):
         counts = Counter()
         for block, data in incidents.items():
             counts.update(data['incidences'])
@@ -93,9 +103,9 @@ class TurnChart(QWidget):
         ax = self.figure.add_subplot(111)
 
         if horizontal:
-            bars = ax.barh(labels, values, color=color)
+            bars = ax.barh(labels, values, color='skyblue')
         else:
-            bars = ax.bar(labels, values, color=color)
+            bars = ax.bar(labels, values, color='skyblue')
 
         ax.set_title(title, fontsize=14, fontweight='bold')
         ax.set_xlabel('Cantidad', fontsize=12)
