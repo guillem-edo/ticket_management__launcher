@@ -1,6 +1,4 @@
-import json
-import datetime
-from PyQt5.QtCore import QTimer
+from dependencies import *
 
 class MTBFDisplay():
 
@@ -33,10 +31,20 @@ class MTBFDisplay():
 
 
     def reset_mtbf_timer(self):
-        self.reset_mtbf_data()
-        timer = QTimer(self)
-        timer.timeout.connect(self.reset_mtbf_data)
-        timer.start(24 * 60 * 60 * 1000)
+        """Reinicia el temporizador para el cálculo del MTBF."""
+        self.mtbf_data = {block: {"total_time": 0, "incident_count": 0} for block in self.mtbf_data.keys()}
+        for block in self.mtbf_labels.keys():
+            self.mtbf_labels[block].setText(f"MTBF {block}: N/A")
+
+        # Asegúrate de que el temporizador se reinicia cada 24 horas
+        self.schedule_daily_reset()
+
+    def schedule_daily_reset(self):
+        now = datetime.now()
+        next_reset = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        delay = (next_reset - now).total_seconds() * 1000  # Convertir a milisegundos
+        self.timer = QTimer()
+        self.timer.singleShot(int(delay), self.reset_mtbf_timer)
 
     def reset_mtbf_data(self):
         if self.mtbf_data is not None:
