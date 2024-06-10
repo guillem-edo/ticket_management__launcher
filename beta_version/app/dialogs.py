@@ -233,6 +233,7 @@ class AdvancedFilterDialog(QDialog):
                 writer.writerow([incidencia, num_incidencias])
 
         QMessageBox.information(self, "Exportar Informe", "Informe exportado con éxito en formato CSV.")
+        
 class TopIncidentsDialog(QDialog):
     def __init__(self, parent=None, incident_details=None):
         super().__init__(parent)

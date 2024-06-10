@@ -116,6 +116,9 @@ class TicketManagement(QMainWindow):
         self.change_history_list = QListWidget(self)
         self.relevant_layout.addWidget(self.change_history_list)
 
+        self.update_top_incidents()
+        self.update_change_history()
+
         # Nueva pestaña para gráficos con tres botones
         self.charts_tab = QWidget()
         self.tabWidget.addTab(self.charts_tab, "Gráficos")
@@ -801,17 +804,13 @@ class TicketManagement(QMainWindow):
         return incident_counter.most_common(10)  # Devuelve las 10 incidencias más comunes
 
     def update_top_incidents(self):
-        # Suponiendo que 'self.incident_details' es un diccionario de bloques que contiene contadores de incidencias
         all_incidents = Counter()
-        for block, incidents in self.incident_details.items():
-            all_incidents.update(incidents)
+        for block in self.user.blocks:  # Filtrar solo los bloques del usuario actual
+            all_incidents.update(self.incident_details.get(block, {}))
         
         sorted_incidents = sorted(all_incidents.items(), key=lambda x: x[1], reverse=True)
 
-        # Limpiar la lista existente para actualizarla
         self.top_incidents_list.clear()
-
-        # Agregar incidencias ordenadas a la lista
         for incident, count in sorted_incidents:
             self.top_incidents_list.addItem(f"{incident} - {count} veces")
 
@@ -839,13 +838,11 @@ class TicketManagement(QMainWindow):
                     except json.JSONDecodeError:
                         continue
 
-        # Ordenar cambios por fecha en orden cronológico inverso
         changes.sort(key=lambda x: x['date'], reverse=True)
 
         for change in changes:
             item = QListWidgetItem(f"{change['date']} - {change['user']}: {change['action']} - {change['details']}")
             self.change_history_list.addItem(item)
-
 
     def show_daily_chart(self):
         self.clear_chart_display_area()
