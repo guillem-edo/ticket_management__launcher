@@ -55,7 +55,7 @@ class TicketManagement(QMainWindow):
         self.load_incidence_state()
 
         # Realizar acciones iniciales de actualización
-        self.mtbf_display.reset_mtbf_timer()  # Asegúrate de llamar al método correcto
+        self.mtbf_display.reset_mtbf_timer()
         self.schedule_daily_reset()
         self.update_all()
 
@@ -115,9 +115,6 @@ class TicketManagement(QMainWindow):
 
         self.change_history_list = QListWidget(self)
         self.relevant_layout.addWidget(self.change_history_list)
-
-        self.update_top_incidents()
-        self.update_change_history()
 
         # Nueva pestaña para gráficos con tres botones
         self.charts_tab = QWidget()
@@ -184,7 +181,7 @@ class TicketManagement(QMainWindow):
             mtbf_layout.addWidget(self.mtbf_labels[block])
 
             info_button = QPushButton()
-            info_button.setIcon(QIcon(os.path.join(os.path.dirname(__file__), "question_icon.png")))  # Asegúrate de que esta ruta sea correcta
+            info_button.setIcon(QIcon(os.path.join(os.path.dirname(__file__), "question_icon.png")))
             info_button.setToolTip("Haz clic para obtener más información sobre MTBF.")
             info_button.setStyleSheet("background-color: transparent; border: none; padding: 0px;")
             info_button.setFixedSize(24, 24)
@@ -219,10 +216,9 @@ class TicketManagement(QMainWindow):
         timer.timeout.connect(self.update_status_bar)
         timer.start(1000)
 
-        # Configura un temporizador para actualizar las incidencias y el historial de cambios periódicamente
         update_timer = QTimer(self)
         update_timer.timeout.connect(self.update_all)
-        update_timer.start(60000)  # Actualiza cada 60 segundos
+        update_timer.start(60000)
 
         self.apply_styles()
         self.load_last_excel_file()
@@ -396,19 +392,66 @@ class TicketManagement(QMainWindow):
 
     def update_general_chart(self):
         self.clear_chart_display_area()
+        
         start_dt = datetime.combine(datetime.today(), time.min)
         end_dt = datetime.combine(datetime.today(), time.max)
-        incidents_general, _ = self.get_general_filtered_incidents(start_dt, end_dt)
-        self.general_chart = TurnChart(self)
-        self.general_chart.plot_general_chart(incidents_general, "Incidencias Generales")
-        self.general_chart_canvas = FigureCanvas(self.general_chart.figure)
-        self.scroll_layout.addWidget(self.general_chart_canvas)
+        incidents_general, trends = self.get_general_filtered_incidents(start_dt, end_dt)
+
+        if not incidents_general:
+            return
+
+        # Organizar incidencias por bloque
+        block_incidents = {}
+        for block, data in incidents_general.items():
+            for incident in data['incidences']:
+                if block not in block_incidents:
+                    block_incidents[block] = []
+                block_incidents[block].append(incident)
+
+        # Crear la figura y los ejes
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        # Colores para los bloques
+        colors = plt.cm.tab20.colors  # Usar una paleta de colores predefinida
+        color_dict = {block: colors[i % len(colors)] for i, block in enumerate(block_incidents)}
+
+        # Crear el gráfico de barras horizontal
+        incident_labels = []
+        incident_counts = []
+        bar_colors = []
+
+        for block, incidents in block_incidents.items():
+            counter = Counter(incidents)
+            for incident, count in counter.items():
+                incident_labels.append(incident)  # Mostrar solo el nombre de la incidencia
+                incident_counts.append(count)
+                bar_colors.append(color_dict[block])
+
+        bars = ax.barh(incident_labels, incident_counts, color=bar_colors)
+
+        # Ajustar la leyenda
+        legend_labels = {color_dict[block]: block for block in block_incidents}
+        handles = [plt.Line2D([0], [0], color=color, lw=4) for color in legend_labels.keys()]
+        ax.legend(handles, legend_labels.values(), title="Bloques", bbox_to_anchor=(1.05, 1), loc='upper left')
+
+        # Mejorar la estética del gráfico
+        ax.set_ylabel("Incidencias")
+        ax.set_xlabel("Número de Incidencias")
+        ax.set_title("Incidencias Generales")
+
+        # Ajustar los márgenes para que la leyenda no solape las barras
+        plt.subplots_adjust(left=0.3, right=0.75)
+
+        # Crear el canvas y añadirlo al área de visualización
+        canvas = FigureCanvas(fig)
+        self.scroll_layout.addWidget(canvas)
+        canvas.draw()
 
     def clear_chart_display_area(self):
-        for i in reversed(range(self.scroll_layout.count())):
-            widget = self.scroll_layout.itemAt(i).widget()
-            if widget is not None:
-                widget.deleteLater()
+        while self.scroll_layout.count():
+            child = self.scroll_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
 
     def update_tabs_incidences(self):
         for name in self.blocks:
@@ -882,6 +925,7 @@ class TicketManagement(QMainWindow):
 
     def show_general_chart(self):
         self.clear_chart_display_area()
+        self.update_general_chart()
         start_dt = datetime.combine(datetime.today(), time.min)
         end_dt = datetime.combine(datetime.today(), time.max)
         incidents_general, _ = self.get_general_filtered_incidents(start_dt, end_dt)
