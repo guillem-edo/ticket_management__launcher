@@ -78,8 +78,7 @@ class TicketManagement(QMainWindow):
 
     def initUI(self):
         self.setWindowTitle(f"Ticket Management - {self.user.username}")
-        self.resize(1200, 800)
-        self.center_window_app()
+        self.center_window_app()  # Centrar la ventana después de establecer el tamaño
 
         main_layout = QHBoxLayout()
         central_widget = QWidget()
@@ -181,7 +180,7 @@ class TicketManagement(QMainWindow):
             mtbf_layout.addWidget(self.mtbf_labels[block])
 
             info_button = QPushButton()
-            info_button.setIcon(QIcon(os.path.join(os.path.dirname(__file__), "question_icon.png")))
+            info_button.setIcon(QIcon(os.path.join(os.path.dirname(__file__), "question_icon.png")))  # Asegúrate de que esta ruta sea correcta
             info_button.setToolTip("Haz clic para obtener más información sobre MTBF.")
             info_button.setStyleSheet("background-color: transparent; border: none; padding: 0px;")
             info_button.setFixedSize(24, 24)
@@ -216,9 +215,10 @@ class TicketManagement(QMainWindow):
         timer.timeout.connect(self.update_status_bar)
         timer.start(1000)
 
+        # Configura un temporizador para actualizar las incidencias y el historial de cambios periódicamente
         update_timer = QTimer(self)
         update_timer.timeout.connect(self.update_all)
-        update_timer.start(60000)
+        update_timer.start(60000)  # Actualiza cada 60 segundos
 
         self.apply_styles()
         self.load_last_excel_file()
@@ -257,12 +257,14 @@ class TicketManagement(QMainWindow):
 
 
     def center_window_app(self):
-        screen_rect_app = QApplication.desktop().availableGeometry()
-        window_width = self.width()
-        window_height = self.height()
-        x = (screen_rect_app.width() - window_width) // 2
-        y = (screen_rect_app.height() - window_height) // 2
-        self.setGeometry(QRect(x, y, window_width, window_height))
+        screen_geometry = QApplication.desktop().availableGeometry()
+        window_width = int(screen_geometry.width() * 0.8)
+        window_height = int(screen_geometry.height() * 0.8)
+        self.resize(window_width, window_height)
+        screen_center = screen_geometry.center()
+        window_geometry = self.frameGeometry()
+        window_geometry.moveCenter(screen_center)
+        self.move(window_geometry.topLeft())
 
     def open_report_export_dialog(self):
         self.report_dialog = ExportReportDialog(self.incidencias)
