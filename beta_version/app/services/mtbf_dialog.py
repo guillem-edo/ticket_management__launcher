@@ -1,5 +1,6 @@
 from dependencies import *
 
+<<<<<<< HEAD:beta_version/app/services/mtbf_dialog.py
 class MTBFDisplay(QObject):
 
     def __init__(self, parent = None):
@@ -26,42 +27,61 @@ class MTBFDisplay(QObject):
         layout.addWidget(close_button)
         dialog.setLayout(layout)
         dialog.exec_()
+=======
+class MTBFDisplay:
+    def __init__(self):
+        self.mtbf_data = {}
+        self.mtbf_labels = {}
+>>>>>>> 1faa5ff97e308c736376616e21df72d5a2804e60:beta_version/app/mtbf_dialog.py
 
     def update_mtbf(self, block_name, timestamp):
+        if block_name not in self.mtbf_data:
+            self.mtbf_data[block_name] = {'last_time': None, 'total_time': 0, 'incident_count': 0}
+
+        mtbf_info = self.mtbf_data[block_name]
+        if mtbf_info["last_time"] is not None:
+            time_diff = (timestamp - mtbf_info["last_time"]).total_seconds() / 60.0
+            mtbf_info["total_time"] += time_diff
+            mtbf_info["incident_count"] += 1
+        else:
+            mtbf_info["incident_count"] = 1
+        
+        mtbf_info["last_time"] = timestamp
+        self.update_mtbf_display()
+
+    def calculate_mtbf(self, block_name):
         if block_name in self.mtbf_data:
             mtbf_info = self.mtbf_data[block_name]
-            if mtbf_info["last_time"] is not None:
-                time_diff = (timestamp - mtbf_info["last_time"]).total_seconds() / 60.0
-                mtbf_info["total_time"] += time_diff
-                mtbf_info["incident_count"] += 1
-            mtbf_info["last_time"] = timestamp
-            self.update_mtbf_display()
+            if mtbf_info["incident_count"] > 0:
+                mtbf = mtbf_info["total_time"] / mtbf_info["incident_count"]
+                return f"{mtbf:.2f} minutos"
+        return "N/A"
 
     def update_mtbf_display(self):
-        if self.mtbf_data is None:
-            self.mtbf_data = {}  # Asegurarse de que self.mtbf_data es un diccionario si era None.
-            print("MTBF data was None, initialized to empty dictionary.")
-
         for block, data in self.mtbf_data.items():
             if block in self.mtbf_labels:
                 if data["incident_count"] > 0:
                     mtbf = data["total_time"] / data["incident_count"]
                     self.mtbf_labels[block].setText(f"MTBF {block}: {mtbf:.2f} minutos")
                 else:
+<<<<<<< HEAD:beta_version/app/services/mtbf_dialog.py
                     self.mtbf_labels[block].setText("MTBF {block}: N/A")
+=======
+                    self.mtbf_labels[block].setText(f"MTBF {block}: N/A")
+>>>>>>> 1faa5ff97e308c736376616e21df72d5a2804e60:beta_version/app/mtbf_dialog.py
 
     def reset_mtbf_timer(self):
-        self.reset_mtbf_data()
-        timer = QTimer(self)
-        timer.timeout.connect(self.reset_mtbf_data)
-        timer.start(24 * 60 * 60 * 1000)
+        self.mtbf_data = {block: {"total_time": 0, "incident_count": 0, "last_time": None} for block in self.mtbf_data.keys()}
+        for block in self.mtbf_labels.keys():
+            self.mtbf_labels[block].setText(f"MTBF {block}: N/A")
+        self.schedule_daily_reset()
 
-    def reset_mtbf_data(self):
-        if self.mtbf_data is not None:
-            for block in self.mtbf_data.keys():
-                self.mtbf_data[block] = {'last_time': None, 'total_time': 0, 'incident_count': 0}
-        else:
-            print("MTBF data is not initialized.")
+    def schedule_daily_reset(self):
+        now = datetime.now()
+        next_reset = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        delay = (next_reset - now).total_seconds() * 1000  # Convertir a milisegundos
+        self.timer = QTimer()
+        self.timer.singleShot(int(delay), self.reset_mtbf_timer)
 
     def load_mtbf_data(self):
         try:
@@ -81,8 +101,7 @@ class MTBFDisplay(QObject):
                             'last_time': None
                         }
         except FileNotFoundError:
-            print("MTBF data file not found. Initializing with empty data.")
-            self.mtbf_data = {block: {'last_time': None, 'total_time': 0, 'incident_count': 0} for block in self.incidencias.keys()}
+            self.mtbf_data = {}
         except Exception as e:
             print(f"Failed to load MTBF data: {e}")
             self.mtbf_data = {}
@@ -102,7 +121,6 @@ class MTBFDisplay(QObject):
                     'incident_count': data['incident_count'],
                     'last_time': None
                 }
-
         with open('mtbf_data.json', 'w') as f:
             json.dump(mtbf_data_to_save, f)
     

@@ -1,3 +1,4 @@
+<<<<<<< HEAD:beta_version/app/management.py
 from .dependencies import *
 
 from .ui.dialogs import AdvancedFilterDialog, TopIncidentsDialog
@@ -11,6 +12,21 @@ from .services.reports_export import ExportReportDialog
 from .services.change_history import ChangeHistoryDialog
 from .services.send_report import SendReportDialog
 from .services.mtbf_dialog import MTBFDisplay
+=======
+from dependencies import *
+
+from .dialogs import AdvancedFilterDialog, TopIncidentsDialog
+from .incidence_chart import TurnChart
+from .admin_dialog import AdminDialog
+from .excel_window import ExcelWindow
+# from .responsive_design import center_window, adjust_to_screen
+# from .animations import fade_in
+from .reports_export import ExportReportDialog
+from .change_history import ChangeHistoryDialog
+from .email_notifications import EmailNotifier
+from .send_report import SendReportDialog
+from .mtbf_dialog import MTBFDisplay
+>>>>>>> 1faa5ff97e308c736376616e21df72d5a2804e60:beta_version/app/v2_management.py
 
 class TicketManagement(QMainWindow):
 
@@ -18,18 +34,26 @@ class TicketManagement(QMainWindow):
         super().__init__()
         self.user = user
 
+<<<<<<< HEAD:beta_version/app/management.py
         self.excel_file = None
         self.excel_window = None
 
         # Configuración de archivos y carga de datos
+=======
+>>>>>>> 1faa5ff97e308c736376616e21df72d5a2804e60:beta_version/app/v2_management.py
         self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidencias_config.json")
         self.mtbf_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mtbf_data.json")
         self.change_log_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "change_log.json")
         self.state_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidence_state.json")
+        self.detailed_messages_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "detailed_messages.json")
 
         self.incidencias = AdminDialog.load_incidencias(self.config_file) or self.default_incidences()
         self.blocks = user.blocks if not user.is_admin else list(self.incidencias.keys())
 
+<<<<<<< HEAD:beta_version/app/management.py
+=======
+        # Deberías inicializar todos los atributos necesarios antes de llamar a initUI()
+>>>>>>> 1faa5ff97e308c736376616e21df72d5a2804e60:beta_version/app/v2_management.py
         self.last_incidence_labels = {}
         self.incidences_count = {block: 0 for block in self.incidencias.keys()}
         self.pending_incidents = []
@@ -39,15 +63,31 @@ class TicketManagement(QMainWindow):
         self.mtbf_data = {}
         self.mtbf_labels = {block: QLabel(f"MTBF {block}: N/A") for block in self.incidencias.keys()}
 
+<<<<<<< HEAD:beta_version/app/management.py
         self.mtbf_display = MTBFDisplay(self)
+=======
+        # Instancia de MTBFDisplay
+        self.mtbf_display = MTBFDisplay()
+>>>>>>> 1faa5ff97e308c736376616e21df72d5a2804e60:beta_version/app/v2_management.py
         self.mtbf_display.load_mtbf_data()
         self.mtbf_display.mtbf_data = self.mtbf_data
         self.mtbf_display.mtbf_labels = self.mtbf_labels
 
+<<<<<<< HEAD:beta_version/app/management.py
         self.load_incident_details()
         self.mtbf_display.load_mtbf_data()
-        self.load_incidence_state()
+=======
+        # Ahora puedes llamar a initUI
+        self.initUI()
 
+        # Carga de datos externos
+        self.load_incident_details()
+        self.load_last_excel_file()
+>>>>>>> 1faa5ff97e308c736376616e21df72d5a2804e60:beta_version/app/v2_management.py
+        self.load_incidence_state()
+        self.load_detailed_messages()
+
+<<<<<<< HEAD:beta_version/app/management.py
         self.excel_display = excelDialogs()
         self.excel_display.updated.connect(self.update_top_incidents)
         self.excel_display.excelSelected.connect(self.handle_excel_selected)
@@ -58,6 +98,9 @@ class TicketManagement(QMainWindow):
 
         self.initUI()
 
+=======
+        # Realizar acciones iniciales de actualización
+>>>>>>> 1faa5ff97e308c736376616e21df72d5a2804e60:beta_version/app/v2_management.py
         self.mtbf_display.reset_mtbf_timer()
         self.schedule_daily_reset()
         self.update_all()
@@ -74,8 +117,12 @@ class TicketManagement(QMainWindow):
 
     def initUI(self):
         self.setWindowTitle(f"Ticket Management - {self.user.username}")
+<<<<<<< HEAD:beta_version/app/management.py
         self.resize(1200, 800)
         self.center_window_app()
+=======
+        self.center_window_app()  # Centrar la ventana y ajustar el tamaño basado en la resolución de la pantalla
+>>>>>>> 1faa5ff97e308c736376616e21df72d5a2804e60:beta_version/app/v2_management.py
 
         main_layout = QHBoxLayout()
         central_widget = QWidget()
@@ -91,6 +138,10 @@ class TicketManagement(QMainWindow):
         for name in self.blocks:
             self.create_tab(name, self.incidencias[name])
 
+<<<<<<< HEAD:beta_version/app/management.py
+=======
+        # Nueva pestaña para Incidencias Más Relevantes y el Historial de Cambios
+>>>>>>> 1faa5ff97e308c736376616e21df72d5a2804e60:beta_version/app/v2_management.py
         self.relevant_tab = QWidget()
         self.tabWidget.addTab(self.relevant_tab, "Incidencias y Historial")
         self.relevant_layout = QVBoxLayout(self.relevant_tab)
@@ -111,6 +162,10 @@ class TicketManagement(QMainWindow):
         self.change_history_list = QListWidget(self)
         self.relevant_layout.addWidget(self.change_history_list)
 
+<<<<<<< HEAD:beta_version/app/management.py
+=======
+        # Nueva pestaña para gráficos con tres botones
+>>>>>>> 1faa5ff97e308c736376616e21df72d5a2804e60:beta_version/app/v2_management.py
         self.charts_tab = QWidget()
         self.tabWidget.addTab(self.charts_tab, "Gráficos")
         self.charts_layout = QHBoxLayout(self.charts_tab)
@@ -138,8 +193,14 @@ class TicketManagement(QMainWindow):
 
         self.chart_display_area = QScrollArea(self.charts_tab)
         self.chart_display_area.setWidgetResizable(True)
+<<<<<<< HEAD:beta_version/app/management.py
         self.scroll_content = QWidget()
         self.scroll_layout = QVBoxLayout(self.scroll_content)  # Aquí se define scroll_layout
+=======
+        self.chart_display_area.setLayout(QVBoxLayout())
+        self.scroll_content = QWidget()
+        self.scroll_layout = QVBoxLayout(self.scroll_content)
+>>>>>>> 1faa5ff97e308c736376616e21df72d5a2804e60:beta_version/app/v2_management.py
         self.scroll_content.setLayout(self.scroll_layout)
         self.chart_display_area.setWidget(self.scroll_content)
         self.charts_layout.addWidget(self.chart_display_area)
@@ -150,7 +211,11 @@ class TicketManagement(QMainWindow):
 
         select_excel_button = QPushButton("Seleccionar Archivo Excel", self)
         select_excel_button.setStyleSheet(self.get_button_style())
+<<<<<<< HEAD:beta_version/app/management.py
         select_excel_button.clicked.connect(self.excel_display.select_excel_file)
+=======
+        select_excel_button.clicked.connect(self.select_excel_file)
+>>>>>>> 1faa5ff97e308c736376616e21df72d5a2804e60:beta_version/app/v2_management.py
         right_layout.addWidget(select_excel_button)
 
         self.excel_path_display = QLineEdit(self)
@@ -168,6 +233,7 @@ class TicketManagement(QMainWindow):
         self.refresh_button.clicked.connect(self.update_all)
         right_layout.addWidget(self.refresh_button)
 
+<<<<<<< HEAD:beta_version/app/management.py
         self.global_incidence_list = QListWidget(self)
         self.global_incidence_list.setStyleSheet("QListWidget { background-color: #f0f0f0; border: 1px solid #ccc; padding: 5px; }")
         right_layout.addWidget(self.global_incidence_list)
@@ -191,18 +257,149 @@ class TicketManagement(QMainWindow):
         update_timer.start(60000)  # Actualiza cada 60 segundos
 
         self.apply_styles()
+=======
+        for block in self.user.blocks:
+            mtbf_layout = QHBoxLayout()
+            self.mtbf_labels[block].setStyleSheet("font-size: 16px; font-weight: bold; color: #4CAF50; background-color: #f0f0f0; padding: 5px; border-radius: 5px;")
+            mtbf_layout.addWidget(self.mtbf_labels[block])
+
+            info_button = QPushButton()
+            info_button.setIcon(QIcon(os.path.join(os.path.dirname(__file__), "question_icon.png")))  # Asegúrate de que esta ruta sea correcta
+            info_button.setToolTip("Haz clic para obtener más información sobre MTBF.")
+            info_button.setStyleSheet("background-color: transparent; border: none; padding: 0px;")
+            info_button.setFixedSize(24, 24)
+            info_button.clicked.connect(self.show_mtbf_info)
+            mtbf_layout.addWidget(info_button)
+
+            right_layout.addLayout(mtbf_layout)
+
+        self.global_incidence_list = QListWidget(self)
+        self.global_incidence_list.setStyleSheet("QListWidget { background-color: #f0f0f0; border: 1px solid #ccc; padding: 5px; }")
+        right_layout.addWidget(self.global_incidence_list)
+
+        button_layout = QHBoxLayout()
+        filter_button = QPushButton("Filtro Avanzado", self)
+        filter_button.setStyleSheet(self.get_button_style())
+        filter_button.clicked.connect(self.open_advanced_filter_dialog)
+        button_layout.addWidget(filter_button)
+
+        right_layout.addLayout(button_layout)
+
+        self.status_bar = QStatusBar(self)
+        self.setStatusBar(self.status_bar)
+
+        self.detailed_messages_tab = QWidget()
+        self.detailed_messages_layout = QVBoxLayout(self.detailed_messages_tab)
+        self.tabWidget.addTab(self.detailed_messages_tab, "Mensajes detallados")
+        self.detailed_messages_list = QListWidget()
+        self.detailed_messages_list.setStyleSheet("""
+            QListWidget {
+                background-color: #f9f9f9;
+                border: 1px solid #ddd;
+                padding: 10px;
+            }
+            QListWidget::item {
+                padding: 10px;
+                border-bottom: 1px solid #ddd;
+            }
+            QListWidget::item:selected {
+                background-color: #4CAF50;  /* Color de fondo cuando se selecciona */
+                color: white;  /* Color de texto cuando se selecciona */
+            }
+        """)
+        self.detailed_messages_layout.addWidget(self.detailed_messages_list)
+
+        timer = QTimer(self)
+        timer.timeout.connect(self.update_status_bar)
+        timer.start(1000)
+
+        # Configura un temporizador para actualizar las incidencias y el historial de cambios periódicamente
+        update_timer = QTimer(self)
+        update_timer.timeout.connect(self.update_all)
+        update_timer.start(60000)  # Actualiza cada 60 segundos
+
+        self.apply_styles()
+        self.load_last_excel_file()
+        self.load_incidence_state()
+        self.load_detailed_messages()
+
+        self.mtbf_display.reset_mtbf_timer()
+        self.update_all()
+>>>>>>> 1faa5ff97e308c736376616e21df72d5a2804e60:beta_version/app/v2_management.py
 
     def open_send_report_dialog(self):
         self.send_report_dialog = SendReportDialog(self.incidencias)
         self.send_report_dialog.exec_()
     
+<<<<<<< HEAD:beta_version/app/management.py
+=======
+    def export_csv(self):
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getSaveFileName(self, "Guardar Informe CSV", "", "CSV Files (*.csv);;All Files (*)", options=options)
+        if not file_name:
+            return
+
+        with open(file_name, 'w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow(["Bloque", "Número de Incidencias", "Incidencia más frecuente"])
+            for row in range(self.results_table.rowCount()):
+                bloque = self.results_table.item(row, 0).text() if self.results_table.item(row, 0) else ''
+                num_incidencias = self.results_table.item(row, 1).text() if self.results_table.item(row, 1) else ''
+                incidencia_frecuente = self.results_table.item(row, 2).text() if self.results_table.item(row, 2) else ''
+                writer.writerow([bloque, num_incidencias, incidencia_frecuente])
+
+            writer.writerow([])
+            writer.writerow(["Incidencia", "Número de Incidencias"])
+            for row in range(self.incidents_table.rowCount()):
+                incidencia = self.incidents_table.item(row, 0).text() if self.incidents_table.item(row, 0) else ''
+                num_incidencias = self.incidents_table.item(row, 1).text() if self.incidents_table.item(row, 1) else ''
+                writer.writerow([incidencia, num_incidencias])
+
+        QMessageBox.information(self, "Exportar Informe", "Informe exportado con éxito en formato CSV.")
+    
+    # Método para guardar los mensajes detallados en un archivo JSON
+    def save_detailed_messages(self):
+        detailed_messages_by_user = {}
+        if os.path.exists(self.detailed_messages_file):
+            try:
+                with open(self.detailed_messages_file, 'r') as file:
+                    detailed_messages_by_user = json.load(file)
+                    if not isinstance(detailed_messages_by_user, dict):
+                        detailed_messages_by_user = {}
+            except json.JSONDecodeError:
+                detailed_messages_by_user = {}
+        detailed_messages_by_user[self.user.username] = []
+        for i in range(self.detailed_messages_list.count()):
+            item = self.detailed_messages_list.item(i)
+            detailed_messages_by_user[self.user.username].append(item.text())
+        with open(self.detailed_messages_file, 'w') as file:
+            json.dump(detailed_messages_by_user, file, indent=4)
+
+    def load_detailed_messages(self):
+        if os.path.exists(self.detailed_messages_file):
+            try:
+                with open(self.detailed_messages_file, 'r') as file:
+                    detailed_messages_by_user = json.load(file)
+                    if isinstance(detailed_messages_by_user, dict):
+                        self.detailed_messages_list.clear()  # Limpiar la lista antes de cargar nuevos mensajes
+                        user_messages = detailed_messages_by_user.get(self.user.username, [])
+                        for message in user_messages:
+                            self.detailed_messages_list.addItem(message)
+                    else:
+                        self.detailed_messages_list.addItem("Error: Unexpected data format in detailed messages file.")
+            except json.JSONDecodeError:
+                self.detailed_messages_list.addItem("Error: Failed to load detailed messages due to JSON decode error.")
+
+>>>>>>> 1faa5ff97e308c736376616e21df72d5a2804e60:beta_version/app/v2_management.py
     def center_window_app(self):
-        screen_rect_app = QApplication.desktop().availableGeometry()
-        window_width = self.width()
-        window_height = self.height()
-        x = (screen_rect_app.width() - window_width) // 2
-        y = (screen_rect_app.height() - window_height) // 2
-        self.setGeometry(QRect(x, y, window_width, window_height))
+        screen_geometry = QApplication.desktop().availableGeometry()
+        window_width = int(screen_geometry.width() * 0.8)
+        window_height = int(screen_geometry.height() * 0.8)
+        self.resize(window_width, window_height)
+        screen_center = screen_geometry.center()
+        window_geometry = self.frameGeometry()
+        window_geometry.moveCenter(screen_center)
+        self.move(window_geometry.topLeft())
 
     def open_report_export_dialog(self):
         self.report_dialog = ExportReportDialog(self.incidencias)
@@ -218,7 +415,7 @@ class TicketManagement(QMainWindow):
             "action": action,
             "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "details": details
-    }
+        }
         with open(self.change_log_file, 'a') as file:
             json.dump(change, file)
             file.write('\n')
@@ -265,6 +462,7 @@ class TicketManagement(QMainWindow):
 
     def update_all(self):
         self.update_top_incidents()
+<<<<<<< HEAD:beta_version/app/management.py
         self.update_change_history()
         self.update_global_incidence_list()
         self.update_tabs_incidences()
@@ -285,6 +483,12 @@ class TicketManagement(QMainWindow):
         # Agregar incidencias ordenadas a la lista
         for incident, count in sorted_incidents:
             self.top_incidents_list.addItem(f"{incident} - {count} veces")
+=======
+        self.update_global_incidence_list()
+        self.update_tabs_incidences()
+        self.mtbf_display.update_mtbf_display()
+        self.update_charts()
+>>>>>>> 1faa5ff97e308c736376616e21df72d5a2804e60:beta_version/app/v2_management.py
 
     def update_chart(self):
         # Asegúrate de cerrar cualquier figura antigua que esté abierta
@@ -317,7 +521,7 @@ class TicketManagement(QMainWindow):
         self.update_daily_chart()
         self.update_shift_chart()
         self.update_general_chart()
-    
+
     def update_daily_chart(self):
         self.clear_chart_display_area()
         today = datetime.today().date()
@@ -326,7 +530,7 @@ class TicketManagement(QMainWindow):
         self.daily_chart.plot_daily_chart(incidents_daily, "Incidencias Diarias")
         self.daily_chart_canvas = FigureCanvas(self.daily_chart.figure)
         self.scroll_layout.addWidget(self.daily_chart_canvas)
-            
+
     def update_shift_chart(self):
         self.clear_chart_display_area()
         today = datetime.today().date()
@@ -340,15 +544,23 @@ class TicketManagement(QMainWindow):
 
     def update_general_chart(self):
         self.clear_chart_display_area()
+
         start_dt = datetime.combine(datetime.today(), time.min)
         end_dt = datetime.combine(datetime.today(), time.max)
         incidents_general, _ = self.get_general_filtered_incidents(start_dt, end_dt)
-        self.general_chart = TurnChart(self)
-        self.general_chart.plot_general_chart(incidents_general, "Incidencias Generales")
-        self.general_chart_canvas = FigureCanvas(self.general_chart.figure)
-        self.scroll_layout.addWidget(self.general_chart_canvas)
+
+        if not incidents_general:
+            return
+
+        # Crear una instancia de TurnChart
+        turn_chart = TurnChart(self)
+        turn_chart.plot_general_chart(incidents_general, "Incidencias Generales")
+
+        # Añadir el nuevo gráfico al layout
+        self.scroll_layout.addWidget(turn_chart)
 
     def clear_chart_display_area(self):
+<<<<<<< HEAD:beta_version/app/management.py
         # Elimina todos los widgets en el layout que contienen los gráficos
         while self.scroll_layout.count():
             item = self.scroll_layout.takeAt(0)
@@ -358,6 +570,12 @@ class TicketManagement(QMainWindow):
                 if isinstance(widget, FigureCanvas):
                     plt.close(widget.figure)
                 widget.deleteLater()
+=======
+        while self.scroll_layout.count():
+            child = self.scroll_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+>>>>>>> 1faa5ff97e308c736376616e21df72d5a2804e60:beta_version/app/v2_management.py
 
     def update_tabs_incidences(self):
         for name in self.blocks:
@@ -527,6 +745,7 @@ class TicketManagement(QMainWindow):
         confirm_button.clicked.connect(lambda: self.confirm_incidence(name, list_widget))
         layout.addWidget(confirm_button)
 
+    # Método para confirmar una incidencia
     def confirm_incidence(self, block_name, list_widget):
         current_item = list_widget.currentItem()
         if current_item:
@@ -537,18 +756,22 @@ class TicketManagement(QMainWindow):
                 date_str = timestamp.strftime("%Y-%m-%d")
                 time_str = timestamp.strftime("%H:%M:%S")
                 self.last_incidence_labels[block_name].setText(f"Incidencia confirmada: {incidence_text} a las {time_str}")
-                self.log_incidence_to_excel(block_name, date_str, time_str, incidence_text)
-            
-                self.mtbf_display.update_mtbf(block_name, timestamp)
 
-                # Actualizar los detalles de las incidencias
+                # Actualizar MTBF y registrar la incidencia en Excel
+                self.mtbf_display.update_mtbf(block_name, timestamp)
+                self.log_incidence_to_excel(block_name, date_str, time_str, incidence_text)
+
+                # Registrar el cambio y actualizar el historial
+                self.log_change("Confirmar Incidencia", f"{block_name}: {incidence_text}")
+                self.update_change_history()
+
                 if incidence_text in self.incident_details[block_name]:
                     self.incident_details[block_name][incidence_text] += 1
                 else:
                     self.incident_details[block_name][incidence_text] = 1
 
-                self.save_incident_details()  # Guardar los detalles de las incidencias
-                self.update_top_incidents()  # Actualizar las incidencias más relevantes
+                self.save_incident_details()
+                self.update_top_incidents()
 
                 QMessageBox.information(self, "Confirmación", "Incidencia confirmada.")
 
@@ -629,6 +852,7 @@ class TicketManagement(QMainWindow):
                     self.global_incidence_list.scrollToItem(item, QAbstractItemView.PositionAtCenter)
                     break
 
+    # Método para registrar la hora de reparación en Excel
     def mark_incidence_as_fixed(self, block_name, incidence_text, date_str, time_str):
         for i in range(self.global_incidence_list.count()):
             item = self.global_incidence_list.item(i)
@@ -645,16 +869,105 @@ class TicketManagement(QMainWindow):
 
                     repair_time_str = datetime.now().strftime("%H:%M:%S")
                     self.log_repair_time_to_excel(block_name, date_str, time_str, repair_time_str)
+
+                    # Registrar el cambio y actualizar el historial
+                    self.log_change("Marcar Incidencia como Reparada", f"{block_name}: {incidence_text}")
+                    self.update_change_history()
+
                     self.update_top_incidents()
                     break
 
+    # Método para añadir detalles de la incidencia
     def add_incidence_details(self, block_name, incidence_text, date_str, time_str):
         detail_text, ok = QInputDialog.getMultiLineText(self, "Añadir Detalles", "Escribe los detalles de la incidencia:")
         if ok and detail_text:
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            detail_message = f"{timestamp} - {block_name}: {incidence_text} ({date_str} {time_str})\nDetalles: {detail_text}"
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            detail_message = f"{timestamp} - {block_name}: {incidence_text}\nDetalles: {detail_text}"
             self.detailed_messages_list.addItem(detail_message)
+            self.save_detailed_messages()  # Guardar los mensajes detallados
 
+<<<<<<< HEAD:beta_version/app/management.py
+=======
+    def log_repair_time_to_excel(self, block_name, date_str, time_str, repair_time_str):
+        if self.excel_file and os.path.exists(self.excel_file):
+            try:
+                workbook = load_workbook(self.excel_file)
+                sheet = workbook.active
+
+                for row in sheet.iter_rows(min_row=2, values_only=False):
+                    if row[0].value == block_name and row[2].value == date_str and row[3].value == time_str:
+                        repair_time_cell = row[5]
+                        repair_time_cell.value = repair_time_str
+
+                        start_time = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M:%S")
+                        end_time = datetime.strptime(f"{date_str} {repair_time_str}", "%Y-%m-%d %H:%M:%S")
+                        time_diff = end_time - start_time
+                        time_diff_cell = row[6]
+                        time_diff_cell.value = str(time_diff)
+                        break
+
+                workbook.save(self.excel_file)
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Error al registrar la hora de reparación en Excel: {e}")
+
+    def select_excel_file(self):
+        file_dialog = QFileDialog()
+        file_dialog.setNameFilter("Archivos Excel (*.xlsx)")
+        if file_dialog.exec_():
+            self.excel_file = file_dialog.selectedFiles()[0]
+            self.excel_path_display.setText(self.excel_file)
+            with open(self.config_file, "w") as config:
+                config.write(self.excel_file)
+            self.update_top_incidents()
+
+    def create_excel_if_not_exists(self, file_path):
+        if not os.path.exists(file_path):
+            workbook = Workbook()
+            sheet = workbook.active
+            headers = ["Bloque", "Incidencia", "Fecha", "Hora", "Turno", "Hora de Reparación", "Tiempo de Reparación", "MTBF"]
+            sheet.append(headers)
+            workbook.save(file_path)
+
+    def log_incidence_to_excel(self, block_name, date_str, time_str, incidence_text):
+        if self.excel_file and os.path.exists(self.excel_file):
+            try:
+                workbook = load_workbook(self.excel_file)
+                sheet = workbook.active
+
+                headers = [cell.value for cell in sheet[1]]
+                expected_headers = ["Bloque", "Incidencia", "Fecha", "Hora", "Turno", "Hora de Reparación", "Tiempo de Reparación", "MTBF"]
+                if headers != expected_headers:
+                    sheet.delete_rows(1, 1)
+                    sheet.insert_rows(1)
+                    for idx, header in enumerate(expected_headers):
+                        sheet.cell(row=1, column=idx + 1, value=header)
+
+                time_obj = datetime.strptime(time_str, "%H:%M:%S").time()
+                if time(6, 0) <= time_obj < time(18, 0):
+                    turno = "Mañana"
+                else:
+                    turno = "Noche"
+
+                # Asegurarse de que se calcula el MTBF antes de registrar la incidencia
+                self.mtbf_display.update_mtbf(block_name, datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M:%S"))
+                mtbf_value = self.mtbf_display.calculate_mtbf(block_name)
+
+                new_row = [block_name, incidence_text, date_str, time_str, turno, "", "", mtbf_value]
+                sheet.append(new_row)
+
+                workbook.save(self.excel_file)
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Error al registrar la incidencia en Excel: {e}")
+
+    def calculate_mtbf(self, block_name):
+        if block_name in self.mtbf_data:
+            mtbf_info = self.mtbf_data[block_name]
+            if mtbf_info["incident_count"] > 0:
+                mtbf = mtbf_info["total_time"] / mtbf_info["incident_count"]
+                return f"{mtbf:.2f} minutos"
+        return "N/A"
+
+>>>>>>> 1faa5ff97e308c736376616e21df72d5a2804e60:beta_version/app/v2_management.py
     def update_status_bar(self):
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.statusBar().showMessage(f"Fecha y Hora Actual: {current_time}")
@@ -667,17 +980,49 @@ class TicketManagement(QMainWindow):
             incident_counter[incidence] += 1
         return incident_counter.most_common(10)  # Devuelve las 10 incidencias más comunes
 
+<<<<<<< HEAD:beta_version/app/management.py
+=======
+    def update_top_incidents(self):
+        all_incidents = Counter()
+        for block in self.user.blocks:  # Filtrar solo los bloques del usuario actual
+            all_incidents.update(self.incident_details.get(block, {}))
+        
+        sorted_incidents = sorted(all_incidents.items(), key=lambda x: x[1], reverse=True)
+
+        self.top_incidents_list.clear()
+        for incident, count in sorted_incidents:
+            self.top_incidents_list.addItem(f"{incident} - {count} veces")
+
+>>>>>>> 1faa5ff97e308c736376616e21df72d5a2804e60:beta_version/app/v2_management.py
     def schedule_daily_reset(self):
         now = datetime.now()
         next_reset = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
         delay = (next_reset - now).total_seconds()
         QTimer.singleShot(int(delay * 1000), self.reset_incidents)
-
+        QTimer.singleShot(int(delay * 1000), self.reset_detailed_messages)
+    
     def reset_incidents(self):
         self.incident_details = {block: Counter() for block in self.incidencias.keys()}
         self.save_incident_details()
         self.update_top_incidents()
         self.schedule_daily_reset()  # Programar el siguiente reseteo diario
+    
+    def reset_detailed_messages(self):
+        detailed_messages_by_user = {}
+        if os.path.exists(self.detailed_messages_file):
+            try:
+                with open(self.detailed_messages_file, 'r') as file:
+                    detailed_messages_by_user = json.load(file)
+                    if not isinstance(detailed_messages_by_user, dict):
+                        detailed_messages_by_user = {}
+            except json.JSONDecodeError:
+                detailed_messages_by_user = {}
+
+        detailed_messages_by_user[self.user.username] = []
+        with open(self.detailed_messages_file, 'w') as file:
+            json.dump(detailed_messages_by_user, file, indent=4)
+
+        self.detailed_messages_list.clear()
 
     def update_change_history(self):
         self.change_history_list.clear()
@@ -691,7 +1036,6 @@ class TicketManagement(QMainWindow):
                     except json.JSONDecodeError:
                         continue
 
-        # Ordenar cambios por fecha en orden cronológico inverso
         changes.sort(key=lambda x: x['date'], reverse=True)
 
         for change in changes:
@@ -809,6 +1153,7 @@ class TicketManagement(QMainWindow):
         with open(self.state_file, "w") as file:
             json.dump(state, file, indent=4)
 
+    # Método para cargar el estado de las incidencias
     def load_incidence_state(self):
         if os.path.exists(self.state_file):
             with open(self.state_file, "r") as file:
@@ -922,6 +1267,7 @@ class TicketManagement(QMainWindow):
         """
 
     def closeEvent(self, event):
+        self.save_detailed_messages()  # Guardar los mensajes detallados antes de cerrar
         self.save_incidence_state()
         self.mtbf_display.save_mtbf_data()
         event.accept()
