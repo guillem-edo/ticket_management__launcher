@@ -21,6 +21,7 @@ class TicketManagement(QMainWindow):
         self.mtbf_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mtbf_data.json")
         self.change_log_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "change_log.json")
         self.state_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidence_state.json")
+        self.detailed_messages_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "detailed_messages.json")
 
         # Cargar configuraciones y datos iniciales
         self.incidencias = AdminDialog.load_incidencias(self.config_file) or self.default_incidences()
@@ -42,9 +43,6 @@ class TicketManagement(QMainWindow):
         self.mtbf_display.mtbf_data = self.mtbf_data
         self.mtbf_display.mtbf_labels = self.mtbf_labels
 
-        # Inicializar excel_file
-        self.excel_file = None
-
         # Ahora puedes llamar a initUI
         self.initUI()
 
@@ -53,6 +51,7 @@ class TicketManagement(QMainWindow):
         self.load_mtbf_data()
         self.load_last_excel_file()
         self.load_incidence_state()
+        self.load_detailed_messages()
 
         # Realizar acciones iniciales de actualización
         self.mtbf_display.reset_mtbf_timer()
@@ -254,6 +253,23 @@ class TicketManagement(QMainWindow):
                 writer.writerow([incidencia, num_incidencias])
 
         QMessageBox.information(self, "Exportar Informe", "Informe exportado con éxito en formato CSV.")
+    
+    # Método para guardar los mensajes detallados en un archivo JSON
+    def save_detailed_messages(self):
+        detailed_messages = []
+        for i in range(self.detailed_messages_list.count()):
+            item = self.detailed_messages_list.item(i)
+            detailed_messages.append(item.text())
+        with open(self.detailed_messages_file, 'w') as file:
+            json.dump(detailed_messages, file, indent=4)
+    
+    # Método para cargar los mensajes detallados desde un archivo JSON
+    def load_detailed_messages(self):
+        if os.path.exists(self.detailed_messages_file):
+            with open(self.detailed_messages_file, 'r') as file:
+                detailed_messages = json.load(file)
+                for message in detailed_messages:
+                    self.detailed_messages_list.addItem(message)
 
 
     def center_window_app(self):
@@ -719,10 +735,7 @@ class TicketManagement(QMainWindow):
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             detail_message = f"{timestamp} - {block_name}: {incidence_text} ({date_str} {time_str})\nDetalles: {detail_text}"
             self.detailed_messages_list.addItem(detail_message)
-
-            # Registrar el cambio y actualizar el historial
-            self.log_change("Añadir Detalles a Incidencia", f"{block_name}: {incidence_text}")
-            self.update_change_history()
+            self.save_detailed_messages()  # Guardar los mensajes detallados
 
     def log_repair_time_to_excel(self, block_name, date_str, time_str, repair_time_str):
         if self.excel_file and os.path.exists(self.excel_file):
@@ -1089,6 +1102,7 @@ class TicketManagement(QMainWindow):
         """
 
     def closeEvent(self, event):
+        self.save_detailed_messages()  # Guardar los mensajes detallados antes de cerrar
         self.save_incidence_state()
         self.mtbf_display.save_mtbf_data()
         event.accept()
