@@ -1,19 +1,12 @@
-# app/dialogs.py
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QComboBox, QPushButton, QTableWidget, QTableWidgetItem, QLineEdit, QHBoxLayout, QHeaderView, QMessageBox, QFileDialog
-from collections import Counter
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-from datetime import datetime, timedelta
-from datetime import datetime, timedelta
-from collections import Counter
-import csv
-
+from dependencies import *
 
 class AdvancedFilterDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Filtro Avanzado")
         self.setGeometry(300, 300, 800, 600)
+        self.center_window_app()
+        self.setWindowFlags(self.windowFlags() | Qt.WindowMinimizeButtonHint | Qt.WindowMaximizeButtonHint)
         self.setStyleSheet("""
             QDialog {
                 background-color: #f0f0f0;
@@ -137,6 +130,25 @@ class AdvancedFilterDialog(QDialog):
 
         self.setLayout(layout)
         self.populate_date_combos()
+
+    def center_window_app(self):
+        screen_geometry = QApplication.desktop().availableGeometry()
+        window_width = int(screen_geometry.width() * 0.5)
+        window_height = int(screen_geometry.height() * 0.5)
+        self.resize(window_width, window_height)
+        screen_center = screen_geometry.center()
+        window_geometry = self.frameGeometry()
+        window_geometry.moveCenter(screen_center)
+        self.move(window_geometry.topLeft())
+    
+    def toggle_maximize_restore(self):
+        if self.isMaximized():
+            self.showNormal()
+            self.maximize_button.setText("Maximize")
+            self.center_window_app()  # Re-centrar al restaurar tamaño normal
+        else:
+            self.showMaximized()
+            self.maximize_button.setText("Restore")
 
     def populate_date_combos(self):
         today = datetime.today()

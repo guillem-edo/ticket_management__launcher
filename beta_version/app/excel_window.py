@@ -1,12 +1,4 @@
-import os
-import csv
-from openpyxl import load_workbook
-from PyQt5.QtWidgets import (
-    QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QFileDialog, QTableWidget, QTableWidgetItem, QMessageBox
-)
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont, QColor
-
+from dependencies import *
 
 class ExcelWindow(QMainWindow):
     def __init__(self, excel_file):
@@ -17,7 +9,7 @@ class ExcelWindow(QMainWindow):
     def initUI(self):
         self.setWindowTitle("Visualización de Excel")
         self.resize(800, 600)
-        self.setGeometry(300, 300, 800, 600)
+        self.center_window_app()
 
         main_layout = QVBoxLayout()
         central_widget = QWidget()
@@ -40,6 +32,16 @@ class ExcelWindow(QMainWindow):
         main_layout.addLayout(button_layout)
 
         self.load_excel_file()
+    
+    def center_window_app(self):
+        screen_geometry = QApplication.desktop().availableGeometry()
+        window_width = int(screen_geometry.width() * 0.6)
+        window_height = int(screen_geometry.height() * 0.6)
+        self.resize(window_width, window_height)
+        screen_center = screen_geometry.center()
+        window_geometry = self.frameGeometry()
+        window_geometry.moveCenter(screen_center)
+        self.move(window_geometry.topLeft())
 
     def load_excel_file(self):
         if self.excel_file and os.path.exists(self.excel_file):
