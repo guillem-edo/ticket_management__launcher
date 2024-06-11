@@ -271,20 +271,36 @@ class TicketManagement(QMainWindow):
     
     # Método para guardar los mensajes detallados en un archivo JSON
     def save_detailed_messages(self):
-        detailed_messages = []
+        detailed_messages_by_user = {}
+        if os.path.exists(self.detailed_messages_file):
+            try:
+                with open(self.detailed_messages_file, 'r') as file:
+                    detailed_messages_by_user = json.load(file)
+                    if not isinstance(detailed_messages_by_user, dict):
+                        detailed_messages_by_user = {}
+            except json.JSONDecodeError:
+                detailed_messages_by_user = {}
+        detailed_messages_by_user[self.user.username] = []
         for i in range(self.detailed_messages_list.count()):
             item = self.detailed_messages_list.item(i)
-            detailed_messages.append(item.text())
+            detailed_messages_by_user[self.user.username].append(item.text())
         with open(self.detailed_messages_file, 'w') as file:
-            json.dump(detailed_messages, file, indent=4)
-    
-    # Método para cargar los mensajes detallados desde un archivo JSON
+            json.dump(detailed_messages_by_user, file, indent=4)
+
     def load_detailed_messages(self):
         if os.path.exists(self.detailed_messages_file):
-            with open(self.detailed_messages_file, 'r') as file:
-                detailed_messages = json.load(file)
-                for message in detailed_messages:
-                    self.detailed_messages_list.addItem(message)
+            try:
+                with open(self.detailed_messages_file, 'r') as file:
+                    detailed_messages_by_user = json.load(file)
+                    if isinstance(detailed_messages_by_user, dict):
+                        self.detailed_messages_list.clear()  # Limpiar la lista antes de cargar nuevos mensajes
+                        user_messages = detailed_messages_by_user.get(self.user.username, [])
+                        for message in user_messages:
+                            self.detailed_messages_list.addItem(message)
+                    else:
+                        self.detailed_messages_list.addItem("Error: Unexpected data format in detailed messages file.")
+            except json.JSONDecodeError:
+                self.detailed_messages_list.addItem("Error: Failed to load detailed messages due to JSON decode error.")
 
     def center_window_app(self):
         screen_geometry = QApplication.desktop().availableGeometry()
@@ -867,12 +883,30 @@ class TicketManagement(QMainWindow):
         next_reset = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
         delay = (next_reset - now).total_seconds()
         QTimer.singleShot(int(delay * 1000), self.reset_incidents)
-
+        QTimer.singleShot(int(delay * 1000), self.reset_detailed_messages)
+    
     def reset_incidents(self):
         self.incident_details = {block: Counter() for block in self.incidencias.keys()}
         self.save_incident_details()
         self.update_top_incidents()
         self.schedule_daily_reset()  # Programar el siguiente reseteo diario
+    
+    def reset_detailed_messages(self):
+        detailed_messages_by_user = {}
+        if os.path.exists(self.detailed_messages_file):
+            try:
+                with open(self.detailed_messages_file, 'r') as file:
+                    detailed_messages_by_user = json.load(file)
+                    if not isinstance(detailed_messages_by_user, dict):
+                        detailed_messages_by_user = {}
+            except json.JSONDecodeError:
+                detailed_messages_by_user = {}
+
+        detailed_messages_by_user[self.user.username] = []
+        with open(self.detailed_messages_file, 'w') as file:
+            json.dump(detailed_messages_by_user, file, indent=4)
+
+        self.detailed_messages_list.clear()
 
     def update_change_history(self):
         self.change_history_list.clear()
