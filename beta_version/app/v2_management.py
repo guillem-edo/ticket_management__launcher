@@ -48,7 +48,6 @@ class TicketManagement(QMainWindow):
 
         # Carga de datos externos
         self.load_incident_details()
-        self.load_mtbf_data()
         self.load_last_excel_file()
         self.load_incidence_state()
         self.load_detailed_messages()
@@ -57,14 +56,6 @@ class TicketManagement(QMainWindow):
         self.mtbf_display.reset_mtbf_timer()
         self.schedule_daily_reset()
         self.update_all()
-
-    def load_mtbf_data(self):
-        if os.path.exists(self.mtbf_file):
-            with open(self.mtbf_file, "r") as file:
-                self.mtbf_data = json.load(file)
-                for block, data in self.mtbf_data.items():
-                    if block in self.mtbf_labels:
-                        self.mtbf_labels[block].setText(f"MTBF {block}: {data['total_time'] / data['incident_count'] if data['incident_count'] > 0 else 'N/A'}")
 
     def default_incidences(self):
         return {
@@ -1037,6 +1028,7 @@ class TicketManagement(QMainWindow):
         with open(self.state_file, "w") as file:
             json.dump(state, file, indent=4)
 
+    # Método para cargar el estado de las incidencias
     def load_incidence_state(self):
         if os.path.exists(self.state_file):
             with open(self.state_file, "r") as file:
