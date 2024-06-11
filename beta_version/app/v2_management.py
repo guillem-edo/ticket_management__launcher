@@ -884,7 +884,14 @@ class TicketManagement(QMainWindow):
         self.scroll_layout.addWidget(self.shift_chart_canvas)
 
     def show_general_chart(self):
-        self.update_general_chart()
+        self.clear_chart_display_area()
+        start_dt = datetime.combine(datetime.today(), time.min)
+        end_dt = datetime.combine(datetime.today(), time.max)
+        incidents_general, _ = self.get_general_filtered_incidents(start_dt, end_dt)
+        self.general_chart = TurnChart(self)
+        self.general_chart.plot_general_chart(incidents_general, "Incidencias Generales")
+        self.general_chart_canvas = FigureCanvas(self.general_chart.figure)
+        self.scroll_layout.addWidget(self.general_chart_canvas)
 
     def apply_styles(self):
         title_font = QFont("Arial", 14, QFont.Bold)

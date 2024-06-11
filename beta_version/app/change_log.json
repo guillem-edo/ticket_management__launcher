@@ -148,3 +148,29 @@
 {"user": "pideu3", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 12:50:34", "details": "WC49 P5H: La c\u00e1mara no detecta Busbar"}
 {"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-10 12:54:48", "details": "WC47 NACP: No atornilla clips"}
 {"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-10 12:54:50", "details": "WC47 NACP: No atornilla clips"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-06-11 09:18:43", "details": "WC48 P5F: Etiquetadora"}
+{"user": "pideu2", "action": "Marcar Incidencia como Reparada", "date": "2024-06-11 09:18:45", "details": "WC48 P5F: Etiquetadora"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-06-11 09:18:49", "details": "WC48 P5F: Fallo etiqueta"}
+{"user": "pideu2", "action": "Marcar Incidencia como Reparada", "date": "2024-06-11 09:18:50", "details": "WC48 P5F: Fallo etiqueta"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-06-11 09:19:07", "details": "WC48 P5F: Detecci\u00f3n de sealling mal puesto"}
+{"user": "pideu2", "action": "Marcar Incidencia como Reparada", "date": "2024-06-11 09:19:07", "details": "WC48 P5F: Detecci\u00f3n de sealling mal puesto"}
+{"user": "pideu3", "action": "Confirmar Incidencia", "date": "2024-06-11 09:28:36", "details": "WC49 P5H: Screw K30 no lo detecta puesto"}
+{"user": "pideu3", "action": "Marcar Incidencia como Reparada", "date": "2024-06-11 09:28:38", "details": "WC49 P5H: Screw K30 no lo detecta puesto"}
+{"user": "pideu3", "action": "Confirmar Incidencia", "date": "2024-06-11 09:29:11", "details": "WC49 P5H: Power atascado en prensa, cuesta sacar"}
+{"user": "pideu3", "action": "Marcar Incidencia como Reparada", "date": "2024-06-11 09:29:12", "details": "WC49 P5H: Power atascado en prensa, cuesta sacar"}
+{"user": "pideu3", "action": "Confirmar Incidencia", "date": "2024-06-11 09:29:14", "details": "WC49 P5H: Etiquetadora"}
+{"user": "pideu3", "action": "Marcar Incidencia como Reparada", "date": "2024-06-11 09:29:15", "details": "WC49 P5H: Etiquetadora"}
+{"user": "pideu3", "action": "Confirmar Incidencia", "date": "2024-06-11 09:29:17", "details": "WC49 P5H: Screw K30 no lo detecta puesto"}
+{"user": "pideu3", "action": "Marcar Incidencia como Reparada", "date": "2024-06-11 09:29:17", "details": "WC49 P5H: Screw K30 no lo detecta puesto"}
+{"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-11 09:34:07", "details": "WC47 NACP: Fallo tolva"}
+{"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-11 09:34:08", "details": "WC47 NACP: Fallo tolva"}
+{"user": "pideu3", "action": "Confirmar Incidencia", "date": "2024-06-11 09:37:55", "details": "WC49 P5H: Power atascado en prensa, cuesta sacar"}
+{"user": "pideu3", "action": "Marcar Incidencia como Reparada", "date": "2024-06-11 09:37:56", "details": "WC49 P5H: Power atascado en prensa, cuesta sacar"}
+{"user": "pideu4", "action": "Confirmar Incidencia", "date": "2024-06-11 09:40:13", "details": "WV50 FILTER: NOK Soldadura Pl\u00e1stico"}
+{"user": "pideu4", "action": "Confirmar Incidencia", "date": "2024-06-11 09:40:15", "details": "WV50 FILTER: Robot no coloca bien filter en palet"}
+{"user": "pideu4", "action": "Marcar Incidencia como Reparada", "date": "2024-06-11 09:40:16", "details": "WV50 FILTER: NOK Soldadura Pl\u00e1stico"}
+{"user": "pideu4", "action": "Marcar Incidencia como Reparada", "date": "2024-06-11 09:40:16", "details": "WV50 FILTER: Robot no coloca bien filter en palet"}
+{"user": "pideu4", "action": "Confirmar Incidencia", "date": "2024-06-11 09:42:19", "details": "WV50 FILTER: No coloca bien la pcb"}
+{"user": "pideu4", "action": "Marcar Incidencia como Reparada", "date": "2024-06-11 09:42:20", "details": "WV50 FILTER: No coloca bien la pcb"}
+{"user": "pideu4", "action": "Confirmar Incidencia", "date": "2024-06-11 09:42:23", "details": "WV50 FILTER: Repeat funcional"}
+{"user": "pideu4", "action": "Marcar Incidencia como Reparada", "date": "2024-06-11 09:42:24", "details": "WV50 FILTER: Repeat funcional"}

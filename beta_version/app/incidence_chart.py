@@ -32,13 +32,13 @@ class TurnChart(QWidget):
         if self.figure:
             plt.close(self.figure)  # Cerrar cualquier figura antigua
 
-        self.figure = plt.figure(figsize=(12, 8))  # Ajustar el tamaño de la figura
+        self.figure = plt.figure(figsize=(8, 6))  # Ajustar el tamaño de la figura
         self.canvas = FigureCanvas(self.figure)  # Crear el canvas de la figura
         layout = self.layout()
         layout.addWidget(self.canvas)  # Añadir el canvas al layout
 
         ax = self.figure.add_subplot(111)
-        colors = sns.color_palette("Set2", n_colors=len(counts))  # Usar una paleta de colores suaves
+        colors = ["#bc6c25", "#219EBC", "#023047", "#FFB703", "#FB8500"]  # Usar la paleta de colores proporcionada
 
         all_labels = sorted({label for counter in counts.values() for label in counter})
         bottom = [0] * len(all_labels)
@@ -46,12 +46,9 @@ class TurnChart(QWidget):
         # Mapa de colores por bloque
         block_colors = {block: colors[idx % len(colors)] for idx, block in enumerate(counts.keys())}
 
-        bar_collections = []
-
         for block, counter in counts.items():
             values = [counter[label] for label in all_labels]
             bars = ax.barh(all_labels, values, left=bottom, color=block_colors[block], label=block)
-            bar_collections.append((block, bars))
             bottom = [i + j for i, j in zip(bottom, values)]
             for bar, value in zip(bars, values):
                 if value > 0:
@@ -65,17 +62,12 @@ class TurnChart(QWidget):
         ax.set_title(title, fontsize=14, fontweight='bold')
         ax.set_xlabel('Cantidad', fontsize=12)
         ax.set_ylabel('Incidencia', fontsize=12)
+        ax.legend(title="Bloques", bbox_to_anchor=(1.05, 1), loc='upper left')  # Ajustar la leyenda para que no solape las barras
 
-        # Reubicar la leyenda fuera del gráfico
-        ax.legend(title="Bloques", bbox_to_anchor=(1.05, 1), loc='upper left')  
-
-        plt.xticks(rotation=45, ha='right')
         ax.set_yticklabels([label if len(label) < 30 else label[:27] + '...' for label in all_labels], fontsize=10)  # Ajustar etiquetas largas
 
-        try:
-            self.figure.tight_layout()
-        except ValueError:
-            pass  # Si tight_layout falla, solo continuamos sin él
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout(pad=2.0)  # Ajustar el espaciado para acomodar la leyenda
 
         self.canvas.draw()  # Asegurarse de actualizar el canvas
 
@@ -90,7 +82,7 @@ class TurnChart(QWidget):
         if self.figure:
             plt.close(self.figure)  # Cerrar cualquier figura antigua
 
-        self.figure = plt.figure()
+        self.figure = plt.figure(figsize=(8, 6))  # Ajustar el tamaño de la figura
         self.canvas = FigureCanvas(self.figure)  # Crear el canvas de la figura
         layout = self.layout()
         layout.addWidget(self.canvas)  # Añadir el canvas al layout
@@ -128,9 +120,6 @@ class TurnChart(QWidget):
                             ha='center', va='bottom')
 
         plt.xticks(rotation=45, ha='right')
-        try:
-            self.figure.tight_layout()
-        except ValueError:
-            pass  # Si tight_layout falla, solo continuamos sin él
+        plt.tight_layout(pad=2.0)  # Ajustar el espaciado para acomodar la leyenda
 
         self.canvas.draw()  # Asegurarse de actualizar el canvas
