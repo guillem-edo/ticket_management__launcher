@@ -77,7 +77,7 @@ class TicketManagement(QMainWindow):
 
     def initUI(self):
         self.setWindowTitle(f"Ticket Management - {self.user.username}")
-        self.center_window_app()  # Centrar la ventana después de establecer el tamaño
+        self.center_window_app()  # Centrar la ventana y ajustar el tamaño basado en la resolución de la pantalla
 
         main_layout = QHBoxLayout()
         central_widget = QWidget()
@@ -207,7 +207,21 @@ class TicketManagement(QMainWindow):
         self.detailed_messages_layout = QVBoxLayout(self.detailed_messages_tab)
         self.tabWidget.addTab(self.detailed_messages_tab, "Mensajes detallados")
         self.detailed_messages_list = QListWidget()
-        self.detailed_messages_list.setStyleSheet("QListWidget { background-color: #f0f0f0; border: 1px solid #ccc; padding: 5px; }")
+        self.detailed_messages_list.setStyleSheet("""
+            QListWidget {
+                background-color: #f9f9f9;
+                border: 1px solid #ddd;
+                padding: 10px;
+            }
+            QListWidget::item {
+                padding: 10px;
+                border-bottom: 1px solid #ddd;
+            }
+            QListWidget::item:selected {
+                background-color: #4CAF50;  /* Color de fondo cuando se selecciona */
+                color: white;  /* Color de texto cuando se selecciona */
+            }
+        """)
         self.detailed_messages_layout.addWidget(self.detailed_messages_list)
 
         timer = QTimer(self)
@@ -222,6 +236,7 @@ class TicketManagement(QMainWindow):
         self.apply_styles()
         self.load_last_excel_file()
         self.load_incidence_state()
+        self.load_detailed_messages()
 
         self.mtbf_display.reset_mtbf_timer()
         self.update_all()
@@ -270,7 +285,6 @@ class TicketManagement(QMainWindow):
                 detailed_messages = json.load(file)
                 for message in detailed_messages:
                     self.detailed_messages_list.addItem(message)
-
 
     def center_window_app(self):
         screen_geometry = QApplication.desktop().availableGeometry()
@@ -732,8 +746,8 @@ class TicketManagement(QMainWindow):
     def add_incidence_details(self, block_name, incidence_text, date_str, time_str):
         detail_text, ok = QInputDialog.getMultiLineText(self, "Añadir Detalles", "Escribe los detalles de la incidencia:")
         if ok and detail_text:
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            detail_message = f"{timestamp} - {block_name}: {incidence_text} ({date_str} {time_str})\nDetalles: {detail_text}"
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            detail_message = f"{timestamp} - {block_name}: {incidence_text}\nDetalles: {detail_text}"
             self.detailed_messages_list.addItem(detail_message)
             self.save_detailed_messages()  # Guardar los mensajes detallados
 
