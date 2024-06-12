@@ -17,9 +17,10 @@ a = Analysis(
     binaries=[],
     datas=[
         (os.path.join(base_path, 'app', 'dependencies.py'), 'app/dependencies.py'),
-        (os.path.join(base_path, 'app', 'email_notifications.py'), 'app/email_notifications.py')
+        (os.path.join(base_path, 'app', 'email_notifications.py'), 'app/email_notifications.py'),
+        (os.path.join(base_path, 'app', 'logo.png'), 'app/logo.png')
     ],
-    hiddenimports=['dependencies', 'email_notifications'],
+    hiddenimports=['app.dependencies', 'app.email_notifications'],
     hookspath=[],
     runtime_hooks=[],
     excludes=[],

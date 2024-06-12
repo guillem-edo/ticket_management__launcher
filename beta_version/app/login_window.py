@@ -1,5 +1,6 @@
 # app/login_window.py
 import os
+import sys
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox, QApplication
 from PyQt5.QtCore import pyqtSignal, Qt, QRect
 from PyQt5.QtGui import QFont, QPixmap
@@ -25,7 +26,14 @@ class LoginWindow(QWidget):
         ]
 
         layout = QVBoxLayout()
-        logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logo.png")
+
+        # Ajusta la ruta del logo
+        if getattr(sys, 'frozen', False):  # If running as a compiled exe
+            base_path = sys._MEIPASS
+        else:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+
+        logo_path = os.path.join(base_path, "logo.png")
         logo_pixmap = QPixmap(logo_path)
 
         if not logo_pixmap.isNull():
@@ -34,7 +42,7 @@ class LoginWindow(QWidget):
             logo_label.setAlignment(Qt.AlignCenter)
             layout.addWidget(logo_label)
         else:
-            print("Warning: Logo not found!")
+            print(f"Warning: Logo not found at {logo_path}")
 
         font = QFont()
         font.setPointSize(12)
