@@ -1,4 +1,4 @@
-from dependencies import *
+from .dependencies import *
 
 from .dialogs import AdvancedFilterDialog, TopIncidentsDialog
 from .incidence_chart import TurnChart
@@ -8,7 +8,7 @@ from .excel_window import ExcelWindow
 # from .animations import fade_in
 from .reports_export import ExportReportDialog
 from .change_history import ChangeHistoryDialog
-from .email_notifications import EmailNotifier
+#from .email_notifications import EmailNotifier
 from .send_report import SendReportDialog
 from .mtbf_dialog import MTBFDisplay
 

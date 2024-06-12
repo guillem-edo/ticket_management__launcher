@@ -1,4 +1,4 @@
-from dependencies import *
+from .dependencies import *
 
 class MTBFDisplay:
     def __init__(self):

@@ -1,4 +1,4 @@
-from dependencies import *
+from .dependencies import *
 
 class ExcelWindow(QMainWindow):
     def __init__(self, excel_file):

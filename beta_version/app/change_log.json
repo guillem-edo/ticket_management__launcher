@@ -214,3 +214,13 @@
 {"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-11 12:40:36", "details": "WC47 NACP: Etiquetadora"}
 {"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-11 12:40:39", "details": "WC47 NACP: No coge placa"}
 {"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-11 12:40:42", "details": "WC47 NACP: No coge placa"}
+{"user": "pideu4", "action": "Confirmar Incidencia", "date": "2024-06-12 09:15:04", "details": "WV50 FILTER: Core enganchado"}
+{"user": "pideu4", "action": "Marcar Incidencia como Reparada", "date": "2024-06-12 09:15:05", "details": "WV50 FILTER: Core enganchado"}
+{"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-12 09:31:39", "details": "WC47 NACP: No pone tornillo"}
+{"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-12 09:31:40", "details": "WC47 NACP: No pone tornillo"}
+{"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-12 09:31:44", "details": "WC47 NACP: Fallo c\u00e1mara visi\u00f3n"}
+{"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-12 09:31:45", "details": "WC47 NACP: Fallo c\u00e1mara visi\u00f3n"}
+{"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-12 10:37:10", "details": "WC47 NACP: Fallo en paletizador"}
+{"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-12 10:37:11", "details": "WC47 NACP: Fallo en paletizador"}
+{"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-12 10:37:13", "details": "WC47 NACP: Palet atascado en la curva"}
+{"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-12 10:37:13", "details": "WC47 NACP: Palet atascado en la curva"}

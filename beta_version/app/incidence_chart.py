@@ -1,4 +1,4 @@
-from dependencies import *
+from .dependencies import *
 
 class TurnChart(QWidget):
     def __init__(self, parent=None):
