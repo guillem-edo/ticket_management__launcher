@@ -1,27 +1,39 @@
+# beta_version.spec
 # -*- mode: python ; coding: utf-8 -*-
 
+import os
+block_cipher = None
+
+# Define base_path manualmente
+base_path = 'C:/Users/FV1FEB0/Documents/GitHub/ticket_management__launcher/beta_version'
 
 a = Analysis(
-    ['beta_version.py'],
-    pathex=[],
+    [os.path.join(base_path, 'app', 'beta_version.py')],
+    pathex=[
+        os.path.join(base_path, 'app'),
+        os.path.join(base_path, 'app', 'dependencies'),
+        os.path.join(base_path, 'app', 'email_notifications')
+    ],
     binaries=[],
-    datas=[],
-    hiddenimports=[],
+    datas=[
+        (os.path.join(base_path, 'app', 'dependencies.py'), 'app/dependencies.py'),
+        (os.path.join(base_path, 'app', 'email_notifications.py'), 'app/email_notifications.py')
+    ],
+    hiddenimports=['dependencies', 'email_notifications'],
     hookspath=[],
-    hooksconfig={},
     runtime_hooks=[],
     excludes=[],
-    noarchive=False,
-    optimize=0,
+    win_no_prefer_redirects=False,
+    win_private_assemblies=False,
+    cipher=block_cipher,
 )
-pyz = PYZ(a.pure)
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.datas,
     [],
+    exclude_binaries=True,
     name='beta_version',
     debug=False,
     bootloader_ignore_signals=False,
@@ -29,10 +41,15 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,
-    disable_windowed_traceback=False,
-    argv_emulation=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file=None,
+    console=True,
+)
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name='beta_version',
 )

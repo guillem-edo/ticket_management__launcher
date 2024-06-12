@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QComboBox, QMessageBox
 from fpdf import FPDF
-from email_notifications import EmailNotifier
+from .email_notifications import *
 import os
 
 class SendReportDialog(QDialog):

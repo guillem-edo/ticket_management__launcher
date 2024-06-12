@@ -224,3 +224,5 @@
 {"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-12 10:37:11", "details": "WC47 NACP: Fallo en paletizador"}
 {"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-12 10:37:13", "details": "WC47 NACP: Palet atascado en la curva"}
 {"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-12 10:37:13", "details": "WC47 NACP: Palet atascado en la curva"}
+{"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-06-12 11:07:19", "details": "WC48 P5F: AOI (fallo etiqueta)"}
+{"user": "pideu2", "action": "Marcar Incidencia como Reparada", "date": "2024-06-12 11:07:21", "details": "WC48 P5F: AOI (fallo etiqueta)"}

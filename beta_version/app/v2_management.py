@@ -8,7 +8,7 @@ from .excel_window import ExcelWindow
 # from .animations import fade_in
 from .reports_export import ExportReportDialog
 from .change_history import ChangeHistoryDialog
-#from .email_notifications import EmailNotifier
+from .email_notifications import * 
 from .send_report import SendReportDialog
 from .mtbf_dialog import MTBFDisplay
 
@@ -22,6 +22,9 @@ class TicketManagement(QMainWindow):
         self.change_log_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "change_log.json")
         self.state_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "incidence_state.json")
         self.detailed_messages_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "detailed_messages.json")
+
+        # Inicializa excel_file
+        self.excel_file = None
 
         # Cargar configuraciones y datos iniciales
         self.incidencias = AdminDialog.load_incidencias(self.config_file) or self.default_incidences()
