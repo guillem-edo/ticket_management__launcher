@@ -226,3 +226,7 @@
 {"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-12 10:37:13", "details": "WC47 NACP: Palet atascado en la curva"}
 {"user": "pideu2", "action": "Confirmar Incidencia", "date": "2024-06-12 11:07:19", "details": "WC48 P5F: AOI (fallo etiqueta)"}
 {"user": "pideu2", "action": "Marcar Incidencia como Reparada", "date": "2024-06-12 11:07:21", "details": "WC48 P5F: AOI (fallo etiqueta)"}
+{"user": "pideu3", "action": "Confirmar Incidencia", "date": "2024-06-14 09:27:15", "details": "WC49 P5H: Screw K30 no lo detecta puesto"}
+{"user": "pideu3", "action": "Marcar Incidencia como Reparada", "date": "2024-06-14 09:27:17", "details": "WC49 P5H: Screw K30 no lo detecta puesto"}
+{"user": "pideu3", "action": "Confirmar Incidencia", "date": "2024-06-14 09:27:20", "details": "WC49 P5H: Power atascado en prensa, cuesta sacar"}
+{"user": "pideu3", "action": "Marcar Incidencia como Reparada", "date": "2024-06-14 09:27:21", "details": "WC49 P5H: Power atascado en prensa, cuesta sacar"}
