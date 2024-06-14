@@ -1,4 +1,9 @@
 {
-    "user": "pideu3",
-    "incidences": []
+    "user": "filter",
+    "incidences": [
+        {
+            "text": "WV50 FILTER: Cover atascasdo a las 10:53:07 del 2024-06-14",
+            "status": "Fixing"
+        }
+    ]
 }

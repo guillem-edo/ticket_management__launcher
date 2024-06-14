@@ -230,3 +230,8 @@
 {"user": "pideu3", "action": "Marcar Incidencia como Reparada", "date": "2024-06-14 09:27:17", "details": "WC49 P5H: Screw K30 no lo detecta puesto"}
 {"user": "pideu3", "action": "Confirmar Incidencia", "date": "2024-06-14 09:27:20", "details": "WC49 P5H: Power atascado en prensa, cuesta sacar"}
 {"user": "pideu3", "action": "Marcar Incidencia como Reparada", "date": "2024-06-14 09:27:21", "details": "WC49 P5H: Power atascado en prensa, cuesta sacar"}
+{"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-14 10:35:54", "details": "WC47 NACP: Fallo en paletizador"}
+{"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-14 10:36:10", "details": "WC47 NACP: Fallo en paletizador"}
+{"user": "pideu1", "action": "Confirmar Incidencia", "date": "2024-06-14 10:36:23", "details": "WC47 NACP: No pone tornillo"}
+{"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-14 10:36:26", "details": "WC47 NACP: No pone tornillo"}
+{"user": "filter", "action": "Confirmar Incidencia", "date": "2024-06-14 10:53:08", "details": "WV50 FILTER: Cover atascasdo"}

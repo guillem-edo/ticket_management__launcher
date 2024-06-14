@@ -20,7 +20,7 @@ class LoginWindow(QWidget):
             User("pideu1", "1111", ["WC47 NACP"]),
             User("pideu2", "1111", ["WC48 P5F"]),
             User("pideu3", "1111", ["WC49 P5H"]),
-            User("pideu4", "1111", ["WV50 FILTER"]),
+            User("filter", "1111", ["WV50 FILTER"]),
             User("pideu5", "1111", ["SPL"]),
             User("admin", "admin", [], is_admin=True)  # Usuario administrador
         ]
@@ -33,7 +33,7 @@ class LoginWindow(QWidget):
         else:
             base_path = os.path.dirname(os.path.abspath(__file__))
 
-        logo_path = os.path.join(base_path, "logo.png")
+        logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logo.png")
         logo_pixmap = QPixmap(logo_path)
 
         if not logo_pixmap.isNull():
