@@ -632,7 +632,7 @@ class TicketManagement(QMainWindow):
                 time_str = timestamp.strftime("%H:%M:%S")
                 self.last_incidence_labels[block_name].setText(f"Incidencia confirmada: {incidence_text} a las {time_str}")
 
-                # Actualizar MTBF y registrar la incidencia en Excel
+                # Actualizar MTBF y registrar la incidencia
                 self.mtbf_display.update_mtbf(block_name, timestamp)
                 self.log_incidence_to_excel(block_name, date_str, time_str, incidence_text)
 
@@ -640,81 +640,9 @@ class TicketManagement(QMainWindow):
                 self.log_change("Confirmar Incidencia", f"{block_name}: {incidence_text}")
                 self.update_change_history()
 
-                if incidence_text in self.incident_details[block_name]:
-                    self.incident_details[block_name][incidence_text] += 1
-                else:
-                    self.incident_details[block_name][incidence_text] = 1
-
-                self.save_incident_details()
-                self.update_top_incidents()
-
                 QMessageBox.information(self, "Confirmación", "Incidencia confirmada.")
-
-                fixing_label = QLabel("Fixing")
-                fixing_label.setStyleSheet("color: red; font-weight: bold; font-size: 14px;")
-                correct_button = QPushButton("Correct")
-                correct_button.setObjectName("correct_button")
-                correct_button.setStyleSheet(self.get_button_style())
-                correct_button.setFixedSize(100, 30)
-                details_button = QPushButton("Añadir Detalles")
-                details_button.setObjectName("details_button")
-                details_button.setStyleSheet(self.get_button_style())
-                details_button.setFixedSize(150, 30)
-
-                item_widget = QWidget()
-                item_layout = QVBoxLayout(item_widget)
-                label_layout = QHBoxLayout()
-                label_layout.addWidget(QLabel(f"{block_name}: {incidence_text} a las {time_str} del {date_str}"))
-                item_layout.addLayout(label_layout)
-
-                buttons_layout = QHBoxLayout()
-                buttons_layout.addStretch()
-                buttons_layout.addWidget(fixing_label)
-                buttons_layout.addWidget(correct_button)
-                buttons_layout.addWidget(details_button)
-                item_layout.addLayout(buttons_layout)
-
-                list_item = QListWidgetItem()
-                list_item.setSizeHint(item_widget.sizeHint())
-
-                self.global_incidence_list.addItem(list_item)
-                self.global_incidence_list.setItemWidget(list_item, item_widget)
-
-                correct_button.clicked.connect(partial(self.mark_incidence_as_fixed, block_name, incidence_text, date_str, time_str))
-                details_button.clicked.connect(partial(self.add_incidence_details, block_name, incidence_text, date_str, time_str))
-
-                QTimer.singleShot(60000, partial(self.remind_user_to_fix, block_name, incidence_text, date_str, time_str, correct_button, details_button))
-
-                self.update_top_incidents()
         else:
             QMessageBox.warning(self, "Ninguna Incidencia Seleccionada", "Selecciona una incidencia para confirmar.")
-
-    def remind_user_to_fix(self, block_name, incidence_text, date_str, time_str, correct_button, details_button):
-        for i in range(self.global_incidence_list.count()):
-            item = self.global_incidence_list.item(i)
-            item_widget = self.global_incidence_list.itemWidget(item)
-            if item_widget:
-                labels = item_widget.findChildren(QLabel)
-                if labels and labels[0].text() == f"{block_name}: {incidence_text} a las {time_str} del {date_str}" and labels[1].text() == "Fixing":
-                    msg_box = QMessageBox(self)
-                    msg_box.setIcon(QMessageBox.Warning)
-                    msg_box.setText(f'La incidencia "{incidence_text}" sigue en estado "Fixing".')
-                    msg_box.setInformativeText("¿Deseas marcarla como 'Pendiente'?")
-                    msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-                    yes_button = msg_box.button(QMessageBox.Yes)
-                    yes_button.setText("Pendiente")
-                    no_button = msg_box.button(QMessageBox.No)
-                    no_button.setText("Fixing")
-                    msg_box.exec_()
-
-                    if msg_box.clickedButton() == yes_button:
-                        labels[1].setText("Pendiente")
-                        labels[1].setStyleSheet("color: orange; font-weight: bold; font-size: 14px;")
-                        self.pending_incidents.append((block_name, incidence_text, date_str, time_str))
-                        self.redirect_to_pending_incidence(block_name, incidence_text, labels[1], correct_button, details_button, date_str, time_str)
-                    else:
-                        QTimer.singleShot(60000, partial(self.remind_user_to_fix, block_name, incidence_text, date_str, time_str, correct_button, details_button))
-                    break
 
     def redirect_to_pending_incidence(self, block_name, incidence_text, fixing_label, correct_button, details_button, date_str, time_str):
         for i in range(self.global_incidence_list.count()):
@@ -1039,7 +967,6 @@ class TicketManagement(QMainWindow):
                 if state["user"] == self.user.username:
                     for incidence in state["incidences"]:
                         incidence_text = incidence["text"]
-                        status = incidence["status"]
 
                         text_parts = incidence_text.split(" ")
                         if len(text_parts) < 5:
@@ -1049,42 +976,16 @@ class TicketManagement(QMainWindow):
                         time_str = text_parts[-2]
                         block_name = " ".join(text_parts[:-5])
 
-                        fixing_label = QLabel(status)
-                        if status == "Fixing":
-                            fixing_label.setStyleSheet("color: red; font-weight: bold; font-size: 14px;")
-                        elif status == "Pendiente":
-                            fixing_label.setStyleSheet("color: orange; font-weight: bold; font-size: 14px;")
-                        elif status == "Reparada":
-                            fixing_label.setStyleSheet("color: green; font-weight: bold; font-size: 14px;")
-                        correct_button = QPushButton("Correct")
-                        correct_button.setObjectName("correct_button")
-                        correct_button.setStyleSheet(self.get_button_style())
-                        correct_button.setFixedSize(100, 30)
-                        details_button = QPushButton("Añadir Detalles")
-                        details_button.setObjectName("details_button")
-                        details_button.setStyleSheet(self.get_button_style())
-                        details_button.setFixedSize(150, 30)
                         item_widget = QWidget()
                         item_layout = QVBoxLayout(item_widget)
                         label_layout = QHBoxLayout()
                         label_layout.addWidget(QLabel(incidence_text))
                         item_layout.addLayout(label_layout)
-                        buttons_layout = QHBoxLayout()
-                        buttons_layout.addStretch()
-                        buttons_layout.addWidget(fixing_label)
-                        buttons_layout.addWidget(correct_button)
-                        buttons_layout.addWidget(details_button)
-                        item_layout.addLayout(buttons_layout)
                         list_item = QListWidgetItem()
                         list_item.setSizeHint(item_widget.sizeHint())
                         self.global_incidence_list.addItem(list_item)
                         self.global_incidence_list.setItemWidget(list_item, item_widget)
-                        correct_button.clicked.connect(partial(self.mark_incidence_as_fixed, block_name, incidence_text, date_str, time_str))
-                        details_button.clicked.connect(partial(self.add_incidence_details, block_name, incidence_text, date_str, time_str))
-                        if status == "Fixing" or status == "Pendiente":
-                            QTimer.singleShot(60000, partial(self.remind_user_to_fix, block_name, incidence_text, date_str, time_str, correct_button, details_button))
 
-    # Método para guardar las incidencias en un archivo JSON
     def save_incident_details(self):
         with open('incident_details.json', 'w') as f:
             json.dump(self.incident_details, f, default=str)
