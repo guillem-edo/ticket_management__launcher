@@ -2,25 +2,48 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 import os
+from PyInstaller.utils.hooks import copy_metadata
+
 block_cipher = None
 
 # Define base_path manualmente
-base_path = 'C:/Users/FV1FEB0/Documents/GitHub/ticket_management__launcher/beta_version'
+base_path = os.path.abspath(os.path.dirname(__file__))
+
+# Añadir dependencias de los paquetes instalados
+hiddenimports = copy_metadata('PyQt5')
 
 a = Analysis(
     [os.path.join(base_path, 'app', 'beta_version.py')],
-    pathex=[
-        os.path.join(base_path, 'app'),
-        os.path.join(base_path, 'app', 'dependencies'),
-        os.path.join(base_path, 'app', 'email_notifications')
-    ],
+    pathex=[os.path.join(base_path, 'app')],
     binaries=[],
     datas=[
-        (os.path.join(base_path, 'app', 'dependencies.py'), 'app/dependencies.py'),
-        (os.path.join(base_path, 'app', 'email_notifications.py'), 'app/email_notifications.py'),
-        (os.path.join(base_path, 'app', 'logo.png'), 'app/logo.png')
+        (os.path.join(base_path, 'app', 'dependencies.py'), 'app'),
+        (os.path.join(base_path, 'app', 'email_notifications.py'), 'app'),
+        (os.path.join(base_path, 'app', 'admin_dialog.py'), 'app'),
+        (os.path.join(base_path, 'app', 'animations.py'), 'app'),
+        (os.path.join(base_path, 'app', 'change_history.py'), 'app'),
+        (os.path.join(base_path, 'app', 'dialogs.py'), 'app'),
+        (os.path.join(base_path, 'app', 'excel_window.py'), 'app'),
+        (os.path.join(base_path, 'app', 'incidence_chart.py'), 'app'),
+        (os.path.join(base_path, 'app', 'incidence_details.py'), 'app'),
+        (os.path.join(base_path, 'app', 'login_window.py'), 'app'),
+        (os.path.join(base_path, 'app', 'mtbf_dialog.py'), 'app'),
+        (os.path.join(base_path, 'app', 'notifications.py'), 'app'),
+        (os.path.join(base_path, 'app', 'reports_export.py'), 'app'),
+        (os.path.join(base_path, 'app', 'responsive_design.py'), 'app'),
+        (os.path.join(base_path, 'app', 'send_report.py'), 'app'),
+        (os.path.join(base_path, 'app', 'theme_manager.py'), 'app'),
+        (os.path.join(base_path, 'app', 'user.py'), 'app'),
+        (os.path.join(base_path, 'app', 'v2_management.py'), 'app'),
+        (os.path.join(base_path, 'app', 'logo.png'), 'app'),
+        (os.path.join(base_path, 'app', 'config.json'), 'app'),
+        (os.path.join(base_path, 'app', 'incidencias_config.json'), 'app'),
+        (os.path.join(base_path, 'app', 'mtbf_data.json'), 'app'),
+        (os.path.join(base_path, 'app', 'detailed_messages.json'), 'app'),
+        (os.path.join(base_path, 'app', 'change_log.json'), 'app'),
+        (os.path.join(base_path, 'app', 'incidencias_state.json'), 'app'),
     ],
-    hiddenimports=['dependencies', 'email_notifications'],
+    hiddenimports=hiddenimports,
     hookspath=[],
     runtime_hooks=[],
     excludes=[],
@@ -28,6 +51,7 @@ a = Analysis(
     win_private_assemblies=False,
     cipher=block_cipher,
 )
+
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 exe = EXE(
@@ -44,6 +68,7 @@ exe = EXE(
     runtime_tmpdir=None,
     console=True,
 )
+
 coll = COLLECT(
     exe,
     a.binaries,
