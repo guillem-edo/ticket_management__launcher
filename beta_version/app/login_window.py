@@ -33,7 +33,7 @@ class LoginWindow(QWidget):
         else:
             base_path = os.path.dirname(os.path.abspath(__file__))
 
-        logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logo.png")
+        logo_path = os.path.join(base_path, "logo.png")
         logo_pixmap = QPixmap(logo_path)
 
         if not logo_pixmap.isNull():
