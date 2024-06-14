@@ -1,16 +1,16 @@
-from .dependencies import *
+from app.dependencies import *
 
-from .dialogs import AdvancedFilterDialog, TopIncidentsDialog
-from .incidence_chart import TurnChart
-from .admin_dialog import AdminDialog
-from .excel_window import ExcelWindow
+from app.dialogs import AdvancedFilterDialog, TopIncidentsDialog
+from app.incidence_chart import TurnChart
+from app.admin_dialog import AdminDialog
+from app.excel_window import ExcelWindow
 # from .responsive_design import center_window, adjust_to_screen
 # from .animations import fade_in
-from .reports_export import ExportReportDialog
-from .change_history import ChangeHistoryDialog
-from .email_notifications import * 
-from .send_report import SendReportDialog
-from .mtbf_dialog import MTBFDisplay
+from app.reports_export import ExportReportDialog
+from app.change_history import ChangeHistoryDialog
+from app.email_notifications import * 
+from app.send_report import SendReportDialog
+from app.mtbf_dialog import MTBFDisplay
 
 class TicketManagement(QMainWindow):
     def __init__(self, user):
