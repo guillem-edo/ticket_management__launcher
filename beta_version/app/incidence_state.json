@@ -2,15 +2,195 @@
     "user": "filter",
     "incidences": [
         {
-            "text": "WV50 FILTER: Cover atascasdo a las 10:53:07 del 2024-06-14",
+            "text": "WC47 NACP: Fallo tolva - Confirmada 5 veces",
             "status": "Fixing"
         },
         {
-            "text": "WV50 FILTER: Cover atascasdo a las 10:53:07 del 2024-06-14",
+            "text": "WC47 NACP: No coge placa - Confirmada 4 veces",
             "status": "Fixing"
         },
         {
-            "text": "WV50 FILTER: No coloca bien la pcb a las 12:15:06 del 2024-06-14",
+            "text": "WC47 NACP: Fallo en elevador - Confirmada 3 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC47 NACP: Ascensor no sube - Confirmada 2 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC47 NACP: Etiquetadora - Confirmada 5 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC47 NACP: Fallo en paletizador - Confirmada 5 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC47 NACP: Fallo tornillo - Confirmada 2 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC47 NACP: No pone tornillo - Confirmada 3 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC47 NACP: No atornilla tapa - Confirmada 3 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC47 NACP: No atornilla clips - Confirmada 1 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC47 NACP: Fallo atornillador - Confirmada 1 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC47 NACP: Fallo c\u00e1mara visi\u00f3n - Confirmada 1 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC47 NACP: Palet atascado en la curva - Confirmada 1 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC48 P5F: AOI (fallo etiqueta) - Confirmada 5 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC48 P5F: C\u00e1mara no detecta Pcb - Confirmada 1 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC48 P5F: No detecta presencia power CP - Confirmada 1 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC48 P5F: AOI (malla) - Confirmada 2 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC48 P5F: C\u00e1mara no detecta foams - Confirmada 2 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC48 P5F: C\u00e1mara no detecta foam derecho - Confirmada 2 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC48 P5F: C\u00e1mara no detecta skeleton - Confirmada 1 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC48 P5F: Etiquetadora - Confirmada 4 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC48 P5F: Fallo etiqueta - Confirmada 1 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC48 P5F: Detecci\u00f3n de sealling mal puesto - Confirmada 1 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC49 P5H: Screw K30 no lo detecta puesto - Confirmada 4 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC49 P5H: No lee QR - Confirmada 1 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC49 P5H: Atasco tuerca - Confirmada 1 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC49 P5H: No coloca bien el sealling - Confirmada 2 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC49 P5H: La c\u00e1mara no detecta Busbar - Confirmada 5 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC49 P5H: Power atascado en prensa, cuesta sacar - Confirmada 4 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC49 P5H: Etiquetadora - Confirmada 2 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WC49 P5H: La c\u00e1mara no detecta Top Cover - Confirmada 4 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WV50 FILTER: Traza - Confirmada 5 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WV50 FILTER: QR desplazado - Confirmada 2 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WV50 FILTER: Fallo atornillador - Confirmada 3 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WV50 FILTER: NOK Soldadura metal - Confirmada 3 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WV50 FILTER: No coloca bien la pcb - Confirmada 3 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WV50 FILTER: Robot no coloca bien ferrita - Confirmada 1 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WV50 FILTER: Robot no coge PCB - Confirmada 1 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WV50 FILTER: NOK Soldadura Pl\u00e1stico - Confirmada 3 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WV50 FILTER: Fallo c\u00e1mara cover - Confirmada 1 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WV50 FILTER: Robot no coloca bien filter en palet - Confirmada 2 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WV50 FILTER: Fallo c\u00e1mara ferrite - Confirmada 1 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WV50 FILTER: Repeat funcional - Confirmada 1 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WV50 FILTER: Core enganchado - Confirmada 1 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "WV50 FILTER: Cover atascasdo - Confirmada 1 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "SPL: No detecta marcas Power - Confirmada 3 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "SPL: Soldadura defectuosa - Confirmada 1 veces",
+            "status": "Fixing"
+        },
+        {
+            "text": "SPL: Error en sensor de salida - Confirmada 1 veces",
             "status": "Fixing"
         }
     ]

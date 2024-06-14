@@ -471,50 +471,32 @@ class TicketManagement(QMainWindow):
                     list_widget.addItem(item)
 
     def update_global_incidence_list(self):
-        current_fixing_incidents = []
-        for i in range(self.global_incidence_list.count()):
-            item = self.global_incidence_list.item(i)
-            item_widget = self.global_incidence_list.itemWidget(item)
-            if item_widget:
-                labels = item_widget.findChildren(QLabel)
-                if labels and (labels[1].text() == "Fixing" or labels[1].text() == "Pendiente"):
-                    correct_button = item_widget.findChild(QPushButton, "correct_button")
-                    details_button = item_widget.findChild(QPushButton, "details_button")
-                    current_fixing_incidents.append((labels[0].text(), labels[1].text(), correct_button, details_button))
-
+        # Limpiar la lista de incidencias global para actualizarla
         self.global_incidence_list.clear()
-        for incidence_text, fixing_label_text, correct_button, details_button in current_fixing_incidents:
-            text_parts = incidence_text.split(" ")
-            if len(text_parts) >= 5:
-                date_str = text_parts[-3]
-                time_str = text_parts[-2]
-                block_name = " ".join(text_parts[:-5])
 
-                item_widget = QWidget()
-                item_layout = QVBoxLayout(item_widget)
-                label_layout = QHBoxLayout()
-                label_layout.addWidget(QLabel(incidence_text))
-                item_layout.addLayout(label_layout)
-                fixing_label = QLabel(fixing_label_text)
-                fixing_label.setStyleSheet("color: red; font-weight: bold; font-size: 14px;" if fixing_label_text == "Fixing" else "color: orange; font-weight: bold; font-size: 14px;")
-                correct_button.setParent(item_widget)
-                correct_button.setStyleSheet(self.get_button_style())
-                correct_button.setFixedSize(100, 30)
-                details_button.setParent(item_widget)
-                details_button.setStyleSheet(self.get_button_style())
-                details_button.setFixedSize(150, 30)
-                buttons_layout = QHBoxLayout()
-                buttons_layout.addStretch()
-                buttons_layout.addWidget(fixing_label)
-                buttons_layout.addWidget(correct_button)
-                buttons_layout.addWidget(details_button)
-                item_layout.addLayout(buttons_layout)
-                list_item = QListWidgetItem()
-                list_item.setSizeHint(item_widget.sizeHint())
-                self.global_incidence_list.addItem(list_item)
-                self.global_incidence_list.setItemWidget(list_item, item_widget)
-                correct_button.clicked.connect(partial(self.mark_incidence_as_fixed, block_name, incidence_text, date_str, time_str))
-                details_button.clicked.connect(partial(self.add_incidence_details, block_name, incidence_text, date_str, time_str))
+        # Suponemos que tienes un historial de incidencias confirmadas almacenadas con timestamps
+        # Si no es así, necesitarás modificar la forma en que se guardan las incidencias cuando se confirman
+        for block_name, incidents in self.incident_details.items():
+            for incident, details in incidents.items():
+                for detail in details:  # detalles podría ser una lista de diccionarios con fecha y hora de confirmación
+                    # Formatear la incidencia para mostrar
+                    item_text = f"{block_name}: {incident} - Confirmada el {detail['date']} a las {detail['time']}"
+                    
+                    # Crear widget para cada incidencia
+                    item_widget = QWidget()
+                    item_layout = QVBoxLayout(item_widget)
+                    
+                    # Añadir etiqueta con la información de la incidencia
+                    label = QLabel(item_text)
+                    label.setStyleSheet("font-size: 12px; padding: 5px;")
+                    item_layout.addWidget(label)
+                    
+                    # Configurar el widget de lista y añadirlo a la lista global
+                    list_item = QListWidgetItem()
+                    list_item.setSizeHint(item_widget.sizeHint())
+                    self.global_incidence_list.addItem(list_item)
+                    self.global_incidence_list.setItemWidget(list_item, item_widget)
+
 
     def get_filtered_incidents(self, start_dt, end_dt, selected_block):
         if not self.excel_file or not os.path.exists(self.excel_file):

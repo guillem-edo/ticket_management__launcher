@@ -236,3 +236,5 @@
 {"user": "pideu1", "action": "Marcar Incidencia como Reparada", "date": "2024-06-14 10:36:26", "details": "WC47 NACP: No pone tornillo"}
 {"user": "filter", "action": "Confirmar Incidencia", "date": "2024-06-14 10:53:08", "details": "WV50 FILTER: Cover atascasdo"}
 {"user": "filter", "action": "Confirmar Incidencia", "date": "2024-06-14 12:15:06", "details": "WV50 FILTER: No coloca bien la pcb"}
+{"user": "filter", "action": "Confirmar Incidencia", "date": "2024-06-14 12:40:08", "details": "WV50 FILTER: Traza"}
+{"user": "filter", "action": "Confirmar Incidencia", "date": "2024-06-14 12:40:16", "details": "WV50 FILTER: Traza"}
