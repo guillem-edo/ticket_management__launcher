@@ -765,7 +765,7 @@ class TicketManagement(QMainWindow):
         if not os.path.exists(file_path):
             workbook = Workbook()
             sheet = workbook.active
-            headers = ["Bloque", "Incidencia", "Fecha", "Hora", "Turno", "Hora de Reparación", "Tiempo de Reparación", "MTBF"]
+            headers = ["Bloque", "Incidencia", "Fecha", "Hora", "Turno", "MTBF"]
             sheet.append(headers)
             workbook.save(file_path)
 
