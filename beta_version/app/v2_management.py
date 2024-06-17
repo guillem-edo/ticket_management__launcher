@@ -86,6 +86,12 @@ class TicketManagement(QMainWindow):
 
         for name in self.blocks:
             self.create_tab(name, self.incidencias[name])
+        
+        # Botón para el usuario Admin y Administrar Incidencias
+        if self.user.is_admin:
+            self.admin_button = QPushButton("Administrar Incidencias")
+            self.admin_button.clicked.connect(self.open_admin_dialog)
+            main_layout.addWidget(self.admin_button)
 
         # Nueva pestaña para Incidencias Más Relevantes y el Historial de Cambios
         self.relevant_tab = QWidget()
@@ -380,6 +386,14 @@ class TicketManagement(QMainWindow):
         self.mtbf_display.update_mtbf_display()
         self.update_charts()
 
+    def update_ui_for_admin(self):
+        self.tabWidget.clear()
+        for block in self.user.blocks:
+            if block in self.incidencias and self.incidencias[block]:
+                self.create_tab(block, self.incidencias[block])
+            else:
+                self.create_empty_tab(block)  # Crea pestañas incluso para bloques vacíos
+
     def update_chart(self):
         # Asegúrate de cerrar cualquier figura antigua que esté abierta
         if hasattr(self, 'current_canvas') and self.current_canvas.figure:
@@ -413,13 +427,24 @@ class TicketManagement(QMainWindow):
         self.update_general_chart()
 
     def update_daily_chart(self):
+        if not self.user.blocks:  # Verifica que haya bloques asignados
+            print("No hay bloques asignados al usuario.")
+            self.statusBar().showMessage("No hay bloques asignados para mostrar gráficos.")
+            return
+
         self.clear_chart_display_area()
         today = datetime.today().date()
         incidents_daily, _ = self.get_filtered_incidents_by_date(today)
-        self.daily_chart = TurnChart(self)
-        self.daily_chart.plot_daily_chart(incidents_daily, "Incidencias Diarias")
-        self.daily_chart_canvas = FigureCanvas(self.daily_chart.figure)
-        self.scroll_layout.addWidget(self.daily_chart_canvas)
+
+        # Verifica si hay datos para mostrar
+        if incidents_daily:
+            self.daily_chart = TurnChart(self)
+            self.daily_chart.plot_daily_chart(incidents_daily, "Incidencias Diarias")
+            self.daily_chart_canvas = FigureCanvas(self.daily_chart.figure)
+            self.scroll_layout.addWidget(self.daily_chart_canvas)
+        else:
+            print("No hay incidencias diarias para mostrar.")
+            self.statusBar().showMessage("No hay incidencias diarias para mostrar en el gráfico.")
 
     def update_shift_chart(self):
         self.clear_chart_display_area()
@@ -478,25 +503,36 @@ class TicketManagement(QMainWindow):
         # Si no es así, necesitarás modificar la forma en que se guardan las incidencias cuando se confirman
         for block_name, incidents in self.incident_details.items():
             for incident, details in incidents.items():
-                for detail in details:  # detalles podría ser una lista de diccionarios con fecha y hora de confirmación
-                    # Formatear la incidencia para mostrar
-                    item_text = f"{block_name}: {incident} - Confirmada el {detail['date']} a las {detail['time']}"
-                    
-                    # Crear widget para cada incidencia
-                    item_widget = QWidget()
-                    item_layout = QVBoxLayout(item_widget)
-                    
-                    # Añadir etiqueta con la información de la incidencia
-                    label = QLabel(item_text)
-                    label.setStyleSheet("font-size: 12px; padding: 5px;")
-                    item_layout.addWidget(label)
-                    
-                    # Configurar el widget de lista y añadirlo a la lista global
-                    list_item = QListWidgetItem()
-                    list_item.setSizeHint(item_widget.sizeHint())
-                    self.global_incidence_list.addItem(list_item)
-                    self.global_incidence_list.setItemWidget(list_item, item_widget)
+                # Asegurarse de que details es una lista antes de intentar iterar sobre ella
+                if isinstance(details, list):
+                    for detail in details:  # detalles debería ser una lista de diccionarios con fecha y hora de confirmación
+                        # Formatear la incidencia para mostrar
+                        item_text = f"{block_name}: {incident} - Confirmada el {detail['date']} a las {detail['time']}"
 
+                        # Crear widget para cada incidencia
+                        item_widget = QWidget()
+                        item_layout = QVBoxLayout(item_widget)
+
+                        # Añadir etiqueta con la información de la incidencia
+                        label = QLabel(item_text)
+                        label.setStyleSheet("font-size: 12px; padding: 5px;")
+                        item_layout.addWidget(label)
+
+                        # Configurar el widget de lista y añadirlo a la lista global
+                        list_item = QListWidgetItem()
+                        list_item.setSizeHint(item_widget.sizeHint())
+                        self.global_incidence_list.addItem(list_item)
+                        self.global_incidence_list.setItemWidget(list_item, item_widget)
+                else:
+                    print(f"Error: se esperaba una lista de detalles para {block_name}: {incident}, pero se recibió: {type(details)}")
+        
+    def init_user_blocks(self):
+        # Asegúrate de que todos los bloques necesarios están presentes, incluso si están vacíos.
+        all_blocks = ["WC47 NACP", "WC48 P5F", "WC49 P5H", "WV50 FILTER", "SPL"]
+        if self.user.is_admin:
+            self.user.blocks = all_blocks  # Asigna todos los bloques al admin
+        elif not self.user.blocks:
+            self.user.blocks = []  # Asegura que no hay bloques no inicializados
 
     def get_filtered_incidents(self, start_dt, end_dt, selected_block):
         if not self.excel_file or not os.path.exists(self.excel_file):
@@ -550,7 +586,21 @@ class TicketManagement(QMainWindow):
     def get_filtered_incidents_by_shift(self, date, shift_start, shift_end):
         start_dt = datetime.combine(date, shift_start)
         end_dt = datetime.combine(date, shift_end)
-        return self.get_filtered_incidents(start_dt, end_dt, self.user.blocks[0])
+        
+        # Comprueba si el usuario tiene bloques asignados o si es administrador
+        if not self.user.blocks and self.user.is_admin:
+            # Si es administrador y no tiene bloques asignados, puede acceder a todos los bloques
+            selected_block = "Todos"
+        elif self.user.blocks:
+            # Usa el primer bloque asignado por defecto o implementa lógica para seleccionar un bloque específico
+            selected_block = self.user.blocks[0]
+        else:
+            # Si no hay bloques y no es administrador, maneja la situación (p.ej., mostrar un mensaje)
+            print("No hay bloques asignados al usuario.")
+            self.statusBar().showMessage("No hay bloques asignados para mostrar gráficos.")
+            return {}, {}  # Devuelve estructuras vacías para prevenir errores adicionales
+        
+        return self.get_filtered_incidents(start_dt, end_dt, selected_block)
 
     def get_general_filtered_incidents(self, start_dt, end_dt):
         return self.get_filtered_incidents(start_dt, end_dt, "Todos")
@@ -601,6 +651,14 @@ class TicketManagement(QMainWindow):
         confirm_button.setStyleSheet(self.get_button_style())
         confirm_button.clicked.connect(lambda: self.confirm_incidence(name, list_widget))
         layout.addWidget(confirm_button)
+    
+    def create_empty_tab(self, block_name):
+        tab = QWidget()
+        self.tabWidget.addTab(tab, block_name)
+        layout = QVBoxLayout(tab)
+        label = QLabel("No hay incidencias en este bloque.")
+        layout.addWidget(label)
+        # Añadir botones para gestionar incidencias si es necesario
 
     # Método para confirmar una incidencia
     def confirm_incidence(self, block_name, list_widget):
