@@ -3,7 +3,7 @@ import os
 block_cipher = None
 
 # Asegúrate de que este es el directorio correcto donde está tu script principal
-base_path = 'C:/Users/FV1FEB0/Documents/GitHub/ticket_management__launcher/beta_version/app'
+base_path = 'C:\Users\FV1FEB0\Documents\ticket_management__launcher\beta_version\app'
 
 a = Analysis(
     [os.path.join(base_path, 'beta_version.py')],
