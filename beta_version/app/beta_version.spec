@@ -11,7 +11,7 @@ a = Analysis(
     binaries=[],
     datas=[
         # Incluir todo dentro de 'dependencies' si es un directorio
-        (os.path.join(base_path, 'dependencies', '*'), 'dependencies'),
+        (os.path.join(base_path, 'dependencies', '/*'), 'dependencies'),
         # Asegúrate de que los archivos estáticos van a la raíz del ejecutable final
         (os.path.join(base_path, 'logo.png'), 'app'),
         (os.path.join(base_path, 'config.json'), 'app'),

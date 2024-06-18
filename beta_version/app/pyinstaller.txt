@@ -1,0 +1,18 @@
+
+** Ruta de ejecucción (para este caso) / REAL PATH: **
+
+cd C:\Users\FV1FEB0\Documents\GitHub\ticket_management__launcher\beta_version\app
+
+\\ Para Limpiar y ejecutar con DEBUG:
+
+- pyinstaller --clean --log-level=DEBUG beta_version.spec
+
+\\ Ejecutar only pyinstaller:
+
+- pyinstaller beta_version.spec
+
+\\ Borrar carpetas (p.ej: "build" "dist"):
+
+cd C:\Users\FV1FEB0\Documents\GitHub\ticket_management__launcher\beta_version\app
+rd /s /q build
+rd /s /q dist
