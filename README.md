@@ -64,7 +64,7 @@ Upon logging in, the main window presents a dashboard where you can manage incid
 2. Choose the incident from the list.
 3. Click on "Confirmar Incidencia" to log the incident.
 
-## Viewing Charts
+### Viewing Charts
 The application provides three types of charts to help visualize incident data:
 
 - **Daily Chart**: This chart shows incidents logged within the current day. It provides a clear view of the incidents that occurred throughout the day, allowing you to identify peak times and recurring issues on a daily basis. This is particularly useful for daily monitoring and shift handovers.
