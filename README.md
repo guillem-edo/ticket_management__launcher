@@ -18,6 +18,7 @@ The Ticket Management System is a comprehensive tool designed to help manage and
 - **Pending Incidents**: Track incidents marked as "Fixing" or "Pendiente".
 - **Incident Details**: Add detailed descriptions for each incident.
 - **State Persistence**: Save and load the state of incidents and MTBF data between sessions.
+- **Admin Functions**: Manage incident types and configurations with additional administrative controls.
 
 ## Installation
 
@@ -110,7 +111,29 @@ Upon logging in, the main window presents a dashboard where you can manage incid
 
 ### Admin Functions
 
-- Admin users have access to an additional "Administrar Incidencias" button to manage incident types and configurations.
+Admins have additional controls to manage the incident types and configurations. The admin functions include:
+
+**Manage Incident Types**:
+
+- Add New Incidents: Admins can add new types of incidents to the system.
+- Edit Existing Incidents: Admins can edit the names of existing incidents.
+- Delete Incidents: Admins can delete incidents that are no longer relevant.
+- Manage Incident Lists for Blocks: Admins can manage incident lists for different blocks, including empty blocks.
+
+**Configuration Management**:
+
+- Save and Load Configurations: Admins can save the current configuration of incidents to a JSON file and load configurations from a JSON file.
+- Excel File Management: Admins can select the Excel file used for logging incidents.
+
+**Admin Dialog Usage** 
+
+1. Open the Admin Dialog: Click on the "Administrar Incidencias" button.
+2. Select Block: Choose the relevant block from the dropdown menu.
+3. Manage Incidents:
+
+- Add Incident: Click "Añadir" and enter the name of the new incident.
+- Edit Incident: Select an incident from the list, click "Editar", and modify the name.
+- Delete Incident: Select an incident from the list and click "Eliminar".
 
 ## Hidden Features
 
