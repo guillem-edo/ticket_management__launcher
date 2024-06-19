@@ -64,11 +64,14 @@ Upon logging in, the main window presents a dashboard where you can manage incid
 2. Choose the incident from the list.
 3. Click on "Confirmar Incidencia" to log the incident.
 
-### Viewing Charts
+## Viewing Charts
+The application provides three types of charts to help visualize incident data:
 
-- **Daily Chart**: Shows incidents logged within the current day.
-- **Shift Chart**: Shows incidents logged within the current shift (6:00 AM to 6:00 PM).
-- **General Chart**: Displays overall incidents across all production lines.
+- **Daily Chart**: This chart shows incidents logged within the current day. It provides a clear view of the incidents that occurred throughout the day, allowing you to identify peak times and recurring issues on a daily basis. This is particularly useful for daily monitoring and shift handovers.
+
+- **Shift Chart**: This chart displays incidents logged during the current shift (6:00 AM to 6:00 PM or 6:00 PM to 6:00 AM). It helps you understand the distribution of incidents across different shifts, making it easier to manage resources and address shift-specific issues. Use this chart to compare the performance of day and night shifts.
+
+- **General Chart**: This chart provides an overview of all incidents across all production lines over a selected period. It is designed to give you a broader perspective of the incident trends and patterns, helping in long-term planning and decision-making. This chart can be filtered to show data for specific blocks or the entire operation.
 
 ### Advanced Filtering
 
