@@ -1,4 +1,6 @@
-# Ticket Management System - Beta v.6.0
+---
+
+# Ticket Management Software - Beta v.6.0
 
 ## Overview
 
@@ -124,9 +126,87 @@ Upon logging in, the main window presents a dashboard where you can manage incid
 
 - The application saves the current state of incidents and MTBF data when closed, ensuring no data is lost between sessions.
 
-## Contributing
+## Compiling the Application
 
-**Updating and fixing some bugs and issues, because this is a beta version and we are working on.**
+To compile the application and create an executable using PyInstaller, follow these steps:
+
+1. **Configure the `.spec` file**:
+    Ensure that your `beta_version.spec` file is correctly configured. Here is an example configuration:
+
+    ```python
+    import os
+
+    block_cipher = None
+
+    base_path = 'C:/Users/FV1FEB0/Documents/GitHub/ticket_management__launcher/beta_version/app'
+
+    a = Analysis(
+        [os.path.join(base_path, 'beta_version.py')],
+        pathex=[base_path],
+        binaries=[],
+        datas=[
+            (os.path.join(base_path, 'logo.png'), 'app'),
+            (os.path.join(base_path, 'config.json'), 'app'),
+            (os.path.join(base_path, 'incidencias_config.json'), 'app'),
+            (os.path.join(base_path, 'mtbf_data.json'), 'app'),
+            (os.path.join(base_path, 'detailed_messages.json'), 'app'),
+            (os.path.join(base_path, 'change_log.json'), 'app'),
+            (os.path.join(base_path, 'incidencias_state.json'), 'app'),
+        ],
+        hiddenimports=[
+            'pandas',
+            'numpy',
+        ],
+        hookspath=[],
+        runtime_hooks=[],
+        excludes=[],
+        win_no_prefer_redirects=False,
+        win_private_assemblies=False,
+        cipher=block_cipher,
+    )
+
+    pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+
+    exe = EXE(
+        pyz,
+        a.scripts,
+        [],
+        exclude_binaries=True,
+        name='beta_version',
+        debug=False,
+        strip=False,
+        upx=False,
+        console=False  # Cambia a True si necesitas una consola para depuración
+    )
+
+    coll = COLLECT(
+        exe,
+        a.binaries,
+        a.zipfiles,
+        a.datas,
+        strip=False,
+        upx=False,
+        name='beta_version'
+    )
+    ```
+
+2. **Clean and Build**:
+    Before running PyInstaller, remove the `build` and `dist` directories if they exist to ensure a clean build:
+
+    ```bash
+    rmdir /S /Q build dist
+    ```
+
+    Then, run PyInstaller with the following command:
+
+    ```bash
+    pyinstaller --clean --log-level=DEBUG beta_version.spec
+    ```
+
+3. **Transfer and Execute**:
+    Once the build is complete, you will find the executable in the `dist/beta_version` directory. Transfer this directory to the target machine and run `beta_version.exe` to start the application.
+
+## Contributing
 
 Contributions are welcome! Please follow these steps:
 
@@ -136,9 +216,15 @@ Contributions are welcome! Please follow these steps:
 4. Push to the branch (`git push origin feature/your-feature`).
 5. Create a new Pull Request.
 
+Claro, aquí tienes la sección de la licencia actualizada con esa información adicional:
+
+---
+
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](http://www.apache.org/licenses/) file for details.
+This project is licensed under the GNU General Public License v3.0. You are free to use, modify, and distribute this software under the terms of the GPLv3. Unauthorized distribution of this software is prohibited and may lead to legal consequences.
+
+For more details, see the [LICENSE](https://www.gnu.org/licenses/gpl-3.0.en.html) file.
 
 ## Acknowledgments
 
