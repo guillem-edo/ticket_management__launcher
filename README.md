@@ -4,7 +4,7 @@
 
 ## Overview
 
-The Ticket Management System is a comprehensive tool designed to help manage and track incidents across various production lines. It is built using Python, with a GUI powered by PyQt5, and includes features such as incident logging, advanced filtering, MTBF (Mean Time Between Failures) calculation, and visual representation of data through charts. The application also supports Excel integration for data storage and manipulation.
+It is built using Python, with a GUI powered by PyQt5, and includes features such as incident logging, advanced filtering, MTBF (Mean Time Between Failures) calculation, and visual representation of data through charts. The application also supports Excel integration for data storage and manipulation.
 
 ## Features
 
