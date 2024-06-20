@@ -1,4 +1,6 @@
-# Ticket Management System - Beta v.6.0
+---
+
+# Ticket Management Software - Beta v.6.0
 
 ## Overview
 
@@ -16,6 +18,7 @@ It is built using Python, with a GUI powered by PyQt5, and includes features suc
 - **Pending Incidents**: Track incidents marked as "Fixing" or "Pendiente".
 - **Incident Details**: Add detailed descriptions for each incident.
 - **State Persistence**: Save and load the state of incidents and MTBF data between sessions.
+- **Admin Functions**: Manage incident types and configurations with additional administrative controls.
 
 ## Installation
 
@@ -62,10 +65,13 @@ Upon logging in, the main window presents a dashboard where you can manage incid
 3. Click on "Confirmar Incidencia" to log the incident.
 
 ### Viewing Charts
+The application provides three types of charts to help visualize incident data:
 
-- **Daily Chart**: Shows incidents logged within the current day.
-- **Shift Chart**: Shows incidents logged within the current shift (6:00 AM to 6:00 PM).
-- **General Chart**: Displays overall incidents across all production lines.
+- **Daily Chart**: This chart shows incidents logged within the current day. It provides a clear view of the incidents that occurred throughout the day, allowing you to identify peak times and recurring issues on a daily basis. This is particularly useful for daily monitoring and shift handovers.
+
+- **Shift Chart**: This chart displays incidents logged during the current shift (6:00 AM to 6:00 PM or 6:00 PM to 6:00 AM). It helps you understand the distribution of incidents across different shifts, making it easier to manage resources and address shift-specific issues. Use this chart to compare the performance of day and night shifts.
+
+- **General Chart**: This chart provides an overview of all incidents across all production lines over a selected period. It is designed to give you a broader perspective of the incident trends and patterns, helping in long-term planning and decision-making. This chart can be filtered to show data for specific blocks or the entire operation.
 
 ### Advanced Filtering
 
@@ -108,7 +114,29 @@ Upon logging in, the main window presents a dashboard where you can manage incid
 
 ### Admin Functions
 
-- Admin users have access to an additional "Administrar Incidencias" button to manage incident types and configurations.
+Admins have additional controls to manage the incident types and configurations. The admin functions include:
+
+**Manage Incident Types**:
+
+- Add New Incidents: Admins can add new types of incidents to the system.
+- Edit Existing Incidents: Admins can edit the names of existing incidents.
+- Delete Incidents: Admins can delete incidents that are no longer relevant.
+- Manage Incident Lists for Blocks: Admins can manage incident lists for different blocks, including empty blocks.
+
+**Configuration Management**:
+
+- Save and Load Configurations: Admins can save the current configuration of incidents to a JSON file and load configurations from a JSON file.
+- Excel File Management: Admins can select the Excel file used for logging incidents.
+
+**Admin Dialog Usage** 
+
+1. Open the Admin Dialog: Click on the "Administrar Incidencias" button.
+2. Select Block: Choose the relevant block from the dropdown menu.
+3. Manage Incidents:
+
+- Add Incident: Click "Añadir" and enter the name of the new incident.
+- Edit Incident: Select an incident from the list, click "Editar", and modify the name.
+- Delete Incident: Select an incident from the list and click "Eliminar".
 
 ## Hidden Features
 
@@ -124,9 +152,87 @@ Upon logging in, the main window presents a dashboard where you can manage incid
 
 - The application saves the current state of incidents and MTBF data when closed, ensuring no data is lost between sessions.
 
-## Contributing
+## Compiling the Application
 
-**Updating and fixing some bugs and issues, because this is a beta version and we are working on.**
+To compile the application and create an executable using PyInstaller, follow these steps:
+
+1. **Configure the `.spec` file**:
+    Ensure that your `beta_version.spec` file is correctly configured. Here is an example configuration:
+
+    ```python
+    import os
+
+    block_cipher = None
+
+    base_path = 'C:/Users/FV1FEB0/Documents/GitHub/ticket_management__launcher/beta_version/app'
+
+    a = Analysis(
+        [os.path.join(base_path, 'beta_version.py')],
+        pathex=[base_path],
+        binaries=[],
+        datas=[
+            (os.path.join(base_path, 'logo.png'), 'app'),
+            (os.path.join(base_path, 'config.json'), 'app'),
+            (os.path.join(base_path, 'incidencias_config.json'), 'app'),
+            (os.path.join(base_path, 'mtbf_data.json'), 'app'),
+            (os.path.join(base_path, 'detailed_messages.json'), 'app'),
+            (os.path.join(base_path, 'change_log.json'), 'app'),
+            (os.path.join(base_path, 'incidencias_state.json'), 'app'),
+        ],
+        hiddenimports=[
+            'pandas',
+            'numpy',
+        ],
+        hookspath=[],
+        runtime_hooks=[],
+        excludes=[],
+        win_no_prefer_redirects=False,
+        win_private_assemblies=False,
+        cipher=block_cipher,
+    )
+
+    pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+
+    exe = EXE(
+        pyz,
+        a.scripts,
+        [],
+        exclude_binaries=True,
+        name='beta_version',
+        debug=False,
+        strip=False,
+        upx=False,
+        console=False  # Cambia a True si necesitas una consola para depuración
+    )
+
+    coll = COLLECT(
+        exe,
+        a.binaries,
+        a.zipfiles,
+        a.datas,
+        strip=False,
+        upx=False,
+        name='beta_version'
+    )
+    ```
+
+2. **Clean and Build**:
+    Before running PyInstaller, remove the `build` and `dist` directories if they exist to ensure a clean build:
+
+    ```bash
+    rmdir /S /Q build dist
+    ```
+
+    Then, run PyInstaller with the following command:
+
+    ```bash
+    pyinstaller --clean --log-level=DEBUG beta_version.spec
+    ```
+
+3. **Transfer and Execute**:
+    Once the build is complete, you will find the executable in the `dist/beta_version` directory. Transfer this directory to the target machine and run `beta_version.exe` to start the application.
+
+## Contributing
 
 Contributions are welcome! Please follow these steps:
 
@@ -136,9 +242,15 @@ Contributions are welcome! Please follow these steps:
 4. Push to the branch (`git push origin feature/your-feature`).
 5. Create a new Pull Request.
 
+Claro, aquí tienes la sección de la licencia actualizada con esa información adicional:
+
+---
+
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](http://www.apache.org/licenses/) file for details.
+This project is licensed under the GNU General Public License v3.0. You are free to use, modify, and distribute this software under the terms of the GPLv3. Unauthorized distribution of this software is prohibited and may lead to legal consequences.
+
+For more details, see the [LICENSE](https://www.gnu.org/licenses/gpl-3.0.en.html) file.
 
 ## Acknowledgments
 
