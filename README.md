@@ -164,7 +164,7 @@ To compile the application and create an executable using PyInstaller, follow th
     
     block_cipher = None
     
-    base_path = r'C:\Users\FV1FEB0\Documents\ticket_management__launcher\beta_version\app'
+    base_path = r'C:\\ticket_management__launcher\beta_version\app'
     
     a = Analysis(
         [os.path.join(base_path, 'beta_version.py')],
