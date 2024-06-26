@@ -449,13 +449,20 @@ class TicketManagement(QMainWindow):
     def update_shift_chart(self):
         self.clear_chart_display_area()
         today = datetime.today().date()
-        shift_start = time(6, 0)
-        shift_end = time(18, 0)
-        incidents_shift, _ = self.get_filtered_incidents_by_shift(today, shift_start, shift_end)
-        self.shift_chart = TurnChart(self)
-        self.shift_chart.plot_shift_chart(incidents_shift, "Incidencias por Turno")
-        self.shift_chart_canvas = FigureCanvas(self.shift_chart.figure)
-        self.scroll_layout.addWidget(self.shift_chart_canvas)
+        
+        # Definir los nuevos horarios de turnos
+        shifts = [
+            {"name": "Mañana", "start": time(6, 0), "end": time(14, 0)},
+            {"name": "Tarde", "start": time(14, 0), "end": time(22, 0)},
+            {"name": "Noche", "start": time(22, 0), "end": time(6, 0)}
+        ]
+        
+        for shift in shifts:
+            incidents_shift, _ = self.get_filtered_incidents_by_shift(today, shift["start"], shift["end"])
+            shift_chart = TurnChart(self)
+            shift_chart.plot_shift_chart(incidents_shift, f"Incidencias del Turno de {shift['name']}")
+            shift_chart_canvas = FigureCanvas(shift_chart.figure)
+            self.scroll_layout.addWidget(shift_chart_canvas)
 
     def update_general_chart(self):
         self.clear_chart_display_area()
@@ -584,9 +591,13 @@ class TicketManagement(QMainWindow):
         return self.get_filtered_incidents(start_dt, end_dt, self.user.blocks[0])
 
     def get_filtered_incidents_by_shift(self, date, shift_start, shift_end):
-        start_dt = datetime.combine(date, shift_start)
-        end_dt = datetime.combine(date, shift_end)
-        
+        if shift_start < shift_end:
+            start_dt = datetime.combine(date, shift_start)
+            end_dt = datetime.combine(date, shift_end)
+        else:
+            start_dt = datetime.combine(date, shift_start)
+            end_dt = datetime.combine(date + timedelta(days=1), shift_end)
+            
         # Comprueba si el usuario tiene bloques asignados o si es administrador
         if not self.user.blocks and self.user.is_admin:
             # Si es administrador y no tiene bloques asignados, puede acceder a todos los bloques
@@ -804,8 +815,10 @@ class TicketManagement(QMainWindow):
                         sheet.cell(row=1, column=idx + 1, value=header)
 
                 time_obj = datetime.strptime(time_str, "%H:%M:%S").time()
-                if time(6, 0) <= time_obj < time(18, 0):
+                if time(6, 0) <= time_obj < time(14, 0):
                     turno = "Mañana"
+                elif time(14, 0) <= time_obj < time(22, 0):
+                    turno = "Tarde"
                 else:
                     turno = "Noche"
 
