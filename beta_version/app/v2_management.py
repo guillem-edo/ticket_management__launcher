@@ -651,7 +651,7 @@ class TicketManagement(QMainWindow):
         confirm_button.setStyleSheet(self.get_button_style())
         confirm_button.clicked.connect(lambda: self.confirm_incidence(name, list_widget))
         layout.addWidget(confirm_button)
-    
+
     def create_empty_tab(self, block_name):
         tab = QWidget()
         self.tabWidget.addTab(tab, block_name)
@@ -665,22 +665,42 @@ class TicketManagement(QMainWindow):
         current_item = list_widget.currentItem()
         if current_item:
             incidence_text = current_item.text()
-            confirm_dialog = QMessageBox.question(self, "Confirmar Incidencia", f"¿Está seguro que desea confirmar la incidencia '{incidence_text}'?", QMessageBox.Yes | QMessageBox.No)
-            if confirm_dialog == QMessageBox.Yes:
-                timestamp = datetime.now()
-                date_str = timestamp.strftime("%Y-%m-%d")
-                time_str = timestamp.strftime("%H:%M:%S")
-                self.last_incidence_labels[block_name].setText(f"Incidencia confirmada: {incidence_text} a las {time_str}")
+            timestamp = datetime.now()
+            date_str = timestamp.strftime("%Y-%m-%d")
+            time_str = timestamp.strftime("%H:%M:%S")
+            self.last_incidence_labels[block_name].setText(f"Incidencia confirmada: {incidence_text} a las {time_str}")
 
-                # Actualizar MTBF y registrar la incidencia
-                self.mtbf_display.update_mtbf(block_name, timestamp)
-                self.log_incidence_to_excel(block_name, date_str, time_str, incidence_text)
+            # Actualizar MTBF y registrar la incidencia en Excel
+            self.mtbf_display.update_mtbf(block_name, timestamp)
+            self.log_incidence_to_excel(block_name, date_str, time_str, incidence_text)
 
-                # Registrar el cambio y actualizar el historial
-                self.log_change("Confirmar Incidencia", f"{block_name}: {incidence_text}")
-                self.update_change_history()
+            # Registrar el cambio y actualizar el historial
+            self.log_change("Confirmar Incidencia", f"{block_name}: {incidence_text}")
+            self.update_change_history()
 
-                QMessageBox.information(self, "Confirmación", "Incidencia confirmada.")
+            if incidence_text in self.incident_details[block_name]:
+                self.incident_details[block_name][incidence_text] += 1
+            else:
+                self.incident_details[block_name][incidence_text] = 1
+
+            self.save_incident_details()
+            self.update_top_incidents()
+
+            QMessageBox.information(self, "Confirmación", "Incidencia confirmada.")
+
+            item_widget = QWidget()
+            item_layout = QVBoxLayout(item_widget)
+            label_layout = QHBoxLayout()
+            label_layout.addWidget(QLabel(f"{block_name}: {incidence_text} a las {time_str} del {date_str}"))
+            item_layout.addLayout(label_layout)
+
+            list_item = QListWidgetItem()
+            list_item.setSizeHint(item_widget.sizeHint())
+
+            self.global_incidence_list.addItem(list_item)
+            self.global_incidence_list.setItemWidget(list_item, item_widget)
+
+            self.update_top_incidents()
         else:
             QMessageBox.warning(self, "Ninguna Incidencia Seleccionada", "Selecciona una incidencia para confirmar.")
 
