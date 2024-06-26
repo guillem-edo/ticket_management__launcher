@@ -799,7 +799,7 @@ class TicketManagement(QMainWindow):
             headers = ["Bloque", "Incidencia", "Fecha", "Hora", "Turno", "MTBF"]
             sheet.append(headers)
             workbook.save(file_path)
-
+            
     def log_incidence_to_excel(self, block_name, date_str, time_str, incidence_text):
         if self.excel_file and os.path.exists(self.excel_file):
             try:
@@ -807,7 +807,7 @@ class TicketManagement(QMainWindow):
                 sheet = workbook.active
 
                 headers = [cell.value for cell in sheet[1]]
-                expected_headers = ["Bloque", "Incidencia", "Fecha", "Hora", "Turno", "Hora de Reparación", "Tiempo de Reparación", "MTBF"]
+                expected_headers = ["Bloque", "Incidencia", "Fecha", "Hora", "Turno", "MTBF"]
                 if headers != expected_headers:
                     sheet.delete_rows(1, 1)
                     sheet.insert_rows(1)
@@ -826,7 +826,7 @@ class TicketManagement(QMainWindow):
                 self.mtbf_display.update_mtbf(block_name, datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M:%S"))
                 mtbf_value = self.mtbf_display.calculate_mtbf(block_name)
 
-                new_row = [block_name, incidence_text, date_str, time_str, turno, "", "", mtbf_value]
+                new_row = [block_name, incidence_text, date_str, time_str, turno, mtbf_value]
                 sheet.append(new_row)
 
                 workbook.save(self.excel_file)
