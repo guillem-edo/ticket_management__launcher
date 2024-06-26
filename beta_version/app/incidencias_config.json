@@ -1,1 +1,7 @@
-C:/Users/FV1FEB0/Documents/ticket_management__launcher_local/beta_version/excel_files/test.xlsx
+{
+    "WC47 NACP": [],
+    "WC48 P5F": [],
+    "WC49 P5H": [],
+    "WV50 FILTER": ["Traza","No coloca bien la pcb","Robot no coge PCB","Fallo atornillador","Pieza enganchada en HV Test","Cover atascasdo","Robot no coloca bien ferrita","No coloca bien el core","Fallo recojida último circuito - Blister", "Repeat funcional","Fallo cámara QR", "Cover atascasdo"],
+    "SPL": []
+}

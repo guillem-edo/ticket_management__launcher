@@ -20,6 +20,6 @@ from PyQt5.QtWidgets import (
     QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QLineEdit, QFileDialog, QTableWidget, QTableWidgetItem, QMessageBox,
     QTabWidget, QLabel, QListWidget, QStatusBar, QSplitter, QAbstractItemView, QListWidgetItem, QInputDialog, QApplication, QDialog, QTextEdit
 )
-from PyQt5.QtCore import QTimer, Qt, QRect # pyqtSlot
+from PyQt5.QtCore import QTimer, Qt, QRect, pyqtSignal # pyqtSlot
 from PyQt5.QtGui import QFont, QIcon
 from functools import partial

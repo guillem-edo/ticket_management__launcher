@@ -11,6 +11,7 @@ if parent_dir not in sys.path:
 
 from app.login_window import LoginWindow
 from app.v2_management import TicketManagement
+from app.admin_dialog import AdminDialog
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -18,7 +19,8 @@ if __name__ == "__main__":
     login_window = LoginWindow()
 
     def on_login_successful(user):
-        ticket_management = TicketManagement(user)
+        incidencias = AdminDialog.load_incidencias()
+        ticket_management = TicketManagement(user, incidencias=incidencias)
         ticket_management.show()
 
     login_window.login_successful.connect(on_login_successful)

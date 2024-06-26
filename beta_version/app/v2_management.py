@@ -13,7 +13,7 @@ from app.send_report import SendReportDialog
 from app.mtbf_dialog import MTBFDisplay
 
 class TicketManagement(QMainWindow):
-    def __init__(self, user):
+    def __init__(self, user, incidencias=None):
         super().__init__()
         self.user = user
 
@@ -27,7 +27,7 @@ class TicketManagement(QMainWindow):
         self.excel_file = None
 
         # Cargar configuraciones y datos iniciales
-        self.incidencias = AdminDialog.load_incidencias(self.config_file) or self.default_incidences()
+        self.incidencias = incidencias or self.load_incidencias()
         self.blocks = user.blocks if not user.is_admin else list(self.incidencias.keys())
 
         # Deberías inicializar todos los atributos necesarios antes de llamar a initUI()
@@ -799,7 +799,7 @@ class TicketManagement(QMainWindow):
             headers = ["Bloque", "Incidencia", "Fecha", "Hora", "Turno", "MTBF"]
             sheet.append(headers)
             workbook.save(file_path)
-            
+
     def log_incidence_to_excel(self, block_name, date_str, time_str, incidence_text):
         if self.excel_file and os.path.exists(self.excel_file):
             try:
@@ -1058,7 +1058,21 @@ class TicketManagement(QMainWindow):
                         list_item.setSizeHint(item_widget.sizeHint())
                         self.global_incidence_list.addItem(list_item)
                         self.global_incidence_list.setItemWidget(list_item, item_widget)
-
+    @staticmethod
+    def load_incidencias(config_file="incidencias_config.json"):
+        if os.path.exists(config_file):
+            with open(config_file, "r") as file:
+                try:
+                    incidencias = json.load(file)
+                    if not incidencias:
+                        print("Warning: Loaded incidences are empty.")
+                    return incidencias
+                except json.JSONDecodeError:
+                    print("Error: Failed to decode JSON from incidences file.")
+                    return {}
+        print(f"Error: Incidences file '{config_file}' not found.")
+        return {}
+    
     def save_incident_details(self):
         with open('incident_details.json', 'w') as f:
             json.dump(self.incident_details, f, default=str)

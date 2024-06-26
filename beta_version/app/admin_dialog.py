@@ -13,8 +13,10 @@ class AdminDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Administrar Incidencias")
         self.setGeometry(300, 300, 600, 500)
-        self.incidencias = incidencias if incidencias else self.load_incidencias(config_file)
         self.config_file = config_file
+        self.incidencias = self.load_incidencias() if incidencias is None else incidencias
+        if not self.incidencias:
+            print("Warning: No incidences loaded.")
         self.initUI()
 
     def initUI(self):
@@ -26,7 +28,10 @@ class AdminDialog(QDialog):
         layout.addWidget(title_label)
 
         self.block_selector = QComboBox()
-        self.block_selector.addItems(self.incidencias.keys())
+        if self.incidencias:
+            self.block_selector.addItems(self.incidencias.keys())
+        else:
+            print("Warning: No blocks to add to block selector.")
         self.block_selector.currentIndexChanged.connect(self.populate_incidences_list)
         layout.addWidget(self.block_selector)
 
@@ -56,8 +61,11 @@ class AdminDialog(QDialog):
     def populate_incidences_list(self):
         self.incidences_list.clear()
         selected_block = self.block_selector.currentText()
-        for incidence in self.incidencias[selected_block]:
-            self.incidences_list.addItem(incidence)
+        if selected_block and selected_block in self.incidencias:
+            for incidence in self.incidencias[selected_block]:
+                self.incidences_list.addItem(incidence)
+        else:
+            print(f"Warning: Block '{selected_block}' not found in incidences.")
 
     def add_incidence(self):
         text, ok = QInputDialog.getText(self, "Añadir Incidencia", "Nombre de la nueva incidencia:")
@@ -105,7 +113,12 @@ class AdminDialog(QDialog):
         if os.path.exists(config_file):
             with open(config_file, "r") as file:
                 try:
-                    return json.load(file)
+                    incidencias = json.load(file)
+                    if not incidencias:
+                        print("Warning: Loaded incidences are empty.")
+                    return incidencias
                 except json.JSONDecodeError:
+                    print("Error: Failed to decode JSON from incidences file.")
                     return {}
+        print(f"Error: Incidences file '{config_file}' not found.")
         return {}
